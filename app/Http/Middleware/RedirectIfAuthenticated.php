@@ -21,6 +21,18 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                $user = Auth::user();
+
+                // Redirect based on user role
+                if ($user->isSuperAdmin()) {
+                    return redirect('/admin/dashboard');
+                } elseif ($user->isDean()) {
+                    return redirect('/dean/dashboard');
+                } elseif ($user->isTeacher()) {
+                    return redirect('/teacher/dashboard');
+                }
+
+                // Default fallback
                 return redirect(RouteServiceProvider::HOME);
             }
         }

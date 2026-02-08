@@ -40,12 +40,15 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'teacher',  // Auto-assign teacher role
+            'status' => 'pending',  // Pending approval
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // DO NOT auto-login - user must wait for approval
+        // Auth::login($user);
 
-        return redirect(RouteServiceProvider::HOME);
+        return redirect()->route('login')->with('success', 'Registration successful! Your account is pending approval. You will receive an email once approved.');
     }
 }

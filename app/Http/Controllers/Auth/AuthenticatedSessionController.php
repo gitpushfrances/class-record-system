@@ -29,6 +29,30 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Role-based redirect after login
+        $user = Auth::user();
+
+        // Check if user is active
+        if (!$user->isActive()) {
+            Auth::logout();
+
+            $message = $user->isPending()
+                ? 'Your account is pending approval. Please wait for admin/dean approval.'
+                : 'Your account has been deactivated. Please contact the administrator.';
+
+            return redirect()->route('login')->with('error', $message);
+        }
+
+        // Redirect based on role
+        if ($user->isSuperAdmin()) {
+            return redirect()->intended('/admin/dashboard');
+        } elseif ($user->isDean()) {
+            return redirect()->intended('/dean/dashboard');
+        } elseif ($user->isTeacher()) {
+            return redirect()->intended('/teacher/dashboard');
+        }
+
+        // Default fallback
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
