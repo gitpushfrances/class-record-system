@@ -227,30 +227,6 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 🐛 Issue Reporting
-
-Found a bug? Have a feature request?
-
-- **Bug Reports:** [GitHub Issues](https://github.com/yourusername/class-record-system/issues)
-- **Feature Requests:** [GitHub Discussions](https://github.com/yourusername/class-record-system/discussions)
-- **Security Issues:** Please report privately to [your-email@example.com]
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Support
-
-- **Documentation:** See `/docs` folder
-- **Wiki:** [GitHub Wiki](https://github.com/yourusername/class-record-system/wiki)
-- **Email:** support@example.com
-
----
-
 ## 🙏 Acknowledgments
 
 - Laravel Team for the amazing framework
@@ -266,13 +242,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Current Version:** 1.0.0-alpha
 - **Contributors:** 1
 - **Commits:** In Progress
-- **Stars:** Coming Soon
 
 ---
-
-**Built with ❤️ for Philippine Educational Institutions**
 
 ---
 
 **Last Updated:** February 8, 2026  
-**Maintained By:** [Your Name]
+**Maintained By:** [Frances Igop]
