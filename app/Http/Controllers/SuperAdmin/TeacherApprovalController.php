@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Dean;
+namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -15,7 +15,7 @@ class TeacherApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('dean.teachers.pending', compact('pendingTeachers'));
+        return view('admin.teachers.pending', compact('pendingTeachers'));
     }
 
     public function approve(User $user)

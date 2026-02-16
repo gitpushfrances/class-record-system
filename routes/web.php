@@ -2,8 +2,14 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboard;
+use App\Http\Controllers\SuperAdmin\TeacherApprovalController as AdminTeacherApproval;
+use App\Http\Controllers\SuperAdmin\StudentController as AdminStudent;
+use App\Http\Controllers\SuperAdmin\SubjectController as AdminSubject;
 use App\Http\Controllers\Dean\DashboardController as DeanDashboard;
+use App\Http\Controllers\Dean\TeacherApprovalController as DeanTeacherApproval;
+use App\Http\Controllers\Dean\SectionController as DeanSection;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboard;
+use App\Http\Controllers\Dean\EnrollmentController as DeanEnrollment;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,12 +31,16 @@ Route::get('/', function () {
 Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
 
-    // Future routes:
-    // Route::resource('deans', DeanController::class);
-    // Route::resource('teachers', TeacherController::class);
-    // Route::resource('students', StudentController::class);
-    // Route::resource('subjects', SubjectController::class);
-    // Route::resource('sections', SectionController::class);
+    // Teacher approval routes
+    Route::get('/teachers/pending', [AdminTeacherApproval::class, 'index'])->name('teachers.pending');
+    Route::post('/teachers/{user}/approve', [AdminTeacherApproval::class, 'approve'])->name('teachers.approve');
+    Route::delete('/teachers/{user}/reject', [AdminTeacherApproval::class, 'reject'])->name('teachers.reject');
+
+    // Student routes
+    Route::resource('students', AdminStudent::class);
+
+    // Subject routes
+    Route::resource('subjects', AdminSubject::class);
 });
 
 /*
@@ -42,10 +52,19 @@ Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name
 Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.')->group(function () {
     Route::get('/dashboard', [DeanDashboard::class, 'index'])->name('dashboard');
 
-    // Future routes:
-    // Route::get('/teachers/pending', [TeacherApprovalController::class, 'index'])->name('teachers.pending');
-    // Route::post('/teachers/{user}/approve', [TeacherApprovalController::class, 'approve'])->name('teachers.approve');
-    // Route::post('/teachers/{user}/reject', [TeacherApprovalController::class, 'reject'])->name('teachers.reject');
+    // Teacher approval routes
+    Route::get('/teachers/pending', [DeanTeacherApproval::class, 'index'])->name('teachers.pending');
+    Route::post('/teachers/{user}/approve', [DeanTeacherApproval::class, 'approve'])->name('teachers.approve');
+    Route::delete('/teachers/{user}/reject', [DeanTeacherApproval::class, 'reject'])->name('teachers.reject');
+
+    // Section routes
+    Route::resource('sections', DeanSection::class);
+
+    // Enrollment routes
+    Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
+    Route::get('/sections/{section}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
+    Route::post('/sections/{section}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
+    Route::delete('/sections/{section}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
 });
 
 /*
@@ -56,16 +75,6 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
 
 Route::middleware(['auth', 'status', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherDashboard::class, 'index'])->name('dashboard');
-
-    // Future routes:
-    // Route::get('/classes/{section}', [ClassController::class, 'show'])->name('classes.show');
-    // Route::get('/classes/{section}/students', [ClassController::class, 'students'])->name('classes.students');
-    // Route::get('/classes/{section}/attendance', [AttendanceController::class, 'index'])->name('classes.attendance');
-    // Route::get('/classes/{section}/quizzes', [QuizController::class, 'index'])->name('classes.quizzes');
-    // Route::get('/classes/{section}/exams', [ExamController::class, 'index'])->name('classes.exams');
-    // Route::get('/classes/{section}/projects', [ProjectController::class, 'index'])->name('classes.projects');
-    // Route::get('/classes/{section}/assessments', [AssessmentController::class, 'index'])->name('classes.assessments');
-    // Route::get('/classes/{section}/final-grades', [FinalGradeController::class, 'index'])->name('classes.final-grades');
 });
 
 /*

@@ -7,21 +7,26 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Section;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $stats = [
-            'total_deans' => User::where('role', 'dean')->count(),
-            'total_teachers' => User::where('role', 'teacher')->where('status', 'active')->count(),
-            'pending_approvals' => User::where('role', 'teacher')->where('status', 'pending')->count(),
-            'total_students' => Student::count(),
-            'total_subjects' => Subject::count(),
-            'total_sections' => Section::count(),
+            'deans' => User::where('role', 'dean')->count(),
+            'teachers' => User::where('role', 'teacher')->where('status', 'active')->count(),
+            'pending_teachers' => User::where('role', 'teacher')->where('status', 'pending')->count(),
+            'students' => Student::count(),
+            'subjects' => Subject::count(),
+            'sections' => Section::count(),
         ];
 
-        return view('super-admin.dashboard', compact('stats'));
+        $pendingTeachers = User::where('role', 'teacher')
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'pendingTeachers'));
     }
 }
