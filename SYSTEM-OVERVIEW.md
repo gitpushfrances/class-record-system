@@ -66,23 +66,26 @@
 
 **Capabilities:**
 - View enrolled students (read-only)
-- Define grade component weights (pending Dean approval)
+- Define grade component weights
 - Create grade items (quizzes, exams, projects)
 - Input student scores
 - Mark attendance
-- View auto-calculated final grades
-- Export class record to Excel
-- View assigned section details
+- View auto-calculated final grades (live, no button needed)
+- Save and lock final grades officially
+- View DepEd-style class record spreadsheet
+- Export class record to Excel (Phase 7)
 
 **Workflow:**
-1. Self-register account (pending Super Admin approval)
+1. Self-register account (pending approval)
 2. Access assigned sections
-3. Configure grade components (Quiz 20%, Exam 30%, etc.)
-4. Create grade items (Quiz 1, Quiz 2, Midterm Exam, etc.)
-5. Input scores and attendance
-6. Monitor auto-calculated grades
-7. Lock and submit final grades
-8. Export class record to Excel
+3. Configure grade components (Quiz 5%, Exam 40%, etc.)
+4. Create grade items (Quiz 1, Midterm Exam, etc.)
+5. Input scores per grade item per student
+6. Mark attendance daily
+7. View Final Grades page — live calculated grades always visible
+8. Click Save Grades to officially record to database
+9. Lock grades when finalized
+10. Export class record to Excel
 
 ---
 
@@ -96,10 +99,10 @@
 - PHP 8.4.11
 
 **Frontend:**
-- Blade Templates (Laravel's templating engine)
-- Tailwind CSS (Utility-first CSS framework)
-- Alpine.js (Minimal JavaScript framework)
-- Vite (Build tool)
+- Blade Templates
+- Tailwind CSS
+- Alpine.js (planned for Phase 9 inline editing)
+- Vite
 
 **Key Packages:**
 - Laravel Breeze (Authentication)
@@ -112,130 +115,24 @@
 
 ## 🗄️ Database Schema
 
-### User Management
+### Custom Application Tables (11)
+
 ```
-users
-├── id
-├── name
-├── email
-├── password
-├── role (via Spatie)
-├── status (pending/active/inactive)
-└── timestamps
-
-Relationships:
-- hasMany(ClassAssignment)
-- belongsToMany(Role) via Spatie
-```
-
-### Academic Structure
-```
-students
-├── id
-├── student_number (unique)
-├── first_name
-├── last_name
-├── year_level
-└── timestamps
-
-subjects
-├── id
-├── code (unique, e.g., CS101)
-├── name
-├── description
-├── units
-└── timestamps
-
-sections
-├── id
-├── subject_id (FK)
-├── name (e.g., 3A)
-├── year_level
-├── semester (1/2/Summer)
-├── academic_year (2024-2025)
-└── timestamps
-
-Relationships:
-- subjects: belongsTo(Subject)
-- sections: hasMany(ClassAssignment), hasMany(Enrollment)
-```
-
-### Class Management
-```
-class_assignments
-├── id
-├── section_id (FK)
-├── teacher_id (FK)
-├── status (active/inactive)
-└── timestamps
-
-enrollments
-├── id
-├── student_id (FK)
-├── section_id (FK)
-└── timestamps
-
-Relationships:
-- Linking table between teachers/students and sections
-```
-
-### Grading System
-```
-grade_configurations
-├── id
-├── section_id (FK)
-├── quiz_weight (decimal)
-├── exam_weight (decimal)
-├── project_weight (decimal)
-├── assessment_weight (decimal)
-├── attendance_weight (decimal)
-├── status (pending/approved)
-├── approved_by (FK to users)
-└── timestamps
-
-Validation: All weights must sum to 100%
-
-grade_items
-├── id
-├── section_id (FK)
-├── component_type (quiz/exam/project/assessment)
-├── title (Quiz 1, Midterm Exam, etc.)
-├── max_score
-├── date
-└── timestamps
-
-student_grades
-├── id
-├── enrollment_id (FK)
-├── grade_item_id (FK)
-├── score
-├── recorded_by (FK to users)
-└── timestamps
-
-attendance_records
-├── id
-├── enrollment_id (FK)
-├── date
-├── status (present/absent/late/excused)
-└── timestamps
-
-final_grades
-├── id
-├── enrollment_id (FK)
-├── computed_grade (decimal)
-├── letter_grade (1.0-5.0)
-├── locked (boolean)
-├── locked_at
-└── timestamps
+students            — Master student list (soft deletes)
+subjects            — Subject catalog (code unique)
+sections            — Class sections with teacher assignment
+enrollments         — Student-to-section pivot (soft deletes)
+grade_configurations — Component weights per section (must sum to 100%)
+grade_items         — Individual quizzes, exams, projects per section
+student_grades      — Score per student per grade item (unique: enrollment+item)
+attendance_records  — Daily attendance (unique: enrollment+date)
+final_grades        — Saved computed grades with lock support
+grade_change_logs   — Audit trail for every score change
 ```
 
 ---
 
 ## 🧮 Grading Calculation Logic
-
-### Semester-Based Cumulative System
-
-**Principle:** Each component is calculated as a percentage of total possible points, then multiplied by its weight.
 
 ### Formula
 ```
@@ -244,60 +141,12 @@ Component Score = (Total Earned / Total Possible) × Component Weight
 Final Grade = Quiz Score + Exam Score + Project Score + Assessment Score + Attendance Score
 ```
 
-### Example Calculation
+### Live vs Saved Grades
+- **Live:** Calculated in-memory on every page load from `student_grades` and `attendance_records`. No DB write. Always up to date.
+- **Saved:** Written to `final_grades` table when teacher clicks "Save Grades". Required for locking.
+- **Locked:** `is_locked = true`, `locked_at` timestamp set. Cannot be overwritten by compute.
 
-**Grade Configuration:**
-- Quizzes: 20%
-- Exams: 30%
-- Projects: 25%
-- Assessments: 15%
-- Attendance: 10%
-
-**Student Performance:**
-
-**Quizzes:**
-- Quiz 1: 45/50
-- Quiz 2: 48/50
-- Quiz 3: 50/50
-- Total: 143/150
-- Percentage: 143/150 = 95.33%
-- Weighted: 95.33% × 20% = **19.07/20**
-
-**Exams:**
-- Midterm: 85/100
-- Final: 90/100
-- Total: 175/200
-- Percentage: 175/200 = 87.5%
-- Weighted: 87.5% × 30% = **26.25/30**
-
-**Projects:**
-- Project 1: 90/100
-- Project 2: 95/100
-- Total: 185/200
-- Percentage: 185/200 = 92.5%
-- Weighted: 92.5% × 25% = **23.13/25**
-
-**Assessments:**
-- Assessment 1: 48/50
-- Total: 48/50
-- Percentage: 48/50 = 96%
-- Weighted: 96% × 15% = **14.4/15**
-
-**Attendance:**
-- Present: 18 days
-- Total sessions: 20 days
-- Percentage: 18/20 = 90%
-- Weighted: 90% × 10% = **9/10**
-
-**Final Grade:**
-```
-19.07 + 26.25 + 23.13 + 14.4 + 9 = 91.85/100
-```
-
-**Letter Grade (Philippine 1.0-5.0 Scale):**
-- 91.85% = **1.25** (Excellent)
-
-### Grade Scale (Philippine System)
+### Philippine Grade Scale (1.0–5.0)
 ```
 97-100% = 1.00 (Excellent)
 94-96%  = 1.25
@@ -313,175 +162,126 @@ Below 75% = 5.00 (Failed)
 
 ---
 
-## 📑 Class Record Interface (Phase 6 - High Priority)
+## 📑 Class Record Interface ✅ IMPLEMENTED (Phase 6)
 
-### Layout Design (DepEd-Inspired)
+### Layout (DepEd-Inspired Spreadsheet)
 
-**Horizontal Spreadsheet View:**
 ```
-┌────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬────────┬─────────┐
-│ Student    │ Quiz 1   │ Quiz 2   │ Quiz 3   │ Exam 1   │ Project  │ Attend │ Final   │
-│            │ (50)     │ (50)     │ (50)     │ (100)    │ (100)    │ (%)    │ Grade   │
-├────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼────────┼─────────┤
-│ John Doe   │ 45/50    │ 48/50    │ 50/50    │ 85/100   │ 90/100   │ 18/20  │ 92.5    │
-│            │          │          │          │          │          │ 90%    │ (1.25)  │
-├────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼────────┼─────────┤
-│ Jane Smith │ 42/50    │ 45/50    │ 47/50    │ 88/100   │ 95/100   │ 20/20  │ 94.3    │
-│            │          │          │          │          │          │ 100%   │ (1.25)  │
-└────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴────────┴─────────┘
+┌────┬──────────┬──────────────────┬─────────────────────┬──────────────────┬──────────┐
+│ #  │ Stud. No │ Student Name     │ Quiz (5%)           │ Exam (40%)       │ Summary  │
+│    │          │                  │ Q1/50 │ Q2/50 │ Wtd │ E1/100 │ Wtd    │ % │ Gr │ Rem │
+├────┼──────────┼──────────────────┼───────┼───────┼─────┼────────┼────────┼───┼────┼─────┤
+│ 1  │2021-0001 │ Juan M. Dela Cruz│ 45/50 │ 48/50 │4.50 │ 90/100 │ 36.00  │40.50%│5.00│Failed│
+└────┴──────────┴──────────────────┴───────┴───────┴─────┴────────┴────────┴───┴────┴─────┘
+│ Class Average │                  │ 43.4  │       │4.34 │  83.6  │ 33.44  │43.78%│5.00│0/5 Passed│
 ```
 
-### Features:
-1. **Inline Editing** - Click any score cell to edit
-2. **Keyboard Navigation** - Tab/Enter/Arrow keys
-3. **Auto-Save** - Changes saved immediately
-4. **Visual Indicators:**
-   - Red: Failed scores (below 75%)
-   - Yellow: Warning (75-79%)
-   - Green: Passing (80%+)
-5. **Collapsible Sections** - Expand/collapse component groups
-6. **Horizontal Scroll** - Handle many grade items
+**Features Implemented:**
+- ✅ Frozen columns (#, Student No., Name) — CSS sticky positioning
+- ✅ Color-coded component groups (blue, purple, green, orange, teal)
+- ✅ Two-row header (group + individual item)
+- ✅ Scores in `45/50` format
+- ✅ Weighted score column per component
+- ✅ Attendance in `18/20` format
+- ✅ Class averages footer row
+- ✅ Pass/Fail count in footer
+- ✅ Live data — always current
+- ✅ Print button (full export in Phase 7)
+
+**Deferred to Phase 9:**
+- Inline editing (click cell to edit)
+- Keyboard navigation (Tab/Enter/Arrow)
+- Filter/sort/search
+- Collapsible component groups
 
 ---
 
-## 📤 Excel Export Specifications
+## 📤 Excel Export Specifications (Phase 7 — Next)
 
 ### Class Record Export Format
 
 **Sheet Structure:**
 ```
-Row 1: School Header (Name, Logo, School Year)
-Row 2: Section Details (Subject, Section, Teacher)
+Row 1: School Header
+Row 2: Section Details (Subject, Section, Teacher, Semester, AY)
 Row 3: Grade Configuration Weights
-Row 4: Column Headers
-Row 5+: Student Data
+Row 4-5: Column Headers (group + individual)
+Row 6+: Student Data
 Last Row: Class Averages
 ```
 
 **Formatting:**
 - Bold headers
 - Borders on all cells
-- Percentage format for attendance
-- Decimal format for grades
+- Percentage format for attendance and final grade
+- Color-coded component columns matching web view
 - Auto-width columns
-- Freeze header rows
+- Freeze header rows and name column
 
 **File Naming:**
 ```
-{Subject_Code}_{Section}_{Semester}_{AY}.xlsx
-
+{SubjectCode}_{Section}_{Semester}_{AY}.xlsx
 Example: CS101_3A_1stSem_2024-2025.xlsx
 ```
 
 ---
 
+## 🔮 Future Enhancements (Post-Phase 10)
+
+### Real-Time Grade Updates
+**Stack:** Laravel Echo + Redis + Soketi or Pusher  
+**Scope:**
+- Final Grades and Class Record pages update live when scores are saved
+- No page refresh needed
+- Dashboard stats update in real-time
+
+**Why deferred:** Core system stable and functional. Redis + WebSockets adds significant infrastructure overhead best tackled post-deployment.
+
+### Other Planned Features
+- Mobile app (React Native)
+- Parent portal
+- SMS notifications for failing students
+- Advanced analytics with Chart.js/ApexCharts
+- Multi-language support
+- Dark mode
+- Automated report scheduling
+- Grade trending analysis
+- API for third-party integrations
+
+---
+
 ## 🔐 Security Measures
 
-### Authentication
 - Laravel Breeze session-based authentication
-- Password hashing (bcrypt)
-- Email verification (optional)
 - CSRF protection on all forms
-
-### Authorization
 - Spatie Permission middleware on all routes
-- Role-based access control
-- Owner-based access (teachers see only their sections)
-
-### Data Protection
+- Role-based + owner-based access control (teachers see only their sections)
 - SQL injection prevention (Eloquent ORM)
 - XSS protection (Blade escaping)
-- Mass assignment protection
-- File upload validation
-
-### Audit Trail
-- All grade changes logged (who, when, old value, new value)
-- Login/logout tracking
-- Critical actions logged (approve users, lock grades)
+- Mass assignment protection (`$fillable`)
+- Full audit trail via `grade_change_logs`
 
 ---
 
-## 🚀 Deployment Considerations
+## 📈 Development Roadmap
 
-### Server Requirements
-- PHP 8.1+ (currently using 8.4)
-- MySQL 8.0+
-- Composer
-- Node.js 18+
-- Apache/Nginx
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Complete | Foundation setup |
+| Phase 2 | ✅ Complete | Database architecture |
+| Phase 3 | ✅ Complete | Authentication & authorization |
+| Phase 4 | ✅ Complete | Academic structure management |
+| Phase 5 | ✅ Complete | Grading system |
+| Phase 6 | ✅ Complete | DepEd-style class record interface |
+| Phase 7 | 📅 Next | Excel export |
+| Phase 8 | 📅 Planned | Reporting & analytics |
+| Phase 9 | 📅 Planned | UI/UX polish + inline editing |
+| Phase 10 | 📅 Planned | Testing & deployment |
 
-### Environment Configuration
-- Production `.env` with secure credentials
-- Debug mode disabled
-- Error logging enabled
-- Queue workers for background jobs
-
-### Performance Optimization
-- Database indexing on foreign keys
-- Eager loading for relationships
-- Query caching for grade calculations
-- Asset minification
+**Overall Progress: 60%**
 
 ---
 
-## 🎓 User Workflows
-
-### Teacher Daily Workflow
-1. Login → View dashboard
-2. Select section from "My Classes"
-3. Navigate to "Class Record" tab
-4. Input/update scores in spreadsheet view
-5. Mark today's attendance
-6. View auto-updated final grades
-7. Export to Excel if needed
-
-### Dean Weekly Workflow
-1. Login → View dashboard
-2. Review pending grade configurations → Approve/reject
-3. Check department performance reports
-4. Enroll new students to sections
-5. Assign new teachers if needed
-
-### Super Admin Setup Workflow
-1. Approve new teacher registrations
-2. Import student master list from Excel
-3. Create subject catalog for new semester
-4. Monitor system activity logs
-5. Run semester-end reports
-
----
-
-## 📈 Future Enhancements (Post-MVP)
-
-### Potential Features
-- [ ] Mobile app (React Native)
-- [ ] Real-time notifications (Laravel Echo + Pusher)
-- [ ] Advanced analytics dashboard
-- [ ] Parent portal (view child's grades)
-- [ ] SMS notifications for failing grades
-- [ ] Multi-language support
-- [ ] Dark mode
-- [ ] API for third-party integrations
-- [ ] Automated report scheduling
-- [ ] Grade trending analysis
-
----
-
-## 📞 Support & Maintenance
-
-### Issue Reporting
-- GitHub Issues for bug reports
-- Feature requests via discussions
-- Security vulnerabilities: private disclosure
-
-### Maintenance Schedule
-- Database backups: Daily (automated)
-- Security updates: As needed
-- Feature releases: Quarterly
-- Bug fixes: As needed
-
----
-
-**Last Updated:** February 8, 2026  
+**Last Updated:** February 17, 2026  
 **Version:** 1.0.0-alpha  
-**Status:** In Development (Phase 1 Complete)
+**Status:** In Development — Phase 7 Next
