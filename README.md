@@ -109,7 +109,7 @@ php artisan key:generate
 php artisan migrate:fresh --seed
 
 # 6. Build assets
-npm run build
+node node_modules/vite/bin/vite.js build
 
 # 7. Serve
 php artisan serve
