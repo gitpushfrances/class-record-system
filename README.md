@@ -5,7 +5,6 @@ A comprehensive Faculty Class Record Management System built with Laravel 10, de
 ![Status](https://img.shields.io/badge/Status-In%20Development-yellow)
 ![Laravel](https://img.shields.io/badge/Laravel-10.x-red)
 ![PHP](https://img.shields.io/badge/PHP-8.4-blue)
-![Progress](https://img.shields.io/badge/Progress-60%25-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
@@ -15,14 +14,15 @@ A comprehensive Faculty Class Record Management System built with Laravel 10, de
 This system streamlines grade management and class record keeping with a DepEd-style spreadsheet interface, automated Philippine grade scale calculations, and role-based access control for Super Admins, Deans, and Teachers.
 
 ### Key Features
-- ✅ **Three-tier Role System** (Super Admin → Dean → Teacher)
-- ✅ **Centralized Student Management** (No duplicate records)
-- ✅ **Flexible Grading System** (Unlimited items per component)
-- ✅ **Automated Grade Calculation** (Semester-based cumulative, live display)
-- ✅ **DepEd-Style Class Record** (Spreadsheet with frozen columns, color-coded components)
-- ✅ **Philippine Grading Scale** (1.00–5.00 auto-conversion)
-- ✅ **Complete Audit Trail** (Track all grade changes)
-- 📅 **Excel Import/Export** (Phase 7 — next)
+- ✅ Three-tier Role System (Super Admin → Dean → Teacher)
+- ✅ Centralized Student Management (Dean owns master list, no duplicates)
+- ✅ Flexible Grading System (unlimited items per component)
+- ✅ Automated Grade Calculation (semester-based cumulative, live display)
+- ✅ DepEd-Style Class Record (spreadsheet with frozen columns, color-coded components)
+- ✅ Philippine Grading Scale (1.00–5.00 auto-conversion)
+- ✅ Complete Audit Trail (all grade changes logged)
+- ✅ Academic Period Management (school year + semester config)
+- 📅 Excel Export (Phase 7 — next)
 
 ---
 
@@ -30,62 +30,35 @@ This system streamlines grade management and class record keeping with a DepEd-s
 
 **Completed:**
 - ✅ Phase 1: Foundation Setup
-- ✅ Phase 2: Database Architecture (24 tables)
+- ✅ Phase 2: Database Architecture (11 custom tables, 24 total)
 - ✅ Phase 3: Authentication & Authorization
-- ✅ Phase 4: Academic Structure (Students, Subjects, Sections, Enrollments, Teacher Approval)
+- ✅ Phase 4: Academic Structure (Students, Subjects, Sections, Enrollments, Dean Management, Academic Periods, Teacher Approval)
 - ✅ Phase 5: Grading System (Config, Items, Scores, Attendance, Final Grades, Lock)
 - ✅ Phase 6: DepEd-Style Class Record Interface (Spreadsheet, Frozen Columns, Averages)
 
-**Next Up: Phase 7 — Excel Export**
-- 📅 Export class record to `.xlsx` matching DepEd format
-- 📅 Color-coded headers, borders, auto-width columns
-- 📅 Filename: `{SubjectCode}_{Section}_{Semester}_{AY}.xlsx`
+**Next: Phase 7 — Excel Export**
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed progress.
-
----
-
-## 📋 Documentation
-
-- **[CHANGELOG.md](CHANGELOG.md)** - Detailed development progress by phase
-- **[SYSTEM-OVERVIEW.md](SYSTEM-OVERVIEW.md)** - Complete system architecture & specifications
+See [CHANGELOG.md](CHANGELOG.md) for detailed progress and patch notes.
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Laravel 10 LTS** — PHP Framework
-- **MySQL 8.0** — Database
-- **PHP 8.4.11** — Programming Language
-
-### Frontend
-- **Blade Templates** — Templating engine
-- **Tailwind CSS** — Utility-first CSS
-- **Alpine.js** — Planned for Phase 9 inline editing
-- **Vite** — Build tool
-
-### Key Packages
-| Package | Purpose |
-|---------|---------|
-| Laravel Breeze | Authentication scaffolding |
-| Spatie Permission | Role & permission management |
-| Maatwebsite Excel | Excel import/export (Phase 7) |
-| Spatie Activity Log | Audit trail logging |
-| Laravel Debugbar | Development debugging |
+| Layer | Technology |
+|-------|-----------|
+| Framework | Laravel 10 LTS |
+| Language | PHP 8.4.11 |
+| Database | MySQL 8.0 |
+| Frontend | Blade + Tailwind CSS |
+| Auth | Laravel Breeze |
+| Roles | Spatie Permission v5.11 |
+| Excel | Maatwebsite Excel v3.1+ |
+| Audit | Spatie Activity Log v4.8+ |
+| Build | Vite |
 
 ---
 
 ## 📦 Installation
-
-### Prerequisites
-- PHP 8.1+
-- Composer
-- Node.js 18+ & NPM
-- MySQL 8.0+
-- XAMPP/WAMP/Laragon
-
-### Setup Steps
 
 ```bash
 # 1. Clone
@@ -117,7 +90,10 @@ php artisan serve
 
 Visit: `http://localhost:8000`
 
-### Test Accounts
+---
+
+## 🔑 Test Accounts
+
 | Role | Email | Password |
 |------|-------|----------|
 | Super Admin | admin@classrecord.test | password |
@@ -125,27 +101,32 @@ Visit: `http://localhost:8000`
 | Teacher (Active) | teacher@classrecord.test | password |
 | Teacher (Pending) | pending@classrecord.test | password |
 
+> ⚠️ Change these passwords before any production deployment.
+
 ---
 
-## 👥 User Roles
+## 👥 Role Summary
 
-### Super Admin
-- Full system access
-- Approve teacher registrations
-- Manage student master list and subject catalog
+### 👑 Super Admin
+- Manage Dean accounts (create, edit, activate/deactivate)
+- Manage Subject catalog
+- Configure Academic Year & Semester
+- View system-wide stats
 
-### Dean
-- Create and manage sections
-- Enroll students to sections
-- Assign teachers to sections
-- Approve grade configurations
+### 🎓 Dean
+- Approve / reject Teacher registrations
+- Manage Faculty (view, deactivate)
+- Create Sections, assign Teachers
+- Own the Student master list (add, edit, tag Regular/Irregular)
+- Manage enrollments (assign students to sections)
+- Approve Teacher grade config change requests
 
-### Teacher
-- View assigned sections
-- Configure grade components (weights must sum to 100%)
-- Create grade items (Quiz 1, Midterm Exam, etc.)
-- Enter scores per student per item
-- Mark daily attendance
+### 📝 Teacher
+- Self-register (pending until Dean approves)
+- View assigned classes only
+- Enroll students from master list
+- Configure grade weights (must = 100%)
+- Enter grades and attendance
 - View live auto-calculated final grades
 - Save and lock grades officially
 - View DepEd-style class record spreadsheet
@@ -161,13 +142,12 @@ Final Grade     = Sum of all component scores
 ```
 
 ### Grade Components
-- Quiz, Exam, Project, Assessment, Attendance
-- Weights configurable per section (must total 100%)
+Quiz, Exam, Project, Assessment, Attendance — weights configurable per section, must total 100%
 
 ### Philippine Grade Scale
 | Percentage | Grade |
 |-----------|-------|
-| 97–100% | 1.00 (Excellent) |
+| 97–100% | 1.00 |
 | 94–96% | 1.25 |
 | 91–93% | 1.50 |
 | 88–90% | 1.75 |
@@ -178,69 +158,25 @@ Final Grade     = Sum of all component scores
 | 75% | 3.00 (Passing) |
 | Below 75% | 5.00 (Failed) |
 
-### Live vs Saved Grades
-- **Live display:** Final Grades and Class Record pages always show current calculated values — no button needed
-- **Save Grades:** Writes to `final_grades` table for official record
-- **Lock All:** Permanently freezes grades — cannot be overwritten
-
 ---
 
-## 📊 Class Record Interface (Phase 6 ✅)
-
-DepEd-style spreadsheet view with:
-- Frozen student name columns (CSS sticky)
-- Color-coded component groups
-- Scores in `45/50` format
-- Weighted score per component
-- Attendance in `18/20` format
-- Class averages footer
-- Pass/Fail count
-
----
-
-## 📈 Development Roadmap
+## 📈 Roadmap
 
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ Complete | Foundation setup |
 | Phase 2 | ✅ Complete | Database architecture |
 | Phase 3 | ✅ Complete | Authentication & authorization |
-| Phase 4 | ✅ Complete | Academic structure |
+| Phase 4 | ✅ Complete | Academic structure & role management |
 | Phase 5 | ✅ Complete | Grading system |
-| Phase 6 | ✅ Complete | Class record interface |
+| Phase 6 | ✅ Complete | DepEd class record interface |
 | **Phase 7** | 📅 **Next** | **Excel export** |
 | Phase 8 | 📅 Planned | Reporting & analytics |
 | Phase 9 | 📅 Planned | UI/UX polish + inline editing |
 | Phase 10 | 📅 Planned | Testing & deployment |
 
-**Overall Progress: 60%**
-
 ---
 
-## 🔮 Future Enhancements (Post-MVP)
-
-- Real-time grade updates (Laravel Echo + Redis + WebSockets)
-- Mobile app (React Native)
-- Parent portal
-- SMS notifications for failing students
-- Advanced analytics dashboard
-- Multi-language support
-- Dark mode
-- Automated report scheduling
-
----
-
-## 🤝 Contributing
-
-```bash
-git checkout -b feature/phase-X-description
-git commit -m '[PHASE-X] Description'
-git push origin feature/phase-X-description
-```
-
----
-
-**Last Updated:** February 17, 2026  
+**Last Updated:** February 27, 2026  
 **Version:** 1.0.0-alpha  
-**Current Phase:** Phase 7 — Excel Export  
 **Maintained By:** Frances Igop

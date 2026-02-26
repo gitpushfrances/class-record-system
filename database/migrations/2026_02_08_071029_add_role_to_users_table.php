@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->enum('role', ['super_admin', 'dean', 'teacher'])->default('teacher')->after('email');
-            $table->enum('status', ['pending', 'active', 'inactive'])->default('pending')->after('role');
+            $table->enum('status', ['pending', 'active', 'inactive', 'rejected'])->default('pending')->after('role');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null')->after('status');
             $table->timestamp('approved_at')->nullable()->after('approved_by');
         });

@@ -31,7 +31,7 @@ class TeacherApprovalController extends Controller
 
     public function reject(User $user)
     {
-        $user->delete();
+        $user->update(['status' => 'rejected']);
         return redirect()->back()->with('success', 'Teacher registration rejected.');
     }
 }

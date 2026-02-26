@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique()->nullable();
             $table->enum('year_level', ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year']);
             $table->string('program')->nullable();
+            $table->enum('student_type', ['regular', 'irregular'])->default('regular');
             $table->enum('status', ['active', 'inactive', 'graduated', 'dropped'])->default('active');
             $table->timestamps();
             $table->softDeletes();

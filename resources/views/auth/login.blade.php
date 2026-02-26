@@ -1,47 +1,107 @@
 <x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    {{-- Session Status --}}
+    @if (session('status'))
+        <div class="alert-ok">
+            <i class="fas fa-circle-check"></i>
+            {{ session('status') }}
+        </div>
+    @endif
+
+    {{-- Header --}}
+    <div class="form-header">
+        <div class="form-eyebrow">Secure Access</div>
+        <h1 class="form-title">Sign In</h1>
+        <p class="form-sub">Enter your credentials to continue.</p>
+    </div>
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        {{-- Email --}}
+        <div class="field">
+            <label class="field-label" for="email">Email Address</label>
+            <div class="field-wrap">
+                <input
+                    id="email"
+                    class="field-input"
+                    type="email"
+                    name="email"
+                    value="{{ old('email') }}"
+                    placeholder="you@school.edu.ph"
+                    required autofocus
+                    autocomplete="username"
+                    style="padding-left:2.4rem;"
+                />
+                <i class="fas fa-envelope field-ico"></i>
+            </div>
+            @error('email')
+                <div class="field-err">
+                    <i class="fas fa-circle-exclamation"></i> {{ $message }}
+                </div>
+            @enderror
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        {{-- Password --}}
+        <div class="field">
+            <label class="field-label" for="password">Password</label>
+            <div class="field-wrap">
+                <input
+                    id="password"
+                    class="field-input"
+                    type="password"
+                    name="password"
+                    placeholder="••••••••••"
+                    required
+                    autocomplete="current-password"
+                    style="padding-left:2.4rem; padding-right:2.5rem;"
+                />
+                <i class="fas fa-lock field-ico"></i>
+                <button type="button" class="eye-btn" onclick="togglePwd()" title="Toggle password">
+                    <i class="fas fa-eye" id="eyeIco"></i>
+                </button>
+            </div>
+            @error('password')
+                <div class="field-err">
+                    <i class="fas fa-circle-exclamation"></i> {{ $message }}
+                </div>
+            @enderror
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ml-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+        {{-- Remember + Forgot --}}
+        <div class="form-row">
+            <label class="check-label" for="remember_me">
+                <input type="checkbox" name="remember" id="remember_me" {{ old('remember') ? 'checked' : '' }}>
+                Remember me
             </label>
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
+                <a href="{{ route('password.request') }}" class="link-forgot">Forgot password?</a>
             @endif
-
-            <x-primary-button class="ml-3">
-                {{ __('Log in') }}
-            </x-primary-button>
         </div>
+
+        {{-- Submit --}}
+        <button type="submit" class="btn-submit">
+            <span class="btn-ico">
+                <i class="fas fa-arrow-right-to-bracket"></i>
+            </span>
+            Sign In to Portal
+        </button>
     </form>
+
+    <div class="card-foot">
+        <i class="fas fa-shield-halved"></i>
+        Authorized faculty and staff only
+    </div>
+
 </x-guest-layout>
+
+<script>
+function togglePwd() {
+    const inp = document.getElementById('password');
+    const ico = document.getElementById('eyeIco');
+    const hidden = inp.type === 'password';
+    inp.type = hidden ? 'text' : 'password';
+    ico.classList.toggle('fa-eye',       !hidden);
+    ico.classList.toggle('fa-eye-slash',  hidden);
+}
+</script>

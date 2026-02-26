@@ -16,14 +16,14 @@
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.teachers.pending')" :active="request()->routeIs('admin.teachers.*')">
-                            {{ __('Pending Teachers') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
-                            {{ __('Students') }}
+                        <x-nav-link :href="route('admin.deans.index')" :active="request()->routeIs('admin.deans.*')">
+                            {{ __('Deans') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.subjects.index')" :active="request()->routeIs('admin.subjects.*')">
                             {{ __('Subjects') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.academic.index')" :active="request()->routeIs('admin.academic.*')">
+                            {{ __('Academic Period') }}
                         </x-nav-link>
                     @endif
 
@@ -103,11 +103,8 @@
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.teachers.pending')" :active="request()->routeIs('admin.teachers.*')">
-                    {{ __('Pending Teachers') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
-                    {{ __('Students') }}
+                <x-responsive-nav-link :href="route('admin.deans.index')" :active="request()->routeIs('admin.deans.*')">
+                    {{ __('Deans') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.subjects.index')" :active="request()->routeIs('admin.subjects.*')">
                     {{ __('Subjects') }}

@@ -17,10 +17,6 @@
                     <div class="text-3xl font-bold">{{ $stats['teachers'] }}</div>
                 </div>
                 <div class="p-6 bg-white rounded-lg shadow">
-                    <div class="text-sm text-gray-500">Pending Teachers</div>
-                    <div class="text-3xl font-bold text-orange-600">{{ $stats['pending_teachers'] }}</div>
-                </div>
-                <div class="p-6 bg-white rounded-lg shadow">
                     <div class="text-sm text-gray-500">Students</div>
                     <div class="text-3xl font-bold">{{ $stats['students'] }}</div>
                 </div>
@@ -34,24 +30,13 @@
                 </div>
             </div>
 
-            @if($pendingTeachers->isNotEmpty())
-                <div class="p-6 bg-white rounded-lg shadow">
-                    <h3 class="mb-4 text-lg font-semibold">Recent Pending Teachers</h3>
-                    <div class="space-y-2">
-                        @foreach($pendingTeachers as $teacher)
-                            <div class="flex items-center justify-between p-3 border rounded">
-                                <div>
-                                    <div class="font-medium">{{ $teacher->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $teacher->email }}</div>
-                                </div>
-                                <a href="{{ route('admin.teachers.pending') }}" class="text-blue-600 hover:text-blue-900">
-                                    Review
-                                </a>
-                            </div>
-                        @endforeach
-                    </div>
+            <div class="p-6 bg-white rounded-lg shadow">
+                <h3 class="mb-4 text-lg font-semibold">Quick Links</h3>
+                <div class="space-x-4">
+                    <a href="{{ route('admin.deans.index') }}" class="text-blue-600 hover:text-blue-900">Manage Deans</a>
+                    <a href="{{ route('admin.subjects.index') }}" class="text-blue-600 hover:text-blue-900">Manage Subjects</a>
                 </div>
-            @endif
+            </div>
         </div>
     </div>
 </x-app-layout>

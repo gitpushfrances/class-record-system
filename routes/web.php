@@ -2,8 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboard;
-use App\Http\Controllers\SuperAdmin\TeacherApprovalController as AdminTeacherApproval;
-use App\Http\Controllers\SuperAdmin\StudentController as AdminStudent;
+use App\Http\Controllers\SuperAdmin\UserController as AdminUser;
+use App\Http\Controllers\SuperAdmin\AcademicPeriodController as AdminAcademic;
+use App\Http\Controllers\Dean\StudentController as DeanStudent;
 use App\Http\Controllers\SuperAdmin\SubjectController as AdminSubject;
 use App\Http\Controllers\Dean\DashboardController as DeanDashboard;
 use App\Http\Controllers\Dean\TeacherApprovalController as DeanTeacherApproval;
@@ -22,7 +23,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->role === 'super_admin') return redirect()->route('admin.dashboard');
+        if ($user->role === 'dean')        return redirect()->route('dean.dashboard');
+        if ($user->role === 'teacher')     return redirect()->route('teacher.dashboard');
+    }
+    return redirect()->route('login');
 });
 
 /*
@@ -34,12 +41,16 @@ Route::get('/', function () {
 Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
 
-    Route::get('/teachers/pending', [AdminTeacherApproval::class, 'index'])->name('teachers.pending');
-    Route::post('/teachers/{user}/approve', [AdminTeacherApproval::class, 'approve'])->name('teachers.approve');
-    Route::delete('/teachers/{user}/reject', [AdminTeacherApproval::class, 'reject'])->name('teachers.reject');
-
-    Route::resource('students', AdminStudent::class);
     Route::resource('subjects', AdminSubject::class);
+
+    Route::resource('deans', AdminUser::class)->except(['show', 'destroy'])->parameters(['deans' => 'dean']);
+
+    Route::get('/academic', [AdminAcademic::class, 'index'])->name('academic.index');
+    Route::post('/academic', [AdminAcademic::class, 'store'])->name('academic.store');
+    Route::patch('/academic/{period}/set-active', [AdminAcademic::class, 'setActive'])->name('academic.setActive');
+    Route::delete('/academic/{period}', [AdminAcademic::class, 'destroy'])->name('academic.destroy');
+    Route::patch('/deans/{dean}/deactivate', [AdminUser::class, 'deactivate'])->name('deans.deactivate');
+    Route::patch('/deans/{dean}/activate', [AdminUser::class, 'activate'])->name('deans.activate');
 });
 
 /*
@@ -56,6 +67,8 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
     Route::delete('/teachers/{user}/reject', [DeanTeacherApproval::class, 'reject'])->name('teachers.reject');
 
     Route::resource('sections', DeanSection::class);
+
+    Route::resource('students', DeanStudent::class);
 
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
     Route::get('/sections/{section}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
