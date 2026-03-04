@@ -1,12 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Dean Dashboard') }}
-        </h2>
-    </x-slot>
+<x-sidebar-layout>
 
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    
             <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-4">
                 <div class="p-6 bg-white rounded-lg shadow">
                     <div class="text-sm text-gray-500">Pending Teachers</div>
@@ -44,6 +38,4 @@
                     </div>
                 </div>
             @endif
-        </div>
-    </div>
-</x-app-layout>
+</x-sidebar-layout>

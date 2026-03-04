@@ -1,12 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Student Enrollments') }}
-        </h2>
-    </x-slot>
+<x-sidebar-layout>
 
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -52,6 +46,4 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</x-app-layout>
+</x-sidebar-layout>

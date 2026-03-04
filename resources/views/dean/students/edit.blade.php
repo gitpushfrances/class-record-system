@@ -1,9 +1,4 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Edit Student') }}
-        </h2>
-    </x-slot>
+<x-sidebar-layout>
 
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
@@ -77,6 +72,4 @@
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
-</x-app-layout>
+</x-sidebar-layout>

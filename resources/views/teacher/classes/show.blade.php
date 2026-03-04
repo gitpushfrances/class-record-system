@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', $section->subject->code . ' - ' . $section->section_name)
 
-@section('content')
+
 
 {{-- Header --}}
 <div class="mb-6">
@@ -114,4 +114,4 @@
     @endif
 </div>
 
-@endsection
+</x-sidebar-layout>

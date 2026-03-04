@@ -1,9 +1,4 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Manage Enrollments - ') }} {{ $section->name }}
-        </h2>
-    </x-slot>
+<x-sidebar-layout>
 
     <div class="py-12">
         <div class="mx-auto space-y-6 max-w-7xl sm:px-6 lg:px-8">
@@ -98,6 +93,4 @@
                     Back to All Sections
                 </a>
             </div>
-        </div>
-    </div>
-</x-app-layout>
+</x-sidebar-layout>

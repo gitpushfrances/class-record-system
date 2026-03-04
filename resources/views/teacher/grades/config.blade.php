@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Grade Configuration')
 
-@section('content')
+
 
 <div class="mb-6">
     <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
@@ -87,4 +87,4 @@ function updateTotal() {
 updateTotal();
 </script>
 
-@endsection
+</x-sidebar-layout>

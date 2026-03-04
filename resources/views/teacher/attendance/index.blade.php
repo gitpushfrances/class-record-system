@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Attendance')
 
-@section('content')
+
 
 <div class="flex items-start justify-between mb-6">
     <div>
@@ -122,4 +122,4 @@ function markAll(status) {
 }
 </script>
 
-@endsection
+</x-sidebar-layout>

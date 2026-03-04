@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Class Record — ' . $section->subject->code)
 
-@section('content')
+
 
 {{-- Header --}}
 <div class="flex items-start justify-between mb-6">
@@ -423,4 +423,4 @@
     </table>
 </div>
 
-@endsection
+</x-sidebar-layout>

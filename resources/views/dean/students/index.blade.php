@@ -1,17 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ __('Student Master List') }}
-            </h2>
-            <a href="{{ route('dean.students.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">
-                Add Student
-            </a>
-        </div>
-    </x-slot>
+<x-sidebar-layout>
 
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    
             @if(session('success'))
                 <div class="px-4 py-3 mb-4 text-green-700 bg-green-100 border border-green-400 rounded">
                     {{ session('success') }}
@@ -71,6 +60,4 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</x-app-layout>
+</x-sidebar-layout>

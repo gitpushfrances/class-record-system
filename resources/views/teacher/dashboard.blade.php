@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Dashboard')
 
-@section('content')
+
 
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-800">My Classes</h1>
@@ -47,4 +47,4 @@
     </div>
 @endif
 
-@endsection
+</x-sidebar-layout>

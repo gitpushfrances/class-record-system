@@ -229,14 +229,44 @@
 
 ---
 
-## PHASE 8: SIDEBAR NAVIGATION 📅 NEXT
-**Target:** Replace top navbar with a persistent sidebar for all roles
+## PHASE 8: SIDEBAR NAVIGATION ✅ COMPLETED
+**Date:** March 4, 2026
 
-- Sidebar replaces `layouts/navigation.blade.php` top nav
-- Role-specific menu items per sidebar
-- Active state highlighting per route
-- Collapsible on mobile
-- Avoids constant "Back" button navigation — all sections accessible from sidebar at all times
+### What was built
+- `resources/views/layouts/sidebar.blade.php` — unified layout replacing both `app.blade.php` (Breeze) and `teacher.blade.php` (custom) for all three roles
+- `resources/views/layouts/partials/sidebar-link.blade.php` — reusable nav link partial with Font Awesome icons, active state highlight, and hover styles
+- `app/View/Components/SidebarLayout.php` — Blade component class mapping `<x-sidebar-layout>` to the new layout
+- `app/View/Components/SidebarLink.php` — component class for sidebar links (later replaced by `@include` partial for simpler dev scanning)
+
+### Design system
+- Fonts: `Fraunces` (serif, brand) + `DM Sans` (body) — matches login page exactly
+- Palette: warm dark brown `#1c1814` sidebar, sand accent `#c8a97e`, cream text `#f0dfc0` — unified with guest/login layout
+- Font Awesome 6.5.1 via CDN — consistent icon system across login and dashboard
+- Role badge: yellow pill = Super Admin, green pill = Dean, sand pill = Teacher
+- Active nav link: sand-tinted background + right-side indicator bar
+- User footer: avatar initial, name, email, bordered Profile + Logout buttons (red-tinted logout, clearly visible)
+- Mobile: off-canvas sidebar with dark overlay + hamburger trigger in top bar
+
+### Layout migration
+- All 9 teacher views (`@extends('layouts.teacher')`) batch-converted to `<x-sidebar-layout>` via sed
+- All 20 dean/admin views (`<x-app-layout>`) batch-converted to `<x-sidebar-layout>` via perl
+- `<x-slot name="header">` blocks stripped from all dean/admin views
+- `py-12 / max-w-7xl` double-padding wrappers removed from all dean/admin views
+- `@include('layouts.navigation')` and header block removed from `layouts/app.blade.php`
+- Old `layouts/navigation.blade.php` and `layouts/teacher.blade.php` now unused (kept for reference, not included anywhere)
+
+### Sidebar uses pure CSS + vanilla JS — no Alpine.js dependency
+- Desktop: `position: sticky`, always visible via CSS media query
+- Mobile: `transform: translateX(-100%)` off-canvas, `openSidebar()` / `closeSidebar()` vanilla JS functions
+- `is-open` class toggled on `#sidebar`, overlay toggled on `#sidebar-overlay`
+
+### Route fix applied during Phase 8
+- Sidebar referenced non-existent `teacher.classes.index` route — fixed to point to `teacher.dashboard` with broad active state covering all teacher sub-routes (`teacher.classes.*`, `teacher.grades.*`, `teacher.attendance.*`)
+
+**Remarks:**
+- Alpine.js `:class` binding was not applying `lg:translate-x-0` on page load before JS initialized — caused sidebar to be invisible on desktop. Switched entirely to CSS `position: sticky` + inline `<style>` media query. No Alpine required.
+- Two layout systems (Breeze `app.blade.php` + custom `teacher.blade.php`) consolidated into one — reduces maintenance surface significantly
+- `@include` partial approach chosen over Blade component for sidebar links — easier for devs to read and modify without touching PHP component classes
 
 ---
 
@@ -252,7 +282,7 @@
 
 - Toast notifications and confirmation modals
 - Breadcrumb navigation
-- Mobile responsiveness
+- Mobile responsiveness audit
 - Inline score editing, keyboard navigation (Tab/Enter/Arrow)
 - Filter and sort on class record view
 
@@ -267,5 +297,5 @@
 ---
 
 **Last Updated:** March 4, 2026  
-**Next Milestone:** Phase 8 — Sidebar Navigation  
+**Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

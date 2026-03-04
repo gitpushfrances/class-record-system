@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Attendance Summary')
 
-@section('content')
+
 
 <div class="flex items-start justify-between mb-6">
     <div>
@@ -53,4 +53,4 @@
     </table>
 </div>
 
-@endsection
+</x-sidebar-layout>

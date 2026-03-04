@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Enter Scores — ' . $gradeItem->name)
 
-@section('content')
+
 
 <div class="mb-6">
     <a href="{{ route('teacher.grades.items', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Grade Items</a>
@@ -104,4 +104,4 @@ document.querySelectorAll('.score-input').forEach(input => {
 });
 </script>
 
-@endsection
+</x-sidebar-layout>

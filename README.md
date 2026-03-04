@@ -23,11 +23,11 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Complete Audit Trail (all grade changes logged)
 - ✅ Academic Period Management (school year + semester config)
 - ✅ Excel Export — DepEd-format `.xlsx` with color-coded headers, averages, weighted scores
-- 📅 Sidebar Navigation (Phase 8 — next)
+- ✅ Sidebar Navigation — unified dark sidebar layout across all roles, matches login design system
 
 ---
 
-## 🚀 Current Status: Phase 7 Complete ✅
+## 🚀 Current Status: Phase 8 Complete ✅
 
 **Completed:**
 - ✅ Phase 1: Foundation Setup
@@ -37,8 +37,9 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Phase 5: Grading System (Config, Items, Scores, Attendance, Final Grades, Lock)
 - ✅ Phase 6: DepEd-Style Class Record Interface (Spreadsheet, Frozen Columns, Averages)
 - ✅ Phase 7: Excel Export (DepEd format, color-coded, auto-filename)
+- ✅ Phase 8: Sidebar Navigation (unified layout, role-aware, mobile-responsive)
 
-**Next: Phase 8 — Sidebar Navigation**
+**Next: Phase 9 — Reporting & Analytics**
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed progress and patch notes.
 
@@ -56,6 +57,8 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed progress and patch notes.
 | Roles | Spatie Permission v5.11 |
 | Excel | Maatwebsite Excel v3.1+ |
 | Audit | Spatie Activity Log v4.8+ |
+| Icons | Font Awesome 6.5.1 |
+| Fonts | Fraunces + DM Sans (Google Fonts) |
 | Build | Vite |
 
 ---
@@ -84,7 +87,7 @@ php artisan key:generate
 php artisan migrate:fresh --seed
 
 # 6. Build assets
-node node_modules/vite/bin/vite.js build
+npm run build
 
 # 7. Serve
 php artisan serve
@@ -179,6 +182,24 @@ Teacher can export any assigned class record as a `.xlsx` file directly from the
 
 ---
 
+## 🗂️ Layout System
+
+All roles share a single sidebar layout (`resources/views/layouts/sidebar.blade.php`).
+
+- **Fonts:** Fraunces (serif brand) + DM Sans (body) — matches login page
+- **Palette:** Warm dark brown sidebar (`#1c1814`), sand accent (`#c8a97e`), cream text
+- **Icons:** Font Awesome 6.5.1
+- **Role badges:** Yellow = Super Admin, Green = Dean, Sand = Teacher
+- **Mobile:** Off-canvas sidebar with overlay, hamburger trigger in top bar
+- **No Alpine.js dependency** — pure CSS sticky + vanilla JS toggle
+
+### View conventions
+- Teacher views use `<x-sidebar-layout>` with `@section('title', '...')` + `@yield('content')`
+- Dean/Admin views use `<x-sidebar-layout>` with content directly inside the component tags
+- Nav links use `@include('layouts.partials.sidebar-link', [...])` partial
+
+---
+
 ## 📈 Roadmap
 
 | Phase | Status | Description |
@@ -190,8 +211,8 @@ Teacher can export any assigned class record as a `.xlsx` file directly from the
 | Phase 5 | ✅ Complete | Grading system |
 | Phase 6 | ✅ Complete | DepEd class record interface |
 | Phase 7 | ✅ Complete | Excel export |
-| **Phase 8** | 📅 **Next** | **Sidebar navigation** |
-| Phase 9 | 📅 Planned | Reporting & analytics |
+| Phase 8 | ✅ Complete | Sidebar navigation |
+| **Phase 9** | 📅 **Next** | **Reporting & analytics** |
 | Phase 10 | 📅 Planned | UI/UX polish + inline editing |
 | Phase 11 | 📅 Planned | Testing & deployment |
 
@@ -199,4 +220,4 @@ Teacher can export any assigned class record as a `.xlsx` file directly from the
 
 **Last Updated:** March 4, 2026  
 **Version:** 1.0.0-alpha  
-**Maintained By:** Frances Igop
+**Maintained By:** Frances Igop 

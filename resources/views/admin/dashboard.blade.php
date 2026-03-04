@@ -1,12 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Super Admin Dashboard') }}
-        </h2>
-    </x-slot>
+<x-sidebar-layout>
 
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    
             <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-3">
                 <div class="p-6 bg-white rounded-lg shadow">
                     <div class="text-sm text-gray-500">Deans</div>
@@ -35,8 +29,4 @@
                 <div class="space-x-4">
                     <a href="{{ route('admin.deans.index') }}" class="text-blue-600 hover:text-blue-900">Manage Deans</a>
                     <a href="{{ route('admin.subjects.index') }}" class="text-blue-600 hover:text-blue-900">Manage Subjects</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+</x-sidebar-layout>

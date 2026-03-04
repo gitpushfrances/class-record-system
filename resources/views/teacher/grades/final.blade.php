@@ -1,8 +1,8 @@
-@extends('layouts.teacher')
+<x-sidebar-layout>
 
 @section('title', 'Final Grades')
 
-@section('content')
+
 
 {{-- Alerts --}}
 @if(session('success'))
@@ -107,4 +107,4 @@
     </table>
 </div>
 
-@endsection
+</x-sidebar-layout>
