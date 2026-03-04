@@ -18,6 +18,7 @@ class Student extends Model
         'email',
         'year_level',
         'program',
+        'student_type',
         'status',
     ];
 

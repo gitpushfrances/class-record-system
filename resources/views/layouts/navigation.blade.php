@@ -40,6 +40,9 @@
                         <x-nav-link :href="route('dean.enrollments.index')" :active="request()->routeIs('dean.enrollments.*')">
                             {{ __('Enrollments') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('dean.students.index')" :active="request()->routeIs('dean.students.*')">
+                            {{ __('Students') }}
+                        </x-nav-link>
                     @endif
 
                     @if(auth()->user()->role === 'teacher')

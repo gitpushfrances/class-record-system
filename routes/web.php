@@ -113,6 +113,7 @@ Route::middleware(['auth', 'status', 'role:teacher'])->prefix('teacher')->name('
 
     Route::get('/classes/{section}/record', [ClassController::class, 'record'])->name('classes.record');
     Route::get('/classes/{section}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
+    Route::get('/classes/{section}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
 });
 
 /*

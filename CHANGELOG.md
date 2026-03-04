@@ -169,19 +169,78 @@
 
 ---
 
-## PHASE 7: EXCEL EXPORT 📅 NEXT
+## PHASE 7: EXCEL EXPORT ✅ COMPLETED
+**Date:** March 4, 2026
 
-- Export class record to `.xlsx` matching DepEd format
-- Color-coded headers, borders, auto-width columns
-- All scores, attendance, final grades, weighted averages included
-- Filename: `{SubjectCode}_{Section}_{Semester}_{AY}.xlsx`
-- Individual student grade summary
-- Attendance report
-- Dean consolidated report (all sections)
+- `app/Exports/ClassRecordExport.php` — DepEd-format export using Maatwebsite Excel v3.1
+- Export route added: `GET /teacher/classes/{section}/record/export` → `teacher.classes.record.export`
+- `export()` method added to `ClassController` — reuses `calculateComponentScores()`, same logic as live view
+- Export button added to Class Record view (green, beside Print button)
+- Filename format: `{SubjectCode}_{SectionName}_{Semester}_{AY}.xlsx`
+- File structure: rows 1–4 header block, row 5 empty, row 6 component group headers with weights, row 7 item sub-headers, rows 8+ student data, last row class averages
+- Color-coded headers: dark navy group row, medium blue sub-header row, light yellow average row
+- Auto-width columns D onwards, fixed widths for No./Student No./Name columns
+- Borders applied to entire data range
+
+**Remarks:**
+- `app/Exports/` directory created from scratch — did not exist prior
+- First data row (row 8) was inheriting sub-header dark styling — fixed by explicitly resetting font/fill for data rows 8 to lastRow-1
+- Attendance `—` was bleeding into weighted score cell — fixed by splitting into two separate cells: `$attendDisplay` and `$attendWeighted`
+- Middle name was dropped from export name column — fixed with `substr($middle_name, 0, 1) . '.'` inline
+- Duplicate `font` key in `WithStyles` sub-header block removed — PHP silently uses last key, caused style not applying correctly
 
 ---
 
-## PHASE 8: REPORTING & ANALYTICS 📅 PLANNED
+## BUG FIXES & PATCHES — March 4, 2026
+
+### SectionController — Validation Mismatch (CRITICAL)
+- `store()` and `update()` were validating `year_level` as `in:1,2,3,4` and `semester` as `in:1,2`
+- DB enum expects `'1st Year'`, `'2nd Year'` etc. and `'1st Semester'`, `'2nd Semester'`, `'Summer'`
+- All section creates and updates were failing silently or throwing DB errors
+- Fixed: validation rules updated to match enum values exactly
+
+### SectionController — Missing `show()` Method
+- Route `dean.sections.show` existed but `show()` method was never implemented
+- Hitting the route threw a 500 error
+- Fixed: `show()` added, loads subject/teacher/enrollments, returns `dean.sections.show` view
+
+### Section Create Form — Wrong Field Name
+- Form was posting `name` but DB column and validation expect `section_name`
+- Fixed: input `name` attribute and `old()` key updated to `section_name`
+
+### Dean Navigation — Missing Students Link
+- `dean.students.*` routes and `StudentController` existed but no nav link in either desktop or mobile nav
+- Students feature was completely invisible to Dean
+- Fixed: Students link added to both desktop and mobile blocks in `layouts/navigation.blade.php`
+
+### Student Views — Entirely Missing
+- `resources/views/dean/students/` folder did not exist
+- All three views created from scratch: `index.blade.php`, `create.blade.php`, `edit.blade.php`
+- Matches existing section view style — same table structure, same form patterns
+
+### Section Show View — Missing
+- `resources/views/dean/sections/show.blade.php` did not exist
+- Created: shows section details (subject, teacher, schedule, room, status) + enrolled students table with link to manage enrollments
+
+### Student Model — Missing `student_type` in `$fillable`
+- `student_type` column exists in migration and is validated in controller
+- Was not in `$fillable` — silently not saving on create/update
+- Fixed: `student_type` added to `Student::$fillable`
+
+---
+
+## PHASE 8: SIDEBAR NAVIGATION 📅 NEXT
+**Target:** Replace top navbar with a persistent sidebar for all roles
+
+- Sidebar replaces `layouts/navigation.blade.php` top nav
+- Role-specific menu items per sidebar
+- Active state highlighting per route
+- Collapsible on mobile
+- Avoids constant "Back" button navigation — all sections accessible from sidebar at all times
+
+---
+
+## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
 - Dean: department-wide stats, teacher performance, section comparison, consolidated reports
@@ -189,7 +248,7 @@
 
 ---
 
-## PHASE 9: UI/UX POLISH 📅 PLANNED
+## PHASE 10: UI/UX POLISH 📅 PLANNED
 
 - Toast notifications and confirmation modals
 - Breadcrumb navigation
@@ -199,7 +258,7 @@
 
 ---
 
-## PHASE 10: TESTING & DEPLOYMENT 📅 PLANNED
+## PHASE 11: TESTING & DEPLOYMENT 📅 PLANNED
 
 - Feature tests — core workflows, grade calculation accuracy, permission checks
 - Production `.env` configuration, HTTPS, rate limiting on login
@@ -207,16 +266,6 @@
 
 ---
 
-## WHAT TO CHECK / PATCH NEXT
-
-- [ ] Verify Dean navigation has Students link (`dean.students.index`)
-- [ ] Test full Dean student flow — add, edit, tag Regular/Irregular
-- [ ] Test Teacher enrollment — search master list, enroll into class
-- [ ] Verify `sections` table — reconcile whether it uses `academic_period_id` FK or standalone `semester`/`school_year` fields, link if needed
-- [ ] Test Academic Period set-active flow end to end
-
----
-
-**Last Updated:** February 27, 2026  
-**Next Milestone:** Phase 7 — Excel Export  
+**Last Updated:** March 4, 2026  
+**Next Milestone:** Phase 8 — Sidebar Navigation  
 **Maintained By:** Frances Igop

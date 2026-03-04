@@ -22,11 +22,12 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Philippine Grading Scale (1.00–5.00 auto-conversion)
 - ✅ Complete Audit Trail (all grade changes logged)
 - ✅ Academic Period Management (school year + semester config)
-- 📅 Excel Export (Phase 7 — next)
+- ✅ Excel Export — DepEd-format `.xlsx` with color-coded headers, averages, weighted scores
+- 📅 Sidebar Navigation (Phase 8 — next)
 
 ---
 
-## 🚀 Current Status: Phase 6 Complete ✅
+## 🚀 Current Status: Phase 7 Complete ✅
 
 **Completed:**
 - ✅ Phase 1: Foundation Setup
@@ -35,8 +36,9 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Phase 4: Academic Structure (Students, Subjects, Sections, Enrollments, Dean Management, Academic Periods, Teacher Approval)
 - ✅ Phase 5: Grading System (Config, Items, Scores, Attendance, Final Grades, Lock)
 - ✅ Phase 6: DepEd-Style Class Record Interface (Spreadsheet, Frozen Columns, Averages)
+- ✅ Phase 7: Excel Export (DepEd format, color-coded, auto-filename)
 
-**Next: Phase 7 — Excel Export**
+**Next: Phase 8 — Sidebar Navigation**
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed progress and patch notes.
 
@@ -130,6 +132,7 @@ Visit: `http://localhost:8000`
 - View live auto-calculated final grades
 - Save and lock grades officially
 - View DepEd-style class record spreadsheet
+- Export class record to Excel (.xlsx)
 
 ---
 
@@ -160,6 +163,22 @@ Quiz, Exam, Project, Assessment, Attendance — weights configurable per section
 
 ---
 
+## 📥 Excel Export
+
+Teacher can export any assigned class record as a `.xlsx` file directly from the Class Record view.
+
+**Filename format:** `{SubjectCode}_{SectionName}_{Semester}_{AY}.xlsx`  
+**Example:** `CS101_3A_1st-Semester_2024-2025.xlsx`
+
+**File contents:**
+- Rows 1–4: School info, subject, teacher, section, AY, semester
+- Row 6: Component group headers with configured weights
+- Row 7: Individual grade item names with max scores
+- Rows 8+: Student data — scores per item, weighted component scores, attendance, final %, numerical grade, remarks
+- Last row: Class averages per column
+
+---
+
 ## 📈 Roadmap
 
 | Phase | Status | Description |
@@ -170,13 +189,14 @@ Quiz, Exam, Project, Assessment, Attendance — weights configurable per section
 | Phase 4 | ✅ Complete | Academic structure & role management |
 | Phase 5 | ✅ Complete | Grading system |
 | Phase 6 | ✅ Complete | DepEd class record interface |
-| **Phase 7** | 📅 **Next** | **Excel export** |
-| Phase 8 | 📅 Planned | Reporting & analytics |
-| Phase 9 | 📅 Planned | UI/UX polish + inline editing |
-| Phase 10 | 📅 Planned | Testing & deployment |
+| Phase 7 | ✅ Complete | Excel export |
+| **Phase 8** | 📅 **Next** | **Sidebar navigation** |
+| Phase 9 | 📅 Planned | Reporting & analytics |
+| Phase 10 | 📅 Planned | UI/UX polish + inline editing |
+| Phase 11 | 📅 Planned | Testing & deployment |
 
 ---
 
-**Last Updated:** February 27, 2026  
+**Last Updated:** March 4, 2026  
 **Version:** 1.0.0-alpha  
 **Maintained By:** Frances Igop

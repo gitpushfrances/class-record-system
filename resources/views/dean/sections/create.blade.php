@@ -14,8 +14,8 @@
 
                         <div class="mb-4">
                             <label class="block mb-2 text-sm font-bold text-gray-700">Section Name</label>
-                            <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g., CS101-3A" class="w-full px-3 py-2 border rounded" required>
-                            @error('name')
+                            <input type="text" name="section_name" value="{{ old('section_name') }}" placeholder="e.g., 3A" class="w-full px-3 py-2 border rounded" required>
+                            @error('section_name')
                                 <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>

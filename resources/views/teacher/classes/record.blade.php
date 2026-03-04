@@ -16,6 +16,10 @@
         </p>
     </div>
     <div class="flex gap-3 mt-1">
+        <a href="{{ route('teacher.classes.record.export', $section) }}"
+           class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+            📥 Export Excel
+        </a>
         <a href="{{ route('teacher.classes.record.print', $section) }}" target="_blank"
            class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             🖨️ Print

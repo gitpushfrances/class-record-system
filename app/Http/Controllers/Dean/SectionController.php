@@ -37,8 +37,8 @@ class SectionController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
             'section_name' => 'required|string|max:50',
-            'year_level' => 'required|in:1,2,3,4',
-            'semester' => 'required|in:1,2',
+            'year_level' => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
+            'semester' => 'required|in:1st Semester,2nd Semester,Summer',
             'academic_year' => 'required|string|max:20',
             'schedule' => 'nullable|string|max:255',
             'room' => 'nullable|string|max:50',
@@ -48,6 +48,12 @@ class SectionController extends Controller
         Section::create($validated);
 
         return redirect()->route('dean.sections.index')->with('success', 'Section created successfully.');
+    }
+
+    public function show(Section $section)
+    {
+        $section->load(['subject', 'teacher', 'enrollments.student']);
+        return view('dean.sections.show', compact('section'));
     }
 
     public function edit(Section $section)
@@ -67,8 +73,8 @@ class SectionController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
             'section_name' => 'required|string|max:50',
-            'year_level' => 'required|in:1,2,3,4',
-            'semester' => 'required|in:1,2',
+            'year_level' => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
+            'semester' => 'required|in:1st Semester,2nd Semester,Summer',
             'academic_year' => 'required|string|max:20',
             'schedule' => 'nullable|string|max:255',
             'room' => 'nullable|string|max:50',
