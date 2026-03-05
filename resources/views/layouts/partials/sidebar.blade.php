@@ -10,7 +10,6 @@
     }
     /* Hide text labels + email + role badge when collapsed */
     #sidebar.collapsed .sidebar-label,
-    #sidebar.collapsed .sidebar-role,
     #sidebar.collapsed .sidebar-user-info {
         display: none;
     }
@@ -95,30 +94,6 @@
                 title="Toggle sidebar">
             <i id="toggle-icon" class="text-xs transition-transform fas fa-chevron-left duration-220"></i>
         </button>
-    </div>
-
-    {{-- ── Role badge ── --}}
-    <div class="sidebar-role px-4 py-2.5 border-b flex-shrink-0"
-         style="border-color: rgba(200,169,126,0.08);">
-        @if(auth()->user()->role === 'super_admin')
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full"
-                  style="background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);">
-                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0"></span>
-                <span class="sidebar-label">Super Admin</span>
-            </span>
-        @elseif(auth()->user()->role === 'dean')
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full"
-                  style="background: rgba(52,211,153,0.1); color: #34d399; border: 1px solid rgba(52,211,153,0.2);">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                <span class="sidebar-label">Dean</span>
-            </span>
-        @else
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full"
-                  style="background: rgba(200,169,126,0.1); color: #e0c99a; border: 1px solid rgba(200,169,126,0.2);">
-                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#c8a97e;"></span>
-                <span class="sidebar-label">Teacher</span>
-            </span>
-        @endif
     </div>
 
     {{-- ── Nav links ── --}}

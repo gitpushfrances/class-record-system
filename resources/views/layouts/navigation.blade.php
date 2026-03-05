@@ -127,6 +127,9 @@
                 <x-responsive-nav-link :href="route('dean.enrollments.index')" :active="request()->routeIs('dean.enrollments.*')">
                     {{ __('Enrollments') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('dean.students.index')" :active="request()->routeIs('dean.students.*')">
+                    {{ __('Students') }}
+                </x-responsive-nav-link>
             @endif
 
             @if(auth()->user()->role === 'teacher')

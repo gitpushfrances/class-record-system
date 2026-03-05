@@ -139,12 +139,15 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
             // Attendance
             $total   = $attendRec->count();
             $present = $attendRec->whereIn('status', ['present', 'late'])->count();
-            $row[]   = $total > 0 ? $present . '/' . $total : '—';
-            $row[]   = $grades ? round($grades['final_grade'], 2) : '';
-            $row[]   = $grades ? number_format($grades['numerical_grade'], 2) : '';
-            $row[]   = $grades ? ucfirst($grades['remarks']) : '';
+            $attendDisplay = $total > 0 ? $present . '/' . $total : '—';
+            $attendWeighted = $grades ? round($grades['attendance_score'], 2) : 0;
+            $row[] = $attendDisplay;
+            $row[] = $attendWeighted;
+            $row[] = $grades ? round($grades['final_grade'], 2) : '';
+            $row[] = $grades ? number_format($grades['numerical_grade'], 2) : '';
+            $row[] = $grades ? ucfirst($grades['remarks']) : '';
 
-            $columnSums[$colIndex] = ($columnSums[$colIndex] ?? 0) + (float) ($grades['attendance_score'] ?? 0);
+            $columnSums[$colIndex] = ($columnSums[$colIndex] ?? 0) + (float) $attendWeighted;
             $colIndex++;
             $columnSums[$colIndex] = ($columnSums[$colIndex] ?? 0) + (float) ($grades['final_grade'] ?? 0);
 
@@ -205,20 +208,27 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('A2:A4')->getFont()->setSize(10);
 
-        // Header row (row 6)
+        // Header row (row 6) — rows 1-5 are title block + empty row
         $sheet->getStyle('A6:' . $lastCol . '6')->applyFromArray([
-            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFFFF']],
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::COLORS['header']]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'wrapText' => true],
         ]);
 
         // Sub-header row (row 7)
         $sheet->getStyle('A7:' . $lastCol . '7')->applyFromArray([
-            'font'      => ['bold' => true],
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::COLORS['subheader']]],
-            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFFFF']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'wrapText' => true],
         ]);
+
+        // Data rows — explicitly reset styling from row 8 to second-to-last
+        if ($lastRow > 8) {
+            $sheet->getStyle('A8:' . $lastCol . ($lastRow - 1))->applyFromArray([
+                'font' => ['bold' => false, 'color' => ['rgb' => '000000']],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFFFFF']],
+            ]);
+        }
 
         // Average row
         $sheet->getStyle('A' . $lastRow . ':' . $lastCol . $lastRow)->applyFromArray([

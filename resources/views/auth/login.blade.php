@@ -10,30 +10,32 @@
 
     {{-- Header --}}
     <div class="form-header">
-        <div class="form-eyebrow">Secure Access</div>
+        <div class="form-eyebrow">
+            <span class="form-eyebrow-line"></span>
+            Secure Access
+        </div>
         <h1 class="form-title">Sign In</h1>
         <p class="form-sub">Enter your credentials to continue.</p>
     </div>
 
-    <form method="POST" action="{{ route('login') }}">
+    <form method="POST" action="{{ route('login') }}" id="login-form">
         @csrf
 
         {{-- Email --}}
         <div class="field">
             <label class="field-label" for="email">Email Address</label>
             <div class="field-wrap">
+                <i class="fas fa-envelope field-ico"></i>
                 <input
                     id="email"
                     class="field-input"
                     type="email"
                     name="email"
                     value="{{ old('email') }}"
-                    placeholder="you@school.edu.ph"
+                    placeholder="you@essu.edu.ph"
                     required autofocus
                     autocomplete="username"
-                    style="padding-left:2.4rem;"
                 />
-                <i class="fas fa-envelope field-ico"></i>
             </div>
             @error('email')
                 <div class="field-err">
@@ -46,6 +48,7 @@
         <div class="field">
             <label class="field-label" for="password">Password</label>
             <div class="field-wrap">
+                <i class="fas fa-lock field-ico"></i>
                 <input
                     id="password"
                     class="field-input"
@@ -54,10 +57,9 @@
                     placeholder="••••••••••"
                     required
                     autocomplete="current-password"
-                    style="padding-left:2.4rem; padding-right:2.5rem;"
+                    style="padding-right: 2.6rem;"
                 />
-                <i class="fas fa-lock field-ico"></i>
-                <button type="button" class="eye-btn" onclick="togglePwd()" title="Toggle password">
+                <button type="button" class="eye-btn" onclick="togglePwd()" title="Toggle password visibility">
                     <i class="fas fa-eye" id="eyeIco"></i>
                 </button>
             </div>
@@ -80,12 +82,18 @@
         </div>
 
         {{-- Submit --}}
-        <button type="submit" class="btn-submit">
-            <span class="btn-ico">
-                <i class="fas fa-arrow-right-to-bracket"></i>
+        <button type="submit" class="btn-submit" id="submit-btn">
+            <span class="btn-label">
+                <span class="btn-label-ico">
+                    <i class="fas fa-arrow-right-to-bracket"></i>
+                </span>
+                Sign In to Portal
             </span>
-            Sign In to Portal
+            <span class="btn-spinner">
+                <span class="spinner-ring"></span>
+            </span>
         </button>
+
     </form>
 
     <div class="card-foot">
@@ -104,4 +112,9 @@ function togglePwd() {
     ico.classList.toggle('fa-eye',       !hidden);
     ico.classList.toggle('fa-eye-slash',  hidden);
 }
+
+document.getElementById('login-form').addEventListener('submit', function () {
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+});
 </script>
