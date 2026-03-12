@@ -15,10 +15,28 @@ class Subject extends Model
         'name',
         'description',
         'units',
+        'department',
         'status',
+        'requested_by',
+        'approved_by',
+        'approved_at',
+        'rejected_reason',
     ];
 
-    // Relationships
+    protected $casts = [
+        'approved_at' => 'datetime',
+    ];
+
+    public function requester()
+    {
+        return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     public function sections()
     {
         return $this->hasMany(Section::class);

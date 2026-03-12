@@ -152,6 +152,12 @@
                 'label'  => 'Students',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.subjects.index'),
+                'active' => request()->routeIs('dean.subjects.*'),
+                'icon'   => 'fa-book',
+                'label'  => 'Subjects',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.enrollments.index'),
                 'active' => request()->routeIs('dean.enrollments.*'),
                 'icon'   => 'fa-clipboard-list',

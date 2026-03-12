@@ -10,53 +10,50 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $subjects = Subject::orderBy('code')->paginate(20);
-        return view('admin.subjects.index', compact('subjects'));
+        $pending  = Subject::with('requester')
+            ->where('status', 'pending')
+            ->orderBy('created_at')
+            ->get();
+
+        $approved = Subject::with('requester', 'approver')
+            ->where('status', 'approved')
+            ->orderByDesc('approved_at')
+            ->paginate(20);
+
+        return view('admin.subjects.index', compact('pending', 'approved'));
     }
 
-    public function create()
+    public function approve(Subject $subject)
     {
-        return view('admin.subjects.create');
-    }
+        abort_if($subject->status !== 'pending', 422, 'Subject is not pending.');
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'code' => 'required|unique:subjects,code|max:20',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'units' => 'required|integer|min:1|max:10',
-            'status' => 'required|in:active,inactive',
+        $subject->update([
+            'status'      => 'approved',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+            'rejected_reason' => null,
         ]);
 
-        Subject::create($validated);
-
-        return redirect()->route('admin.subjects.index')->with('success', 'Subject created successfully.');
+        return redirect()->route('admin.subjects.index')
+            ->with('success', "Subject [{$subject->code}] approved.");
     }
 
-    public function edit(Subject $subject)
+    public function reject(Request $request, Subject $subject)
     {
-        return view('admin.subjects.edit', compact('subject'));
-    }
+        abort_if($subject->status !== 'pending', 422, 'Subject is not pending.');
 
-    public function update(Request $request, Subject $subject)
-    {
-        $validated = $request->validate([
-            'code' => 'required|unique:subjects,code,' . $subject->id . '|max:20',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'units' => 'required|integer|min:1|max:10',
-            'status' => 'required|in:active,inactive',
+        $request->validate([
+            'rejected_reason' => 'required|string|max:500',
         ]);
 
-        $subject->update($validated);
+        $subject->update([
+            'status'          => 'rejected',
+            'approved_by'     => auth()->id(),
+            'approved_at'     => now(),
+            'rejected_reason' => $request->rejected_reason,
+        ]);
 
-        return redirect()->route('admin.subjects.index')->with('success', 'Subject updated successfully.');
-    }
-
-    public function destroy(Subject $subject)
-    {
-        $subject->delete();
-        return redirect()->route('admin.subjects.index')->with('success', 'Subject deleted successfully.');
+        return redirect()->route('admin.subjects.index')
+            ->with('success', "Subject [{$subject->code}] rejected.");
     }
 }

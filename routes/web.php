@@ -6,6 +6,7 @@ use App\Http\Controllers\SuperAdmin\UserController as AdminUser;
 use App\Http\Controllers\SuperAdmin\AcademicPeriodController as AdminAcademic;
 use App\Http\Controllers\Dean\StudentController as DeanStudent;
 use App\Http\Controllers\SuperAdmin\SubjectController as AdminSubject;
+use App\Http\Controllers\Dean\SubjectController as DeanSubject;
 use App\Http\Controllers\Dean\DashboardController as DeanDashboard;
 use App\Http\Controllers\Dean\TeacherApprovalController as DeanTeacherApproval;
 use App\Http\Controllers\Dean\SectionController as DeanSection;
@@ -41,7 +42,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
 
-    Route::resource('subjects', AdminSubject::class);
+    Route::get('/subjects', [AdminSubject::class, 'index'])->name('subjects.index');
+    Route::post('/subjects/{subject}/approve', [AdminSubject::class, 'approve'])->name('subjects.approve');
+    Route::post('/subjects/{subject}/reject', [AdminSubject::class, 'reject'])->name('subjects.reject');
 
     Route::resource('deans', AdminUser::class)->except(['show', 'destroy'])->parameters(['deans' => 'dean']);
 
@@ -69,6 +72,7 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
     Route::resource('sections', DeanSection::class);
 
     Route::resource('students', DeanStudent::class);
+    Route::resource('subjects', DeanSubject::class);
 
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
     Route::get('/sections/{section}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
