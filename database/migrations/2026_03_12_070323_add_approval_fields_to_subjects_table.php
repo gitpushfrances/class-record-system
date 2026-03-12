@@ -9,12 +9,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Step 1: convert status to varchar, update data, then set final enum
+        // Step 1: convert to varchar so we can safely update existing data
         DB::statement("ALTER TABLE subjects MODIFY COLUMN status VARCHAR(20) DEFAULT 'active'");
+
+        // Step 2: map old values to new
         DB::statement("UPDATE subjects SET status = 'approved' WHERE status IN ('active', 'inactive')");
+
+        // Step 3: set final enum
         DB::statement("ALTER TABLE subjects MODIFY COLUMN status ENUM('pending','approved','rejected') DEFAULT 'pending'");
 
-        // Step 2: add new columns
+        // Step 4: add new columns
         Schema::table('subjects', function (Blueprint $table) {
             $table->string('department')->nullable()->after('units');
             $table->foreignId('requested_by')->nullable()->constrained('users')->nullOnDelete()->after('department');
@@ -32,6 +36,8 @@ return new class extends Migration
             $table->dropColumn(['department', 'approved_at', 'rejected_reason']);
         });
 
+        DB::statement("ALTER TABLE subjects MODIFY COLUMN status VARCHAR(20) DEFAULT 'approved'");
+        DB::statement("UPDATE subjects SET status = 'active'");
         DB::statement("ALTER TABLE subjects MODIFY COLUMN status ENUM('active','inactive') DEFAULT 'active'");
     }
 };
