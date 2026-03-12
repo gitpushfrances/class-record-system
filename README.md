@@ -24,16 +24,18 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Academic Period Management (school year + semester config)
 - ✅ Excel Export — DepEd-format `.xlsx` with color-coded headers, averages, weighted scores
 - ✅ Sidebar Navigation — unified dark sidebar layout across all roles, matches login design system
+- ✅ Subject Approval Workflow — Dean requests subjects per department, Super Admin approves with timestamp
 
 ---
 
-## 🚀 Current Status: Phase 8 Complete ✅
+## 🚀 Current Status: Phase 8 Complete + Subject Approval Workflow ✅
 
 **Completed:**
 - ✅ Phase 1: Foundation Setup
 - ✅ Phase 2: Database Architecture (11 custom tables, 24 total)
 - ✅ Phase 3: Authentication & Authorization
 - ✅ Phase 4: Academic Structure (Students, Subjects, Sections, Enrollments, Dean Management, Academic Periods, Teacher Approval)
+- ✅ Phase 4 Revised: Subject Approval Workflow (Dean requests, Super Admin approves)
 - ✅ Phase 5: Grading System (Config, Items, Scores, Attendance, Final Grades, Lock)
 - ✅ Phase 6: DepEd-Style Class Record Interface (Spreadsheet, Frozen Columns, Averages)
 - ✅ Phase 7: Excel Export (DepEd format, color-coded, auto-filename)
@@ -64,7 +66,6 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed progress and patch notes.
 ---
 
 ## 📦 Installation
-
 ```bash
 # 1. Clone
 git clone https://github.com/yourusername/class-record-system.git
@@ -114,7 +115,7 @@ Visit: `http://localhost:8000`
 
 ### 👑 Super Admin
 - Manage Dean accounts (create, edit, activate/deactivate)
-- Manage Subject catalog
+- Review & approve / reject Subject requests from Deans (with timestamp and reason)
 - Configure Academic Year & Semester
 - View system-wide stats
 
@@ -124,6 +125,7 @@ Visit: `http://localhost:8000`
 - Create Sections, assign Teachers
 - Own the Student master list (add, edit, tag Regular/Irregular)
 - Manage enrollments (assign students to sections)
+- Request new Subjects (pending until Super Admin approves)
 - Approve Teacher grade config change requests
 
 ### 📝 Teacher
@@ -136,6 +138,22 @@ Visit: `http://localhost:8000`
 - Save and lock grades officially
 - View DepEd-style class record spreadsheet
 - Export class record to Excel (.xlsx)
+
+---
+
+## 📋 Subject Workflow
+```
+Dean → Request Subject (Code, Name, Department, Units) →
+SweetAlert preview → Confirm → Status: Pending
+
+Super Admin → Subject Management → Pending tab →
+Approve (with confirm) OR Reject (reason required) →
+Timestamp logged → Dean notified via flash message
+```
+
+- Dean can edit or cancel requests while status is `pending`
+- Once approved, subject is locked — Dean cannot edit
+- Rejected requests show reason inline in Dean's subject list
 
 ---
 
@@ -184,7 +202,7 @@ Teacher can export any assigned class record as a `.xlsx` file directly from the
 
 ## 🗂️ Layout System
 
-All roles share a single sidebar layout (`resources/views/layouts/sidebar.blade.php`).
+All roles share a single sidebar layout (`resources/views/layouts/partials/sidebar.blade.php`).
 
 - **Fonts:** Fraunces (serif brand) + DM Sans (body) — matches login page
 - **Palette:** Warm dark brown sidebar (`#1c1814`), sand accent (`#c8a97e`), cream text
@@ -192,11 +210,6 @@ All roles share a single sidebar layout (`resources/views/layouts/sidebar.blade.
 - **Role badges:** Yellow = Super Admin, Green = Dean, Sand = Teacher
 - **Mobile:** Off-canvas sidebar with overlay, hamburger trigger in top bar
 - **No Alpine.js dependency** — pure CSS sticky + vanilla JS toggle
-
-### View conventions
-- Teacher views use `<x-sidebar-layout>` with `@section('title', '...')` + `@yield('content')`
-- Dean/Admin views use `<x-sidebar-layout>` with content directly inside the component tags
-- Nav links use `@include('layouts.partials.sidebar-link', [...])` partial
 
 ---
 
@@ -208,6 +221,7 @@ All roles share a single sidebar layout (`resources/views/layouts/sidebar.blade.
 | Phase 2 | ✅ Complete | Database architecture |
 | Phase 3 | ✅ Complete | Authentication & authorization |
 | Phase 4 | ✅ Complete | Academic structure & role management |
+| Phase 4 (revised) | ✅ Complete | Subject approval workflow — Dean requests, Admin approves |
 | Phase 5 | ✅ Complete | Grading system |
 | Phase 6 | ✅ Complete | DepEd class record interface |
 | Phase 7 | ✅ Complete | Excel export |
@@ -218,6 +232,6 @@ All roles share a single sidebar layout (`resources/views/layouts/sidebar.blade.
 
 ---
 
-**Last Updated:** March 4, 2026  
+**Last Updated:** March 12, 2026  
 **Version:** 1.0.0-alpha  
-**Maintained By:** Frances Igop 
+**Maintained By:** Frances Igop

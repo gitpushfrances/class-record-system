@@ -13,7 +13,7 @@
 
 ### 👑 Super Admin
 - Create & manage Dean accounts
-- Create & approve Subjects
+- Review & approve / reject Subject requests from Deans (with timestamp)
 - Configure Academic Year & Semester
 - Archive old data
 - View system-wide stats (Deans, Active Teachers, Students, Subjects, Sections)
@@ -24,6 +24,7 @@
 - Create Sections & assign Teachers
 - Add & manage Students (master list owner)
 - Tag students as Regular or Irregular
+- Request new Subjects (pending until Super Admin approves)
 - Approve / reject Teacher grade config change requests
 - View faculty reports
 
@@ -45,7 +46,7 @@
 - Grade Config — free on first setup; Dean approval required after grades are entered
 - Teacher accounts — self-register, pending until Dean approves
 - Dean accounts — created directly by Super Admin
-- Subjects — created and approved by Super Admin only
+- Subjects — Dean requests per department, Super Admin approves with timestamp. Approved subjects are locked from editing.
 
 ---
 
@@ -64,7 +65,7 @@
 
 **Custom Tables (11):**
 - `students` — master list, soft deletes, `student_type` (regular/irregular)
-- `subjects` — catalog with units and status
+- `subjects` — catalog with units, status, and approval workflow
 - `sections` — class sections with teacher assignments
 - `enrollments` — student-to-section pivot
 - `grade_configurations` — component weights per section with approval workflow
@@ -106,7 +107,7 @@
 **Date:** February 16–27, 2026
 
 ### Super Admin ✅
-- Subject CRUD
+- Subject approval — review pending requests from Deans, approve/reject with reason and timestamp
 - Dean Management CRUD (create, edit, activate/deactivate)
 - Academic Period — add school year + semester, set active, delete inactive
 - Dashboard stats — Deans, Active Teachers, Students, Subjects, Sections
@@ -117,7 +118,8 @@
 - Section CRUD
 - Student Master List CRUD — add, edit, tag Regular/Irregular
 - Enrollment Management — assign students to sections
-- Navigation: Dashboard → Pending Teachers → Sections → Enrollments → Students
+- Subject Requests — create, view status, edit/cancel pending requests
+- Navigation: Dashboard → Pending Teachers → Sections → Enrollments → Students → Subjects
 
 ### Fixes Applied (February 27, 2026)
 - Removed Teacher Approval and Student Management from Super Admin — moved to Dean
@@ -196,12 +198,10 @@
 ### SectionController — Validation Mismatch (CRITICAL)
 - `store()` and `update()` were validating `year_level` as `in:1,2,3,4` and `semester` as `in:1,2`
 - DB enum expects `'1st Year'`, `'2nd Year'` etc. and `'1st Semester'`, `'2nd Semester'`, `'Summer'`
-- All section creates and updates were failing silently or throwing DB errors
 - Fixed: validation rules updated to match enum values exactly
 
 ### SectionController — Missing `show()` Method
 - Route `dean.sections.show` existed but `show()` method was never implemented
-- Hitting the route threw a 500 error
 - Fixed: `show()` added, loads subject/teacher/enrollments, returns `dean.sections.show` view
 
 ### Section Create Form — Wrong Field Name
@@ -209,21 +209,18 @@
 - Fixed: input `name` attribute and `old()` key updated to `section_name`
 
 ### Dean Navigation — Missing Students Link
-- `dean.students.*` routes and `StudentController` existed but no nav link in either desktop or mobile nav
-- Students feature was completely invisible to Dean
+- `dean.students.*` routes and `StudentController` existed but no nav link
 - Fixed: Students link added to both desktop and mobile blocks in `layouts/navigation.blade.php`
 
 ### Student Views — Entirely Missing
 - `resources/views/dean/students/` folder did not exist
-- All three views created from scratch: `index.blade.php`, `create.blade.php`, `edit.blade.php`
-- Matches existing section view style — same table structure, same form patterns
+- Created from scratch: `index.blade.php`, `create.blade.php`, `edit.blade.php`
 
 ### Section Show View — Missing
 - `resources/views/dean/sections/show.blade.php` did not exist
-- Created: shows section details (subject, teacher, schedule, room, status) + enrolled students table with link to manage enrollments
+- Created: shows section details + enrolled students table with link to manage enrollments
 
 ### Student Model — Missing `student_type` in `$fillable`
-- `student_type` column exists in migration and is validated in controller
 - Was not in `$fillable` — silently not saving on create/update
 - Fixed: `student_type` added to `Student::$fillable`
 
@@ -232,41 +229,65 @@
 ## PHASE 8: SIDEBAR NAVIGATION ✅ COMPLETED
 **Date:** March 4, 2026
 
-### What was built
-- `resources/views/layouts/sidebar.blade.php` — unified layout replacing both `app.blade.php` (Breeze) and `teacher.blade.php` (custom) for all three roles
+- `resources/views/layouts/partials/sidebar.blade.php` — unified layout for all three roles
 - `resources/views/layouts/partials/sidebar-link.blade.php` — reusable nav link partial with Font Awesome icons, active state highlight, and hover styles
-- `app/View/Components/SidebarLayout.php` — Blade component class mapping `<x-sidebar-layout>` to the new layout
-- `app/View/Components/SidebarLink.php` — component class for sidebar links (later replaced by `@include` partial for simpler dev scanning)
-
-### Design system
-- Fonts: `Fraunces` (serif, brand) + `DM Sans` (body) — matches login page exactly
-- Palette: warm dark brown `#1c1814` sidebar, sand accent `#c8a97e`, cream text `#f0dfc0` — unified with guest/login layout
-- Font Awesome 6.5.1 via CDN — consistent icon system across login and dashboard
+- `app/View/Components/SidebarLayout.php` — Blade component class
+- Fonts: `Fraunces` + `DM Sans`, Palette: `#1c1814` sidebar, `#c8a97e` accent, `#f0dfc0` text
+- Font Awesome 6.5.1 via CDN
 - Role badge: yellow pill = Super Admin, green pill = Dean, sand pill = Teacher
-- Active nav link: sand-tinted background + right-side indicator bar
-- User footer: avatar initial, name, email, bordered Profile + Logout buttons (red-tinted logout, clearly visible)
 - Mobile: off-canvas sidebar with dark overlay + hamburger trigger in top bar
-
-### Layout migration
-- All 9 teacher views (`@extends('layouts.teacher')`) batch-converted to `<x-sidebar-layout>` via sed
-- All 20 dean/admin views (`<x-app-layout>`) batch-converted to `<x-sidebar-layout>` via perl
-- `<x-slot name="header">` blocks stripped from all dean/admin views
-- `py-12 / max-w-7xl` double-padding wrappers removed from all dean/admin views
-- `@include('layouts.navigation')` and header block removed from `layouts/app.blade.php`
-- Old `layouts/navigation.blade.php` and `layouts/teacher.blade.php` now unused (kept for reference, not included anywhere)
-
-### Sidebar uses pure CSS + vanilla JS — no Alpine.js dependency
-- Desktop: `position: sticky`, always visible via CSS media query
-- Mobile: `transform: translateX(-100%)` off-canvas, `openSidebar()` / `closeSidebar()` vanilla JS functions
-- `is-open` class toggled on `#sidebar`, overlay toggled on `#sidebar-overlay`
-
-### Route fix applied during Phase 8
-- Sidebar referenced non-existent `teacher.classes.index` route — fixed to point to `teacher.dashboard` with broad active state covering all teacher sub-routes (`teacher.classes.*`, `teacher.grades.*`, `teacher.attendance.*`)
+- Pure CSS + vanilla JS — no Alpine.js dependency
+- All teacher and dean/admin views migrated to unified layout
 
 **Remarks:**
-- Alpine.js `:class` binding was not applying `lg:translate-x-0` on page load before JS initialized — caused sidebar to be invisible on desktop. Switched entirely to CSS `position: sticky` + inline `<style>` media query. No Alpine required.
-- Two layout systems (Breeze `app.blade.php` + custom `teacher.blade.php`) consolidated into one — reduces maintenance surface significantly
-- `@include` partial approach chosen over Blade component for sidebar links — easier for devs to read and modify without touching PHP component classes
+- Alpine.js `:class` binding was not applying `lg:translate-x-0` on page load — switched entirely to CSS `position: sticky`
+- `teacher.classes.index` route did not exist — fixed to point to `teacher.dashboard`
+- Two layout systems (Breeze `app.blade.php` + custom `teacher.blade.php`) consolidated into one
+
+---
+
+## PHASE 4 REVISION: SUBJECT APPROVAL WORKFLOW ✅ COMPLETED
+**Date:** March 12, 2026
+
+### What changed
+- Subject ownership moved: Super Admin full CRUD → Dean requests, Super Admin approves
+- Matches real Philippine HEI workflow — department head requests, registrar/admin approves
+
+### Database
+- Migration `2026_03_12_070323_add_approval_fields_to_subjects_table` added to `subjects` table:
+  - `department` (varchar) — Dean's department
+  - `requested_by` (FK → users) — Dean who submitted the request
+  - `approved_by` (FK → users) — Super Admin who actioned it
+  - `approved_at` (timestamp) — when actioned
+  - `rejected_reason` (text, nullable) — populated on reject
+  - `status` enum changed: `active/inactive` → `pending/approved/rejected`
+- Existing seeded subjects (5 rows, `active` status) mapped to `approved` during migration
+
+### Controllers
+- `SuperAdmin/SubjectController` — gutted to approval-only: `index`, `approve`, `reject`
+- `Dean/SubjectController` — new: `index`, `create`, `store`, `edit`, `update`, `destroy`
+  - Dean can only edit/delete their own pending subjects
+  - Approved/rejected subjects are locked from Dean edits
+
+### Routes
+- `admin.subjects.*` resource removed — replaced with `index`, `approve`, `reject` only
+- `dean.subjects.*` resource added under Dean route group
+
+### Views
+- `resources/views/dean/subjects/index.blade.php` — subject list with status badges (Pending/Approved/Rejected)
+- `resources/views/dean/subjects/create.blade.php` — request form with SweetAlert2 preview before submit
+- `resources/views/dean/subjects/edit.blade.php` — edit pending requests only
+- `resources/views/admin/subjects/index.blade.php` — two-section layout: Pending (with badge count) + Approved catalog
+- SweetAlert2: submit confirmation (Dean), approve confirmation (Admin), reject with required reason textarea (Admin)
+
+### Sidebar
+- Dean sidebar: `Subjects` link added pointing to `dean.subjects.index`
+- Super Admin sidebar: `Subjects` link retained, now points to approval view
+
+### Remarks
+- MySQL strict mode blocked direct enum-to-enum change with existing data — resolved by converting to VARCHAR first, updating data, then setting final enum
+- `department` column was partially added in a failed migration run — cleaned manually via tinker
+- Migration marked complete manually after partial execution, then re-run cleanly
 
 ---
 
@@ -296,6 +317,6 @@
 
 ---
 
-**Last Updated:** March 4, 2026  
+**Last Updated:** March 12, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop
