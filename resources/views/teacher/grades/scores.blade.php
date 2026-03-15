@@ -1,6 +1,5 @@
 <x-sidebar-layout>
 
-@section('title', 'Enter Scores — ' . $gradeItem->name)
 
 
 
@@ -8,7 +7,7 @@
     <a href="{{ route('teacher.grades.items', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Grade Items</a>
     <h1 class="mt-1 text-2xl font-bold text-gray-800">{{ $gradeItem->name }}</h1>
     <p class="mt-1 text-sm text-gray-500">
-        {{ $section->subject->code }} — {{ $section->section_name }} &bull;
+        {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }} &bull;
         {{ ucfirst($gradeItem->component_type) }} &bull;
         Max Score: <strong>{{ $gradeItem->max_score }}</strong>
         @if($gradeItem->date_given)

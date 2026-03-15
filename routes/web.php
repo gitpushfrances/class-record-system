@@ -70,6 +70,7 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
     Route::delete('/teachers/{user}/reject', [DeanTeacherApproval::class, 'reject'])->name('teachers.reject');
 
     Route::resource('sections', DeanSection::class);
+    Route::post('/sections/{section}/change-adviser', [DeanSection::class, 'changeAdviser'])->name('sections.change-adviser');
 
     Route::resource('students', DeanStudent::class);
     Route::resource('subjects', DeanSubject::class);

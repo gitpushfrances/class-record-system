@@ -1,120 +1,124 @@
 <x-sidebar-layout>
 
-    <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <form action="{{ route('dean.sections.store') }}" method="POST">
-                        @csrf
+    <div class="max-w-xl mx-auto">
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-800">Create Section</h2>
+            <p class="text-sm text-gray-500">A section is a persistent student group. Adviser and term details are set separately.</p>
+        </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Section Name</label>
-                            <input type="text" name="section_name" value="{{ old('section_name') }}" placeholder="e.g., 3A" class="w-full px-3 py-2 border rounded" required>
-                            @error('section_name')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
+        <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div class="p-6">
+                @if($errors->any())
+                    <div class="px-4 py-3 mb-4 text-red-700 bg-red-100 border border-red-400 rounded">
+                        <ul class="list-disc list-inside">
+                            @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                        </ul>
+                    </div>
+                @endif
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Subject</label>
-                            <select name="subject_id" class="w-full px-3 py-2 border rounded" required>
-                                <option value="">Select Subject</option>
-                                @foreach($subjects as $subject)
-                                    <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
-                                        {{ $subject->code }} - {{ $subject->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('subject_id')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
+                <form id="createSectionForm" action="{{ route('dean.sections.store') }}" method="POST">
+                    @csrf
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Teacher</label>
-                            <select name="teacher_id" class="w-full px-3 py-2 border rounded" required>
-                                <option value="">Select Teacher</option>
-                                @foreach($teachers as $teacher)
-                                    <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                        {{ $teacher->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('teacher_id')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <div class="mb-4">
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Program</label>
+                        <select name="program_id" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
+                            <option value="">Select Program</option>
+                            @foreach($programs as $program)
+                                <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>
+                                    {{ $program->code }} — {{ $program->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('program_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Academic Year</label>
-                            <input type="text" name="academic_year" value="{{ old('academic_year', '2024-2025') }}" placeholder="2024-2025" class="w-full px-3 py-2 border rounded" required>
-                            @error('academic_year')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <div class="mb-4">
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Year Level</label>
+                        <select name="year_level" id="year_level" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1" required onchange="syncYearNumber()">
+                            <option value="">Select Year Level</option>
+                            @foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $level)
+                                <option value="{{ $level }}" {{ old('year_level') == $level ? 'selected' : '' }}>{{ $level }}</option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" name="year_number" id="year_number" value="{{ old('year_number') }}">
+                        @error('year_level')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Semester</label>
-                            <select name="semester" class="w-full px-3 py-2 border rounded" required>
-                                <option value="1st Semester" {{ old('semester') == '1st Semester' ? 'selected' : '' }}>1st Semester</option>
-                                <option value="2nd Semester" {{ old('semester') == '2nd Semester' ? 'selected' : '' }}>2nd Semester</option>
-                                <option value="Summer" {{ old('semester') == 'Summer' ? 'selected' : '' }}>Summer</option>
-                            </select>
-                            @error('semester')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <div class="mb-6">
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Section</label>
+                        <input
+                            type="text"
+                            name="section_letter"
+                            id="section_letter"
+                            value="{{ old('section_letter') }}"
+                            placeholder="e.g., A, B, Block 1, Rizal"
+                            list="section-suggestions"
+                            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1"
+                            required
+                            autocomplete="off"
+                        >
+                        <datalist id="section-suggestions">
+                            <option value="A">
+                            <option value="B">
+                            <option value="C">
+                            <option value="D">
+                            <option value="E">
+                            <option value="F">
+                            <option value="Block 1">
+                            <option value="Block 2">
+                        </datalist>
+                        <p class="mt-1 text-xs text-gray-400">Type freely or pick a suggestion.</p>
+                        @error('section_letter')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Year Level</label>
-                            <select name="year_level" class="w-full px-3 py-2 border rounded" required>
-                                <option value="1st Year" {{ old('year_level') == '1st Year' ? 'selected' : '' }}>1st Year</option>
-                                <option value="2nd Year" {{ old('year_level') == '2nd Year' ? 'selected' : '' }}>2nd Year</option>
-                                <option value="3rd Year" {{ old('year_level') == '3rd Year' ? 'selected' : '' }}>3rd Year</option>
-                                <option value="4th Year" {{ old('year_level') == '4th Year' ? 'selected' : '' }}>4th Year</option>
-                            </select>
-                            @error('year_level')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Schedule</label>
-                            <input type="text" name="schedule" value="{{ old('schedule') }}" placeholder="e.g., MWF 10:00-11:30 AM" class="w-full px-3 py-2 border rounded">
-                            @error('schedule')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Room</label>
-                            <input type="text" name="room" value="{{ old('room') }}" placeholder="e.g., Room 301" class="w-full px-3 py-2 border rounded">
-                            @error('room')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Status</label>
-                            <select name="status" class="w-full px-3 py-2 border rounded" required>
-                                <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-                            </select>
-                            @error('status')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">
-                                Create Section
-                            </button>
-                            <a href="{{ route('dean.sections.index') }}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
-                                Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="confirmCreate()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Create Section</button>
+                        <a href="{{ route('dean.sections.index') }}" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
+                    </div>
+                </form>
             </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const yearMap = {
+            '1st Year': '1', '2nd Year': '2', '3rd Year': '3',
+            '4th Year': '4', '5th Year': '5'
+        };
+
+        function syncYearNumber() {
+            const level = document.getElementById('year_level').value;
+            document.getElementById('year_number').value = yearMap[level] || '';
+        }
+
+        function confirmCreate() {
+            const form = document.getElementById('createSectionForm');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const program = document.querySelector('[name=program_id] option:checked').text;
+            const yearLevel = document.getElementById('year_level').value;
+            const section = document.getElementById('section_letter').value;
+
+            Swal.fire({
+                title: 'Confirm Section',
+                html: `
+                    <div style="text-align:left;font-size:14px;line-height:2">
+                        <div><span style="color:#888">Program:</span> <strong>${program}</strong></div>
+                        <div><span style="color:#888">Year Level:</span> <strong>${yearLevel}</strong></div>
+                        <div><span style="color:#888">Section:</span> <strong>${section}</strong></div>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Create',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#c8a97e',
+                cancelButtonColor: '#6b7280',
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
+        }
+    </script>
+
 </x-sidebar-layout>

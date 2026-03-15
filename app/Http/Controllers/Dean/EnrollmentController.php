@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dean;
 
 use App\Http\Controllers\Controller;
 use App\Models\Section;
+use App\Models\SectionTerm;
 use App\Models\Student;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
@@ -12,48 +13,63 @@ class EnrollmentController extends Controller
 {
     public function index()
     {
-        $sections = Section::with(['subject', 'teacher', 'enrollments'])
+        $sectionTerms = SectionTerm::with(['section.program.department', 'adviser', 'enrollments'])
             ->orderBy('academic_year', 'desc')
             ->orderBy('semester', 'desc')
             ->paginate(20);
 
-        return view('dean.enrollments.index', compact('sections'));
+        return view('dean.enrollments.index', compact('sectionTerms'));
     }
 
     public function show(Section $section)
     {
-        $section->load(['subject', 'teacher', 'enrollments.student']);
-        $enrolledStudentIds = $section->enrollments->pluck('student_id');
+        $currentTerm = $section->terms()->where('status', 'active')->with('enrollments.student')->first();
+        $enrolledStudentIds = $currentTerm ? $currentTerm->enrollments->pluck('student_id') : collect();
         $availableStudents = Student::whereNotIn('id', $enrolledStudentIds)
             ->orderBy('student_number')
             ->get();
 
-        return view('dean.enrollments.show', compact('section', 'availableStudents'));
+        return view('dean.enrollments.show', compact('section', 'currentTerm', 'availableStudents'));
     }
 
     public function store(Request $request, Section $section)
     {
-        $validated = $request->validate([
-            'student_ids' => 'required|array',
-            'student_ids.*' => 'exists:students,id',
+        $request->validate([
+            'student_id'    => 'required|exists:students,id',
+            'academic_year' => 'required|string|max:20',
+            'semester'      => 'required|in:1st Semester,2nd Semester,Summer',
         ]);
 
-        foreach ($validated['student_ids'] as $studentId) {
-            Enrollment::firstOrCreate([
-                'student_id' => $studentId,
-                'section_id' => $section->id,
-            ]);
+        $term = SectionTerm::firstOrCreate(
+            [
+                'section_id'    => $section->id,
+                'academic_year' => $request->academic_year,
+                'semester'      => $request->semester,
+            ],
+            ['status' => 'active']
+        );
+
+        $already = Enrollment::where('section_term_id', $term->id)
+            ->where('student_id', $request->student_id)
+            ->exists();
+
+        if ($already) {
+            return back()->with('error', 'Student is already enrolled in this section for this term.');
         }
 
-        return redirect()->route('dean.enrollments.show', $section)
-            ->with('success', 'Students enrolled successfully.');
+        Enrollment::create([
+            'student_id'      => $request->student_id,
+            'section_term_id' => $term->id,
+            'status'          => 'enrolled',
+            'enrolled_at'     => now(),
+        ]);
+
+        return back()->with('success', 'Student enrolled successfully.');
     }
 
     public function destroy(Section $section, Enrollment $enrollment)
     {
         $enrollment->delete();
-
-        return redirect()->route('dean.enrollments.show', $section)
-            ->with('success', 'Student removed from section.');
+        return back()->with('success', 'Student removed from enrollment.');
     }
 }

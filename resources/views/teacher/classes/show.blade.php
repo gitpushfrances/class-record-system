@@ -1,6 +1,5 @@
 <x-sidebar-layout>
 
-@section('title', $section->subject->code . ' - ' . $section->section_name)
 
 
 
@@ -8,11 +7,10 @@
 <div class="mb-6">
     <a href="{{ route('teacher.dashboard') }}" class="text-sm text-indigo-600 hover:underline">← Back to Dashboard</a>
     <h1 class="mt-1 text-2xl font-bold text-gray-800">
-        {{ $section->subject->code }} — {{ $section->section_name }}
+        {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
     </h1>
     <p class="mt-1 text-sm text-gray-500">
-        {{ $section->subject->name }} &bull; {{ $section->year_level }} &bull; {{ $section->semester }} &bull; {{ $section->academic_year }}
-        @if($section->room) &bull; Room: {{ $section->room }} @endif
+        {{ $section->program->name }} &bull; {{ $section->year_level }}
     </p>
 </div>
 
@@ -64,10 +62,10 @@
 {{-- Students Table --}}
 <div class="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h2 class="font-semibold text-gray-700">Enrolled Students ({{ $section->enrollments->count() }})</h2>
+        <h2 class="font-semibold text-gray-700">Enrolled Students ({{ $currentTerm ? $currentTerm->enrollments->count() : 0 }})</h2>
     </div>
 
-    @if($section->enrollments->isEmpty())
+    @if(!$currentTerm || $currentTerm->enrollments->isEmpty())
         <div class="px-6 py-10 text-sm text-center text-gray-400">No students enrolled yet.</div>
     @else
         <table class="w-full text-sm">
@@ -81,7 +79,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @foreach($section->enrollments as $i => $enrollment)
+                @foreach(($currentTerm ? $currentTerm->enrollments : collect()) as $i => $enrollment)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>

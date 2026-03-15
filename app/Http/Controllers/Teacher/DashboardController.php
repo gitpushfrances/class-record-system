@@ -1,22 +1,21 @@
 <?php
-
 namespace App\Http\Controllers\Teacher;
-
 use App\Http\Controllers\Controller;
-use App\Models\Section;
-use Illuminate\Http\Request;
-
+use App\Models\SectionTerm;
 class DashboardController extends Controller
 {
     public function index()
     {
         $teacher = auth()->user();
 
-        // Get all sections assigned to this teacher
-        $classes = Section::where('teacher_id', $teacher->id)
-            ->with(['subject', 'enrollments'])
+        $sectionTerms = SectionTerm::where('adviser_id', $teacher->id)
+            ->where('status', 'active')
+            ->with([
+                'section.program.department',
+                'enrollments',
+            ])
             ->get();
 
-        return view('teacher.dashboard', compact('classes'));
+        return view('teacher.dashboard', compact('sectionTerms'));
     }
 }

@@ -1,6 +1,5 @@
 <x-sidebar-layout>
 
-@section('title', 'Attendance')
 
 
 
@@ -8,7 +7,7 @@
     <div>
         <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Attendance</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ $section->subject->code }} — {{ $section->section_name }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
     <a href="{{ route('teacher.attendance.summary', $section) }}"
        class="px-4 py-2 mt-1 text-sm font-medium text-indigo-600 transition border border-indigo-300 rounded-lg hover:bg-indigo-50">

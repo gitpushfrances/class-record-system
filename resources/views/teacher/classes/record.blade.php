@@ -1,6 +1,5 @@
 <x-sidebar-layout>
 
-@section('title', 'Class Record — ' . $section->subject->code)
 
 
 
@@ -10,9 +9,7 @@
         <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Class Record</h1>
         <p class="mt-1 text-sm text-gray-500">
-            {{ $section->subject->code }} — {{ $section->subject->name }} &bull;
-            {{ $section->section_name }} &bull; {{ $section->year_level }} &bull;
-            {{ $section->semester }} &bull; {{ $section->academic_year }}
+            {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }} &bull; {{ $section->year_level }} &bull; {{ $currentTerm?->semester }} &bull; {{ $currentTerm?->academic_year }}
         </p>
     </div>
     <div class="flex gap-3 mt-1">

@@ -13,52 +13,62 @@ class ClassController extends Controller
 {
     public function show(Section $section)
     {
-        abort_if($section->teacher_id !== auth()->id(), 403);
+        $this->authorizeSection($section);
+
+        $currentTerm = $section->terms()->where('status', 'active')->first();
 
         $section->load([
-            'subject',
+            'program.department',
             'gradeItems',
-            'enrollments.student',
-            'enrollments.finalGrade',
         ]);
+
+        if ($currentTerm) {
+            $currentTerm->load([
+                'enrollments.student',
+                'enrollments.finalGrade',
+            ]);
+        }
 
         $hasConfig = $section->gradeConfiguration !== null;
 
-        return view('teacher.classes.show', compact('section', 'hasConfig'));
+        return view('teacher.classes.show', compact('section', 'currentTerm', 'hasConfig'));
     }
 
     public function record(Section $section)
     {
-        abort_if($section->teacher_id !== auth()->id(), 403);
+        $this->authorizeSection($section);
 
         if (!$section->gradeConfiguration) {
             return redirect()->route('teacher.grades.config', $section)
                 ->with('warning', 'Set up grade configuration first.');
         }
 
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+
         $section->load([
+            'program.department',
             'gradeConfiguration',
             'gradeItems',
-            'enrollments.student',
-            'enrollments.finalGrade',
-            'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
-            'enrollments.attendanceRecords',
         ]);
 
-        $config = $section->gradeConfiguration;
+        if ($currentTerm) {
+            $currentTerm->load([
+                'enrollments.student',
+                'enrollments.finalGrade',
+                'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
+                'enrollments.attendanceRecords',
+            ]);
+        }
 
-        $gradeItems = $section->gradeItems
-            ->sortBy('created_at')
-            ->groupBy('component_type');
+        $config     = $section->gradeConfiguration;
+        $gradeItems = $section->gradeItems->sortBy('created_at')->groupBy('component_type');
+        $enrollments = $currentTerm ? $currentTerm->enrollments : collect();
 
-        $enrollments = $section->enrollments;
-
-        // Live grade calculation
         $liveGrades = [];
         foreach ($enrollments as $enrollment) {
-            $scores = $this->calculateComponentScores($enrollment, $config);
+            $scores          = $this->calculateComponentScores($enrollment, $config);
             $finalPercentage = round(array_sum($scores), 2);
-            $numerical = FinalGrade::convertToNumericalGrade($finalPercentage);
+            $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
 
             $liveGrades[$enrollment->id] = [
                 'quiz_score'       => $scores['quiz'],
@@ -69,42 +79,48 @@ class ClassController extends Controller
                 'final_grade'      => $finalPercentage,
                 'numerical_grade'  => $numerical,
                 'letter_grade'     => number_format($numerical, 2),
-                'remarks'          => $finalPercentage >= 75 ? 'passed' : 'failed',
+                'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
             ];
         }
 
-        return view('teacher.classes.record', compact('section', 'config', 'gradeItems', 'enrollments', 'liveGrades'));
+        return view('teacher.classes.record', compact('section', 'currentTerm', 'config', 'gradeItems', 'enrollments', 'liveGrades'));
     }
 
     public function export(Section $section)
     {
-        abort_if($section->teacher_id !== auth()->id(), 403);
+        $this->authorizeSection($section);
 
         if (!$section->gradeConfiguration) {
             return redirect()->route('teacher.grades.config', $section)
                 ->with('warning', 'Set up grade configuration before exporting.');
         }
 
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+
         $section->load([
-            'subject',
-            'teacher',
+            'program.department',
             'gradeConfiguration',
             'gradeItems',
-            'enrollments.student',
-            'enrollments.studentGrades.gradeItem',
-            'enrollments.attendanceRecords',
-            'enrollments.finalGrade',
         ]);
+
+        if ($currentTerm) {
+            $currentTerm->load([
+                'enrollments.student',
+                'enrollments.studentGrades.gradeItem',
+                'enrollments.attendanceRecords',
+                'enrollments.finalGrade',
+            ]);
+        }
 
         $config      = $section->gradeConfiguration;
         $gradeItems  = $section->gradeItems->sortBy('created_at')->groupBy('component_type');
-        $enrollments = $section->enrollments;
+        $enrollments = $currentTerm ? $currentTerm->enrollments : collect();
 
         $liveGrades = [];
         foreach ($enrollments as $enrollment) {
-            $scores     = $this->calculateComponentScores($enrollment, $config);
-            $finalPct   = round(array_sum($scores), 2);
-            $numerical  = FinalGrade::convertToNumericalGrade($finalPct);
+            $scores   = $this->calculateComponentScores($enrollment, $config);
+            $finalPct = round(array_sum($scores), 2);
+            $numerical = FinalGrade::convertToNumericalGrade($finalPct);
 
             $liveGrades[$enrollment->id] = [
                 'quiz_score'       => $scores['quiz'],
@@ -114,18 +130,27 @@ class ClassController extends Controller
                 'attendance_score' => $scores['attendance'],
                 'final_grade'      => $finalPct,
                 'numerical_grade'  => $numerical,
-                'remarks'          => $finalPct >= 75 ? 'passed' : 'failed',
+                'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
             ];
         }
 
-        $filename = implode('_', [
-            $section->subject->code,
-            $section->section_name,
-            str_replace(' ', '-', $section->semester),
-            $section->academic_year,
-        ]) . '.xlsx';
+        $sectionLabel = $section->program->code . '_' . $section->year_number . '-' . $section->section_letter;
+        $termLabel    = $currentTerm
+            ? str_replace(' ', '-', $currentTerm->semester) . '_' . $currentTerm->academic_year
+            : 'no-term';
+        $filename = $sectionLabel . '_' . $termLabel . '.xlsx';
 
         return Excel::download(new ClassRecordExport($section, $liveGrades), $filename);
+    }
+
+    private function authorizeSection(Section $section): void
+    {
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(
+            !$currentTerm || $currentTerm->adviser_id !== auth()->id(),
+            403,
+            'You are not assigned to this section.'
+        );
     }
 
     private function calculateComponentScores($enrollment, $config): array
@@ -140,7 +165,6 @@ class ClassController extends Controller
 
         foreach (['quiz', 'exam', 'project', 'assessment'] as $type) {
             $weight = (float) $config->{$type . '_weight'};
-
             if ($weight === 0.0) continue;
 
             $items = $enrollment->studentGrades->filter(

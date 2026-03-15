@@ -1,6 +1,5 @@
 <x-sidebar-layout>
 
-@section('title', 'Final Grades')
 
 
 
@@ -20,7 +19,7 @@
     <div>
         <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Final Grades</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ $section->subject->code }} — {{ $section->section_name }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
     <div class="flex gap-3 mt-1">
         <form method="POST" action="{{ route('teacher.grades.final.compute', $section) }}">
@@ -66,7 +65,7 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-            @forelse($section->enrollments as $i => $enrollment)
+            @forelse($enrollments as $i => $enrollment)
                 @php
                     $lg = $liveGrades[$enrollment->id];
                     $fg = $enrollment->finalGrade;

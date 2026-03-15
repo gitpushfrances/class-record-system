@@ -1,13 +1,10 @@
-@extends('layouts.app')
+<x-sidebar-layout>
 
-@section('title', 'Request New Subject')
-
-@section('content')
 <div class="max-w-xl mx-auto">
 
     <div class="mb-6">
         <a href="{{ route('dean.subjects.index') }}" class="text-sm" style="color:#c8a97e;">
-            <i class="mr-1 text-xs fas fa-arrow-left"></i> Back to Subjects
+            ← Back to Subjects
         </a>
         <h1 class="mt-2 text-xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Request New Subject</h1>
         <p class="text-sm mt-0.5 text-gray-500">Submitted requests go to the Admin for approval.</p>
@@ -23,7 +20,8 @@
                     <input type="text" name="code" id="code" value="{{ old('code') }}"
                            placeholder="e.g. CS101"
                            class="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2"
-                           style="border-color:#d1d5db; focus:ring-color:#c8a97e;">
+                           style="border-color:#d1d5db;">
+                    @error('code')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -32,6 +30,7 @@
                            placeholder="e.g. Computer Programming 1"
                            class="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2"
                            style="border-color:#d1d5db;">
+                    @error('name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -40,6 +39,7 @@
                            placeholder="e.g. College of Computer Studies"
                            class="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2"
                            style="border-color:#d1d5db;">
+                    @error('department')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -48,6 +48,7 @@
                            min="1" max="10"
                            class="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2"
                            style="border-color:#d1d5db;">
+                    @error('units')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -76,11 +77,11 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.getElementById('preview-btn').addEventListener('click', function () {
-    const code    = document.getElementById('code').value.trim();
-    const name    = document.getElementById('name').value.trim();
-    const dept    = document.getElementById('department').value.trim();
-    const units   = document.getElementById('units').value.trim();
-    const desc    = document.getElementById('description').value.trim();
+    const code  = document.getElementById('code').value.trim();
+    const name  = document.getElementById('name').value.trim();
+    const dept  = document.getElementById('department').value.trim();
+    const units = document.getElementById('units').value.trim();
+    const desc  = document.getElementById('description').value.trim();
 
     if (!code || !name || !dept || !units) {
         Swal.fire({ icon: 'warning', title: 'Incomplete', text: 'Please fill in all required fields.' });
@@ -111,4 +112,5 @@ document.getElementById('preview-btn').addEventListener('click', function () {
     });
 });
 </script>
-@endsection
+
+</x-sidebar-layout>

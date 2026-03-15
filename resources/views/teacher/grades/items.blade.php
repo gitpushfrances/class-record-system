@@ -1,13 +1,12 @@
 <x-sidebar-layout>
 
-@section('title', 'Grade Items')
 
 
 
 <div class="mb-6">
     <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
     <h1 class="mt-1 text-2xl font-bold text-gray-800">Grade Items</h1>
-    <p class="mt-1 text-sm text-gray-500">{{ $section->subject->code }} — {{ $section->section_name }}</p>
+    <p class="mt-1 text-sm text-gray-500">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
 </div>
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">

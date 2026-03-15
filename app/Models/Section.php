@@ -11,53 +11,40 @@ class Section extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'subject_id',
-        'teacher_id',
-        'section_name',
+        'program_id',
+        'year_number',
+        'section_letter',
         'year_level',
-        'semester',
-        'academic_year',
-        'schedule',
-        'room',
         'status',
     ];
 
-    // Relationships
-    public function subject()
+    public function program()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Program::class);
     }
 
-    public function teacher()
+    public function terms()
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->hasMany(SectionTerm::class);
     }
 
-    public function enrollments()
+    public function currentTerm()
     {
-        return $this->hasMany(Enrollment::class);
-    }
-
-    public function students()
-    {
-        return $this->belongsToMany(Student::class, 'enrollments')
-            ->withPivot('status', 'enrolled_at')
-            ->withTimestamps();
-    }
-
-    public function gradeConfiguration()
-    {
-        return $this->hasOne(GradeConfiguration::class);
+        return $this->hasOne(SectionTerm::class)->where('status', 'active')->latestOfMany();
     }
 
     public function gradeItems()
     {
-        return $this->hasMany(GradeItem::class);
+        return $this->hasMany(\App\Models\GradeItem::class);
     }
 
-    // Accessor
+    public function gradeConfiguration()
+    {
+        return $this->hasOne(\App\Models\GradeConfiguration::class);
+    }
+
     public function getFullNameAttribute()
     {
-        return "{$this->subject->code} - {$this->section_name} ({$this->year_level})";
+        return $this->program->code . ' ' . $this->year_number . '-' . $this->section_letter;
     }
 }

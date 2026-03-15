@@ -12,7 +12,7 @@ class Enrollment extends Model
 
     protected $fillable = [
         'student_id',
-        'section_id',
+        'section_term_id',
         'status',
         'enrolled_at',
     ];
@@ -21,15 +21,14 @@ class Enrollment extends Model
         'enrolled_at' => 'datetime',
     ];
 
-    // Relationships
     public function student()
     {
         return $this->belongsTo(Student::class);
     }
 
-    public function section()
+    public function sectionTerm()
     {
-        return $this->belongsTo(Section::class);
+        return $this->belongsTo(SectionTerm::class);
     }
 
     public function studentGrades()

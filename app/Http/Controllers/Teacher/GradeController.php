@@ -13,10 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class GradeController extends Controller
 {
-    // -------------------------------------------------------------------------
-    // Grade Configuration
-    // -------------------------------------------------------------------------
-
     public function config(Section $section)
     {
         $this->authorizeSection($section);
@@ -52,10 +48,6 @@ class GradeController extends Controller
         return redirect()->route('teacher.classes.show', $section)
             ->with('success', 'Grade configuration saved.');
     }
-
-    // -------------------------------------------------------------------------
-    // Grade Items
-    // -------------------------------------------------------------------------
 
     public function items(Section $section)
     {
@@ -102,21 +94,20 @@ class GradeController extends Controller
         return back()->with('success', 'Grade item removed.');
     }
 
-    // -------------------------------------------------------------------------
-    // Score Entry
-    // -------------------------------------------------------------------------
-
     public function scores(Section $section, GradeItem $gradeItem)
     {
         $this->authorizeSection($section);
         abort_if($gradeItem->section_id !== $section->id, 403);
 
-        $enrollments = $section->enrollments()
-            ->with([
-                'student',
-                'studentGrades' => fn($q) => $q->where('grade_item_id', $gradeItem->id),
-            ])
-            ->get();
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        $enrollments = $currentTerm
+            ? $currentTerm->enrollments()
+                ->with([
+                    'student',
+                    'studentGrades' => fn($q) => $q->where('grade_item_id', $gradeItem->id),
+                ])
+                ->get()
+            : collect();
 
         return view('teacher.grades.scores', compact('section', 'gradeItem', 'enrollments'));
     }
@@ -159,35 +150,39 @@ class GradeController extends Controller
             }
         });
 
-        return back()->with('success', 'Scores saved.');
+        return redirect()->route('teacher.grades.items', $section)->with('success', 'Scores saved.');
     }
-
-    // -------------------------------------------------------------------------
-    // Final Grades
-    // -------------------------------------------------------------------------
 
     public function finalGrades(Section $section)
     {
         $this->authorizeSection($section);
         $this->requireConfig($section);
 
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+
         $section->load([
             'gradeConfiguration',
             'gradeItems',
-            'enrollments.student',
-            'enrollments.finalGrade',
-            'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
-            'enrollments.attendanceRecords',
         ]);
 
-        $config = $section->gradeConfiguration;
+        $enrollments = collect();
+        if ($currentTerm) {
+            $currentTerm->load([
+                'enrollments.student',
+                'enrollments.finalGrade',
+                'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
+                'enrollments.attendanceRecords',
+            ]);
+            $enrollments = $currentTerm->enrollments;
+        }
 
-        // Live calculation — no DB write, just compute from current saved data
+        $config     = $section->gradeConfiguration;
         $liveGrades = [];
-        foreach ($section->enrollments as $enrollment) {
-            $scores = $this->calculateComponentScores($enrollment, $config);
+
+        foreach ($enrollments as $enrollment) {
+            $scores          = $this->calculateComponentScores($enrollment, $config);
             $finalPercentage = round(array_sum($scores), 2);
-            $numerical = FinalGrade::convertToNumericalGrade($finalPercentage);
+            $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
 
             $liveGrades[$enrollment->id] = [
                 'quiz_score'       => $scores['quiz'],
@@ -198,36 +193,41 @@ class GradeController extends Controller
                 'final_grade'      => $finalPercentage,
                 'numerical_grade'  => $numerical,
                 'letter_grade'     => number_format($numerical, 2),
-                'remarks'          => $finalPercentage >= 75 ? 'passed' : 'failed',
+                'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
             ];
         }
 
-        return view('teacher.grades.final', compact('section', 'liveGrades'));
+        return view('teacher.grades.final', compact('section', 'enrollments', 'liveGrades'));
     }
 
     public function computeGrades(Section $section)
     {
         $this->authorizeSection($section);
 
-        $section->load([
-            'gradeConfiguration',
-            'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
-            'enrollments.attendanceRecords',
-        ]);
-
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        $section->load(['gradeConfiguration']);
         $config = $section->gradeConfiguration;
 
         if (!$config) {
             return back()->with('error', 'No grade configuration found.');
         }
 
+        $enrollments = collect();
+        if ($currentTerm) {
+            $currentTerm->load([
+                'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
+                'enrollments.attendanceRecords',
+            ]);
+            $enrollments = $currentTerm->enrollments;
+        }
+
         $errors = [];
 
-        foreach ($section->enrollments as $enrollment) {
+        foreach ($enrollments as $enrollment) {
             try {
-                $scores = $this->calculateComponentScores($enrollment, $config);
+                $scores          = $this->calculateComponentScores($enrollment, $config);
                 $finalPercentage = round(array_sum($scores), 2);
-                $numerical = FinalGrade::convertToNumericalGrade($finalPercentage);
+                $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
 
                 FinalGrade::updateOrCreate(
                     ['enrollment_id' => $enrollment->id],
@@ -240,7 +240,7 @@ class GradeController extends Controller
                         'final_grade'      => $finalPercentage,
                         'numerical_grade'  => $numerical,
                         'letter_grade'     => number_format($numerical, 2),
-                        'remarks'          => $finalPercentage >= 75 ? 'passed' : 'failed',
+                        'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
                         'computed_by'      => auth()->id(),
                     ]
                 );
@@ -260,7 +260,13 @@ class GradeController extends Controller
     {
         $this->authorizeSection($section);
 
-        $section->enrollments()
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+
+        if (!$currentTerm) {
+            return back()->with('error', 'No active term found.');
+        }
+
+        $currentTerm->enrollments()
             ->with('finalGrade')
             ->get()
             ->each(function ($enrollment) {
@@ -275,10 +281,6 @@ class GradeController extends Controller
         return back()->with('success', 'All final grades locked.');
     }
 
-    // -------------------------------------------------------------------------
-    // Private Helpers
-    // -------------------------------------------------------------------------
-
     private function calculateComponentScores($enrollment, $config): array
     {
         $scores = [
@@ -289,12 +291,11 @@ class GradeController extends Controller
             'attendance' => 0,
         ];
 
+        $activeWeight = 0;
+
         foreach (['quiz', 'exam', 'project', 'assessment'] as $type) {
             $weight = (float) $config->{$type . '_weight'};
-
-            if ($weight === 0.0) {
-                continue;
-            }
+            if ($weight === 0.0) continue;
 
             $items = $enrollment->studentGrades->filter(
                 fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $type
@@ -307,20 +308,27 @@ class GradeController extends Controller
                 $scores[$type] = $possible > 0
                     ? round(($earned / $possible) * $weight, 2)
                     : 0;
+
+                $activeWeight += $weight;
             }
         }
 
-        // Attendance
         $attendanceWeight = (float) $config->attendance_weight;
         if ($attendanceWeight > 0) {
             $total   = $enrollment->attendanceRecords->count();
-            $present = $enrollment->attendanceRecords
-                ->whereIn('status', ['present', 'late'])
-                ->count();
+            $present = $enrollment->attendanceRecords->whereIn('status', ['present', 'late'])->count();
 
-            $scores['attendance'] = $total > 0
-                ? round(($present / $total) * $attendanceWeight, 2)
-                : 0;
+            if ($total > 0) {
+                $scores['attendance'] = round(($present / $total) * $attendanceWeight, 2);
+                $activeWeight += $attendanceWeight;
+            }
+        }
+
+        if ($activeWeight > 0 && $activeWeight < 100) {
+            $factor = 100 / $activeWeight;
+            foreach ($scores as $key => $val) {
+                $scores[$key] = round($val * $factor, 2);
+            }
         }
 
         return $scores;
@@ -328,7 +336,12 @@ class GradeController extends Controller
 
     private function authorizeSection(Section $section): void
     {
-        abort_if($section->teacher_id !== auth()->id(), 403);
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(
+            !$currentTerm || $currentTerm->adviser_id !== auth()->id(),
+            403,
+            'You are not assigned to this section.'
+        );
     }
 
     private function requireConfig(Section $section): void
