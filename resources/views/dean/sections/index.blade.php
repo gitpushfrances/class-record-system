@@ -88,7 +88,7 @@
             <div class="relative z-10 w-full max-w-md bg-white rounded-lg shadow-xl">
                 <div class="flex items-center justify-between px-6 py-4 border-b">
                     <h3 class="font-semibold text-gray-800">Change Adviser</h3>
-                    <button onclick="closeAdviserModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+                    <button onclick="closeAdviserModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <form id="adviserForm" method="POST">
                     @csrf

@@ -107,7 +107,7 @@
                                         <td class="px-5 py-3 font-medium text-gray-800">
                                             {{ $item->name }}
                                             @if($item->is_locked)
-                                                <span class="ml-1 text-xs text-gray-400">🔒</span>
+                                                <span class="ml-1 text-xs text-gray-400"><i class="fa-solid fa-lock"></i></span>
                                             @endif
                                         </td>
                                         <td class="px-5 py-3 text-center text-gray-600">{{ $item->max_score }}</td>

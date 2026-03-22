@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Exports\ClassRecordExport;
+use App\Models\Enrollment;
 use App\Models\FinalGrade;
 use App\Models\Section;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -31,7 +33,16 @@ class ClassController extends Controller
 
         $hasConfig = $section->gradeConfiguration !== null;
 
-        return view('teacher.classes.show', compact('section', 'currentTerm', 'hasConfig'));
+        $enrolledIds = $currentTerm
+            ? $currentTerm->enrollments->pluck('student_id')->toArray()
+            : [];
+
+        $availableStudents = Student::where('status', 'active')
+            ->whereNotIn('id', $enrolledIds)
+            ->orderBy('last_name')
+            ->get();
+
+        return view('teacher.classes.show', compact('section', 'currentTerm', 'hasConfig', 'availableStudents'));
     }
 
     public function record(Section $section)
@@ -141,6 +152,43 @@ class ClassController extends Controller
         $filename = $sectionLabel . '_' . $termLabel . '.xlsx';
 
         return Excel::download(new ClassRecordExport($section, $liveGrades), $filename);
+    }
+
+    public function enrollStudent(Request $request, Section $section)
+    {
+        $this->authorizeSection($section);
+
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+
+        abort_if(!$currentTerm, 403, 'No active term for this section.');
+
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+        ]);
+
+        $alreadyEnrolled = Enrollment::where('section_term_id', $currentTerm->id)
+            ->where('student_id', $request->student_id)
+            ->exists();
+
+        if ($alreadyEnrolled) {
+            return back()->with('error', 'Student is already enrolled in this class.');
+        }
+
+        Enrollment::create([
+            'student_id'      => $request->student_id,
+            'section_term_id' => $currentTerm->id,
+            'status'          => 'enrolled',
+            'enrolled_at'     => now(),
+        ]);
+
+        return back()->with('success', 'Student enrolled successfully.');
+    }
+
+    public function unenrollStudent(Section $section, Enrollment $enrollment)
+    {
+        $this->authorizeSection($section);
+        $enrollment->delete();
+        return back()->with('success', 'Student removed from class.');
     }
 
     private function authorizeSection(Section $section): void

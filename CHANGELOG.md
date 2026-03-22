@@ -163,7 +163,7 @@
 - Scores in `45/50` format, attendance in `18/20` format
 - Class averages footer — per item, per component, overall average, Pass/Fail count
 - Live data — always current, no button needed
-- Locked grades show 🔒 icon
+- Locked grades show lock icon (Font Awesome)
 
 **Remarks:**
 - `$gradeMap = $enrollment->studentGrades->keyBy('grade_item_id')` for O(1) score lookup
@@ -291,6 +291,149 @@
 
 ---
 
+## QA FIXES & SCHEMA MIGRATION — March 15, 2026
+
+### Background
+QA identified 7 issues after a major architectural restructure that changed sections from a flat model to a two-layer model (`sections` → `section_terms` → `enrollments`). Many controllers and views were still referencing the old schema.
+
+### Architecture Change (Previously Applied)
+Sections restructured from tightly-coupled to a proper two-layer model:
+- `sections` — persistent group (e.g. BSCS 3-A exists across all semesters)
+- `section_terms` — per-semester instance, holds `adviser_id` + `status`
+- `enrollments` — students enrolled per term, not permanently per section
+- `departments` and `programs` tables added
+- `sections` now tied to `program_id` instead of plain text
+- `section_letter` changed to free-text input (supports "A", "Block 1", "Rizal", etc.)
+
+### QA Issues Resolved
+
+**Issue 1 — Section field rejecting values like 3A, 2A**
+- Root cause: old `in:A,B,C,D` validation rule
+- Status: Already fixed in prior session — `required|string|max:50`
+
+**Issue 2 — No Add button on Sections page**
+- Status: Button was already present — confirmed via grep
+
+**Issue 3 — No Add Student button on Students tab**
+- Status: Button was already present — confirmed via grep
+
+**Issue 4 — Subject request Review & Submit button not working**
+- Root cause: `dean/subjects/create.blade.php` was using `@extends('layouts.app')` instead of `<x-sidebar-layout>` — layout was broken, SweetAlert2 script not loading
+- Fixed: View rewritten to use `<x-sidebar-layout>`, `@section`/`@endsection` removed, validation error display added per field
+
+**Issue 5 — Enrollments: no add option, students only enrollable in one subject**
+- Root cause: `EnrollmentController` was still querying `academic_year` and `semester` directly on `sections` — those columns moved to `section_terms`
+- Fixed: `EnrollmentController` fully rewritten to use `SectionTerm` model
+- Fixed: Both enrollment views (`index.blade.php`, `show.blade.php`) rewritten — old schema references (`$section->subject`, `$section->teacher`, `$section->semester`) replaced with `$term->section->program`, `$term->adviser`, `$term->semester`
+
+**Issue 6 — Academic Period: no actions after adding**
+- Root cause: `admin.academic.index` view did not exist — controller and routes existed but view was never created
+- Fixed: `resources/views/admin/academic/index.blade.php` created from scratch with Add form, Set Active (PATCH), and Delete actions
+
+**Issue 7 — Attendance: all students saved as Present**
+- Root cause: `authorizeSection()` in `AttendanceController` was checking `$section->teacher_id` which no longer exists — was causing 403 or silent failures
+- Fixed: `AttendanceController` rewritten — authorization now checks `section_terms.adviser_id`, enrollments loaded via active `section_term`
+
+### Additional Schema Migration Fixes (same session)
+
+**Teacher DashboardController**
+- Was querying `Section::where('teacher_id', $teacher->id)` — `teacher_id` removed from `sections`
+- Fixed: rewritten to query `SectionTerm::where('adviser_id', $teacher->id)->where('status', 'active')`
+- Teacher dashboard view rewritten to use `$sectionTerms` — removed references to `$class->subject`, `$class->section_name`, `$class->semester`
+
+**ClassController**
+- Three `abort_if` checks still used `$section->teacher_id`
+- `export()` filename still used `$section->subject->code` and `$section->section_name`
+- Fixed: all three authorization checks updated to use active `section_term->adviser_id`
+- Fixed: export filename now uses `$section->program->code`, `$section->year_number`, `$section->section_letter`
+
+**GradeController**
+- `authorizeSection()` still checked `$section->teacher_id`
+- Four methods used `$section->enrollments` directly — enrollments now live under `section_terms`
+- Fixed: full controller rewritten — all enrollment queries now scoped to active `section_term`
+- Fixed: `authorizeSection()` updated to check `section_term->adviser_id`
+
+**Section Model**
+- Missing `gradeItems()` and `gradeConfiguration()` relationships
+- Fixed: both `hasMany` and `hasOne` relationships added
+
+**All Teacher Views**
+- `attendance/summary.blade.php`, `classes/show.blade.php`, `classes/record.blade.php`, `grades/config.blade.php`, `grades/final.blade.php`, `grades/items.blade.php`, `grades/scores.blade.php`, `dashboard.blade.php`
+- All references to `$section->subject->code`, `$section->section_name`, `$section->semester`, `$section->academic_year`, `$section->enrollments` replaced with correct `$section->program->code`, `$section->year_number`, `$section->section_letter`, `$currentTerm->semester`, `$currentTerm->enrollments`
+- `@section('title')` directives removed from all views using `<x-sidebar-layout>` (directive does nothing in component layouts)
+- `dashboard.blade.php` was duplicated to 195 lines from a failed write — overwritten clean (~50 lines)
+
+### Grade Calculation Fix — Remarks Logic
+
+**Problem:** `remarks` was computed as `$finalPercentage >= 75 ? 'passed' : 'failed'` — students with incomplete data (e.g. only quiz and attendance entered mid-semester) were showing as Failed because empty components scored 0
+
+**Fix 1 — Correct passing threshold:**
+- Changed to `$numerical <= 3.00 ? 'passed' : 'failed'`
+- Matches Philippine HEI grading — numerical grade ≤ 3.00 = Passed, 5.00 = Failed
+- Applied in all four locations: `GradeController@finalGrades`, `GradeController@computeGrades`, `ClassController@record`, `ClassController@export`
+
+**Fix 2 — Weighted rescaling for incomplete data:**
+- `calculateComponentScores()` was giving 0 to components with no data, dragging the total down
+- Rewritten to track `$activeWeight` — only components with actual data contribute
+- If `$activeWeight < 100`, all scores are rescaled by factor `100 / $activeWeight` so the grade reflects only what has been entered
+- Method definition line was corrupted to `;` by a failed sed — full `GradeController` rewritten clean
+
+---
+
+## QA FIXES & PATCHES — March 23, 2026
+
+### Teacher-Side Student Enrollment (NEW FEATURE)
+- `enrollStudent()` and `unenrollStudent()` methods added to `Teacher\ClassController`
+- `Student` and `Enrollment` models imported into `ClassController`
+- Routes `teacher.classes.enroll` (POST) and `teacher.classes.unenroll` (DELETE) were already in `web.php` but had no controller methods — now implemented
+- `$availableStudents` variable added to `ClassController@show` — queries active students not yet enrolled in the current section term, ordered by last name
+- `resources/views/teacher/classes/show.blade.php` updated:
+  - `+ Add Student` button added to Enrolled Students header (only shown when active term exists)
+  - Modal with live search — filters by name or student number as user types
+  - Already-enrolled students excluded from the modal list
+  - Each student row is a form that POSTs directly on click
+  - `Remove` button added per enrolled student row with DELETE form
+  - `Action` column added to the enrolled students table
+  - Success/error flash messages displayed inside modal
+
+### Enrollment Status Fix
+- `enrollStudent()` was inserting `status = 'active'` into `enrollments` table
+- DB enum only accepts `'enrolled'`, `'dropped'`, `'completed'` — `'active'` caused `SQLSTATE[01000] Data truncated` error
+- Fixed: changed insert value to `'enrolled'`
+
+### Emoji Replacement — Font Awesome Icons
+- All hardcoded emojis replaced with Font Awesome 6.5.1 icon classes across 9 view files
+- Replacement done via PHP script using hex byte sequences to bypass Git Bash UTF-8 mangling
+- Files cleaned:
+  - `resources/views/teacher/classes/show.blade.php` — gear, pen, calendar, graduation cap, chart bar, warning triangle
+  - `resources/views/teacher/classes/record.blade.php` — file-excel, print, lock
+  - `resources/views/teacher/grades/final.blade.php` — floppy-disk, lock
+  - `resources/views/teacher/grades/items.blade.php` — lock
+  - `resources/views/teacher/grades/scores.blade.php` — lock
+  - `resources/views/teacher/grades/config.blade.php` — circle-check
+  - `resources/views/teacher/attendance/index.blade.php` — circle-check, circle-xmark, triangle-exclamation, circle-minus
+  - `resources/views/admin/subjects/index.blade.php` — circle-check, circle-xmark
+  - `resources/views/dean/subjects/index.blade.php` — circle-check, circle-xmark
+  - `resources/views/dean/subjects/create.blade.php` — clock
+  - `resources/views/dean/sections/index.blade.php` — xmark
+
+### Student Delete Confirmation Modal (Dean Side)
+- Replaced plain browser `confirm()` dialog on student remove button with a styled modal
+- Modal displays the student's full name before confirming deletion
+- Shows warning: "This will remove them from all enrolled classes permanently."
+- Cancel button closes modal without action
+- Confirm button submits the hidden DELETE form for that student
+- `resources/views/dean/students/index.blade.php` updated — button now calls `confirmDelete(id, name)` JS function
+
+### Orphaned Enrollment Fix — Cascading Delete
+- Root cause: `Dean\StudentController@destroy` was only calling `$student->delete()` — did not remove the student's enrollment records
+- When a student was deleted from the master list while enrolled in a class, their enrollment record remained with a null student relationship, causing `N/A` to display on the teacher's class view
+- Fixed: `StudentController@destroy` now calls `Enrollment::where('student_id', $student->id)->delete()` before deleting the student
+- Orphaned enrollment (ID: 1, student_id: 1) manually cleaned via tinker after fix was applied
+- `\App\Models\Enrollment` import added to `Dean\StudentController`
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -317,6 +460,6 @@
 
 ---
 
-**Last Updated:** March 12, 2026  
+**Last Updated:** March 23, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

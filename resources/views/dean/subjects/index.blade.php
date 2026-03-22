@@ -43,9 +43,9 @@
                         @if($subject->status === 'pending')
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#fef3c7; color:#92400e;">⏳ Pending</span>
                         @elseif($subject->status === 'approved')
-                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#d1fae5; color:#065f46;">✓ Approved</span>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#d1fae5; color:#065f46;"><i class="fa-solid fa-circle-check"></i> Approved</span>
                         @else
-                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#fee2e2; color:#991b1b;">✗ Rejected</span>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#fee2e2; color:#991b1b;"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
                         @endif
                     </td>
                     <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->created_at->format('M d, Y') }}</td>

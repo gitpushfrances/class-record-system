@@ -92,6 +92,8 @@ Route::middleware(['auth', 'status', 'role:teacher'])->prefix('teacher')->name('
 
     // Class overview
     Route::get('/classes/{section}', [ClassController::class, 'show'])->name('classes.show');
+Route::post('/classes/{section}/enroll', [ClassController::class, 'enrollStudent'])->name('classes.enroll');
+Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class, 'unenrollStudent'])->name('classes.unenroll');
 
     // Grade configuration
     Route::get('/classes/{section}/grade-config', [GradeController::class, 'config'])->name('grades.config');

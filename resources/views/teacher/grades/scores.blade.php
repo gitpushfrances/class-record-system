@@ -18,7 +18,7 @@
 
 @if($gradeItem->is_locked)
     <div class="px-4 py-3 mb-4 text-sm text-gray-600 bg-gray-100 border border-gray-300 rounded-lg">
-        🔒 This grade item is locked. Scores cannot be modified.
+        <i class="fa-solid fa-lock"></i> This grade item is locked. Scores cannot be modified.
     </div>
 @endif
 

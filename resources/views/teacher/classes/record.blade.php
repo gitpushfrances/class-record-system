@@ -15,11 +15,11 @@
     <div class="flex gap-3 mt-1">
         <a href="{{ route('teacher.classes.record.export', $section) }}"
            class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-            📥 Export Excel
+            <i class="fa-solid fa-file-excel"></i> Export Excel
         </a>
         <a href="{{ route('teacher.classes.record.print', $section) }}" target="_blank"
            class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-            🖨️ Print
+            <i class="fa-solid fa-print"></i> Print
         </a>
     </div>
 </div>
@@ -203,7 +203,7 @@
                     <td class="sticky left-[120px] z-10 px-4 py-3 font-medium text-gray-800 bg-white border border-gray-100">
                         {{ $enrollment->student?->full_name ?? 'N/A' }}
                         @if($fg && $fg->is_locked)
-                            <span class="ml-1 text-xs text-gray-400">🔒</span>
+                            <span class="ml-1 text-xs text-gray-400"><i class="fa-solid fa-lock"></i></span>
                         @endif
                     </td>
 
@@ -303,7 +303,7 @@
                     </td>
                     <td class="px-3 py-3 text-center border border-gray-200 bg-gray-50">
                         @if($fg && $fg->is_locked)
-                            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded-full">🔒 Locked</span>
+                            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
                         @elseif($lg['remarks'] === 'passed')
                             <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">Passed</span>
                         @else

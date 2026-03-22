@@ -45,10 +45,14 @@
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $student->program ?? '—' }}</td>
                             <td class="px-6 py-4">
                                 <a href="{{ route('dean.students.edit', $student) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                <form action="{{ route('dean.students.destroy', $student) }}" method="POST" class="inline">
+                                <button type="button"
+                                    onclick="confirmDelete({{ $student->id }}, '{{ addslashes($student->full_name) }}')"
+                                    class="ml-2 text-red-600 hover:text-red-900">Remove</button>
+                                <form id="delete-form-{{ $student->id }}"
+                                    action="{{ route('dean.students.destroy', $student) }}"
+                                    method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="ml-2 text-red-600 hover:text-red-900" onclick="return confirm('Remove this student from the master list?')">Remove</button>
                                 </form>
                             </td>
                         </tr>
@@ -65,6 +69,41 @@
         </div>
     </div>
 
-    
 
+
+{{-- Delete Confirmation Modal --}}
+<div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40">
+    <div class="w-full max-w-sm p-6 bg-white shadow-lg rounded-xl">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+            <i class="text-xl text-red-600 fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Remove Student</h3>
+        <p class="mb-1 text-sm text-center text-gray-500">You are about to remove:</p>
+        <p id="deleteStudentName" class="mb-4 text-sm font-semibold text-center text-gray-800"></p>
+        <p class="mb-6 text-xs text-center text-red-500">This will remove them from all enrolled classes permanently.</p>
+        <div class="flex gap-3">
+            <button onclick="closeDeleteModal()"
+                class="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+            </button>
+            <button id="confirmDeleteBtn"
+                class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                Yes, Remove
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(id, name) {
+    document.getElementById('deleteStudentName').textContent = name;
+    document.getElementById('confirmDeleteBtn').onclick = function () {
+        document.getElementById('delete-form-' + id).submit();
+    };
+    document.getElementById('deleteModal').classList.replace('hidden', 'flex');
+}
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.replace('flex', 'hidden');
+}
+</script>
 </x-sidebar-layout>

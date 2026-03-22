@@ -25,14 +25,14 @@
         <form method="POST" action="{{ route('teacher.grades.final.compute', $section) }}">
             @csrf
             <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-                💾 Save Grades
+                <i class="fa-solid fa-floppy-disk"></i> Save Grades
             </button>
         </form>
         <form method="POST" action="{{ route('teacher.grades.final.lock', $section) }}"
               onsubmit="return confirm('Lock all final grades? This cannot be undone.')">
             @csrf
             <button class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-                🔒 Lock All
+                <i class="fa-solid fa-lock"></i> Lock All
             </button>
         </form>
     </div>
@@ -89,7 +89,7 @@
                     </td>
                     <td class="px-5 py-3 text-center">
                         @if($fg && $fg->is_locked)
-                            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-full">🔒 Locked</span>
+                            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
                         @elseif($lg['remarks'] === 'passed')
                             <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">Passed</span>
                         @else

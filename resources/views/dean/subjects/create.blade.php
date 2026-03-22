@@ -98,7 +98,7 @@ document.getElementById('preview-btn').addEventListener('click', function () {
                 <div><strong>Units:</strong> ${units}</div>
                 ${desc ? `<div><strong>Description:</strong> ${desc}</div>` : ''}
                 <div style="margin-top:10px; padding:8px 12px; background:#fef3c7; border-radius:8px; font-size:12px; color:#92400e;">
-                    ⏳ This will be sent to the Admin for approval.
+                    <i class="fa-solid fa-clock"></i> This will be sent to the Admin for approval.
                 </div>
             </div>`,
         icon: 'question',

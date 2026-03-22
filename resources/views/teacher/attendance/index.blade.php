@@ -36,11 +36,11 @@
             <span class="self-center text-xs font-medium text-gray-500">Quick:</span>
             <button type="button" onclick="markAll('present')"
                     class="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg font-medium transition">
-                ✓ All Present
+                <i class="fa-solid fa-circle-check"></i> All Present
             </button>
             <button type="button" onclick="markAll('absent')"
                     class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg font-medium transition">
-                ✗ All Absent
+                <i class="fa-solid fa-circle-xmark"></i> All Absent
             </button>
         </div>
 
@@ -63,10 +63,10 @@
                         <td class="px-6 py-3 text-center">
                             <input type="hidden" name="attendance[{{ $i }}][enrollment_id]" value="{{ $enrollment->id }}">
                             <div class="flex flex-wrap justify-center gap-2">
-                                @foreach(['present' => ['bg-green-100 text-green-700 border-green-300', '✓ Present'],
-                                          'absent'  => ['bg-red-100 text-red-700 border-red-300', '✗ Absent'],
-                                          'late'    => ['bg-yellow-100 text-yellow-700 border-yellow-300', '⚠ Late'],
-                                          'excused' => ['bg-blue-100 text-blue-700 border-blue-300', '○ Excused']] as $val => [$cls, $lbl])
+                                @foreach(['present' => ['bg-green-100 text-green-700 border-green-300', '<i class="fa-solid fa-circle-check"></i> Present'],
+                                          'absent'  => ['bg-red-100 text-red-700 border-red-300', '<i class="fa-solid fa-circle-xmark"></i> Absent'],
+                                          'late'    => ['bg-yellow-100 text-yellow-700 border-yellow-300', '<i class="fa-solid fa-triangle-exclamation"></i> Late'],
+                                          'excused' => ['bg-blue-100 text-blue-700 border-blue-300', '<i class="fa-solid fa-circle-minus"></i> Excused']] as $val => [$cls, $lbl])
                                     <label class="cursor-pointer">
                                         <input type="radio"
                                                name="attendance[{{ $i }}][status]"

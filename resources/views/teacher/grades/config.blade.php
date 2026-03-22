@@ -51,7 +51,7 @@
         </div>
 
         <div id="totalWarning" class="hidden mt-2 text-xs text-red-500">Total must equal 100% before saving.</div>
-        <div id="totalOk" class="hidden mt-2 text-xs text-green-600">✓ Weights are valid.</div>
+        <div id="totalOk" class="hidden mt-2 text-xs text-green-600"><i class="fa-solid fa-circle-check"></i> Weights are valid.</div>
 
         <div class="mt-6">
             <button type="submit" id="submitBtn"

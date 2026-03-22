@@ -51,7 +51,7 @@
                                     <button type="submit"
                                             class="text-xs font-semibold px-3 py-1.5 rounded-lg transition"
                                             style="background:#d1fae5; color:#065f46;">
-                                        ✓ Approve
+                                        <i class="fa-solid fa-circle-check"></i> Approve
                                     </button>
                                 </form>
                                 {{-- Reject --}}
@@ -60,7 +60,7 @@
                                         data-id="{{ $subject->id }}"
                                         data-code="{{ $subject->code }}"
                                         style="background:#fee2e2; color:#991b1b;">
-                                    ✗ Reject
+                                    <i class="fa-solid fa-circle-xmark"></i> Reject
                                 </button>
                                 {{-- Hidden reject form --}}
                                 <form method="POST"

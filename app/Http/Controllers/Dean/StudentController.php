@@ -62,6 +62,8 @@ class StudentController extends Controller
 
     public function destroy(Student $student)
     {
+        // Remove all enrollments for this student first
+        \App\Models\Enrollment::where('student_id', $student->id)->delete();
         $student->delete();
         return redirect()->route('dean.students.index')->with('success', 'Student removed successfully.');
     }
