@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dean;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class SubjectController extends Controller
@@ -11,10 +12,16 @@ class SubjectController extends Controller
     public function index()
     {
         $subjects = Subject::where('requested_by', auth()->id())
+            ->with('teacher')
             ->orderByDesc('created_at')
             ->paginate(20);
 
-        return view('dean.subjects.index', compact('subjects'));
+        $teachers = User::where('role', 'teacher')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('dean.subjects.index', compact('subjects', 'teachers'));
     }
 
     public function create()
@@ -52,6 +59,17 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         abort_if($subject->requested_by !== auth()->id(), 403);
+
+        // Handle teacher assignment separately (allowed for approved subjects too)
+        if ($request->has('assign_teacher')) {
+            $request->validate([
+                'teacher_id' => 'nullable|exists:users,id',
+            ]);
+            $subject->update(['teacher_id' => $request->teacher_id ?: null]);
+            return redirect()->route('dean.subjects.index')
+                ->with('success', 'Teacher assigned successfully.');
+        }
+
         abort_if($subject->status !== 'pending', 403, 'Only pending subjects can be edited.');
 
         $validated = $request->validate([

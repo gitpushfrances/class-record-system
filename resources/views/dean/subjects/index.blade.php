@@ -18,6 +18,12 @@
         </a>
     </div>
 
+    @if(session('success'))
+        <div class="px-4 py-3 mb-4 text-sm text-green-700 border border-green-200 rounded-xl bg-green-50">
+            {{ session('success') }}
+        </div>
+    @endif
+
     {{-- Table --}}
     <div class="overflow-hidden border rounded-2xl" style="border-color:#e5e7eb;">
         <table class="w-full text-sm">
@@ -27,6 +33,7 @@
                     <th class="px-4 py-3 font-semibold text-left text-gray-600">Name</th>
                     <th class="px-4 py-3 font-semibold text-left text-gray-600">Department</th>
                     <th class="px-4 py-3 font-semibold text-left text-gray-600">Units</th>
+                    <th class="px-4 py-3 font-semibold text-left text-gray-600">Assigned Teacher</th>
                     <th class="px-4 py-3 font-semibold text-left text-gray-600">Status</th>
                     <th class="px-4 py-3 font-semibold text-left text-gray-600">Submitted</th>
                     <th class="px-4 py-3"></th>
@@ -39,6 +46,23 @@
                     <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $subject->department }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
+                    <td class="px-4 py-3">
+                        @if($subject->status === 'approved')
+                            <button onclick="openAssignModal({{ $subject->id }}, '{{ addslashes($subject->name) }}', {{ $subject->teacher_id ?? 'null' }})"
+                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium transition border rounded-lg hover:bg-gray-50"
+                                    style="border-color:#d1d5db; color:#374151;">
+                                @if($subject->teacher)
+                                    <i class="text-green-500 fa-solid fa-user-check"></i>
+                                    {{ $subject->teacher->name }}
+                                @else
+                                    <i class="text-gray-400 fa-solid fa-user-plus"></i>
+                                    Assign Teacher
+                                @endif
+                            </button>
+                        @else
+                            <span class="text-xs italic text-gray-400">— pending approval</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-3">
                         @if($subject->status === 'pending')
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#fef3c7; color:#92400e;">⏳ Pending</span>
@@ -72,7 +96,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-10 text-sm text-center text-gray-400">
+                    <td colspan="8" class="px-4 py-10 text-sm text-center text-gray-400">
                         No subject requests yet. <a href="{{ route('dean.subjects.create') }}" style="color:#c8a97e;">Request one.</a>
                     </td>
                 </tr>
@@ -82,6 +106,42 @@
     </div>
 
     <div class="mt-4">{{ $subjects->links() }}</div>
+</div>
+
+{{-- Assign Teacher Modal --}}
+<div id="assignModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40 backdrop-blur-sm">
+    <div class="w-full max-w-sm p-6 bg-white shadow-xl rounded-2xl">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-indigo-50">
+            <i class="text-indigo-600 fa-solid fa-chalkboard-user"></i>
+        </div>
+        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Assign Teacher</h3>
+        <p id="assignSubjectName" class="mb-4 text-sm font-medium text-center text-gray-500"></p>
+
+        <form id="assignForm" method="POST">
+            @csrf @method('PATCH')
+            <input type="hidden" name="assign_teacher" value="1">
+
+            <select name="teacher_id" id="teacherSelect"
+                    class="w-full px-3 py-2 mb-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <option value="">— No teacher assigned —</option>
+                @foreach($teachers as $teacher)
+                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                @endforeach
+            </select>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeAssignModal()"
+                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90"
+                        style="background:#1c1814;">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -101,5 +161,17 @@ document.querySelectorAll('.delete-form').forEach(form => {
         }).then(result => { if (result.isConfirmed) form.submit(); });
     });
 });
+
+function openAssignModal(subjectId, subjectName, currentTeacherId) {
+    document.getElementById('assignSubjectName').textContent = subjectName;
+    document.getElementById('assignForm').action = '/dean/subjects/' + subjectId;
+    const select = document.getElementById('teacherSelect');
+    select.value = currentTeacherId ?? '';
+    document.getElementById('assignModal').classList.replace('hidden', 'flex');
+}
+
+function closeAssignModal() {
+    document.getElementById('assignModal').classList.replace('flex', 'hidden');
+}
 </script>
 @endsection

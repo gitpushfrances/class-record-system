@@ -21,6 +21,7 @@ class Subject extends Model
         'approved_by',
         'approved_at',
         'rejected_reason',
+        'teacher_id',
     ];
 
     protected $casts = [
@@ -40,5 +41,9 @@ class Subject extends Model
     public function sections()
     {
         return $this->hasMany(Section::class);
+    }
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
     }
 }

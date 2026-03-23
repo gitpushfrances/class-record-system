@@ -144,11 +144,15 @@
                             @endif
                         </td>
                         <td class="px-6 py-3 text-center">
-                            <form method="POST" action="{{ route('teacher.classes.unenroll', [$section, $enrollment]) }}"
-                                  onsubmit="return confirm('Remove this student from the class?')">
+                            <form id="removeForm-{{ $enrollment->id }}"
+                                method="POST" action="{{ route('teacher.classes.unenroll', [$section, $enrollment]) }}">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-xs text-red-500 hover:underline">Remove</button>
+                                <button type="button"
+                                        onclick="openRemoveModal('{{ $enrollment->id }}', '{{ $enrollment->student?->full_name }}')"
+                                        class="text-xs font-medium text-red-500 hover:text-red-700 hover:underline">
+                                    Remove
+                                </button>
                             </form>
                         </td>
                         <td class="px-6 py-3 text-center">
@@ -181,14 +185,49 @@ function filterStudents(q) {
         row.closest('form').style.display = match ? '' : 'none';
     });
 }
+
+let activeRemoveFormId = null;
+
+function openRemoveModal(enrollmentId, studentName) {
+    activeRemoveFormId = enrollmentId;
+    document.getElementById('removeStudentName').textContent = studentName;
+    document.getElementById('removeModal').classList.replace('hidden', 'flex');
+}
+
+function closeRemoveModal() {
+    activeRemoveFormId = null;
+    document.getElementById('removeModal').classList.replace('flex', 'hidden');
+}
+
+document.getElementById('confirmRemoveBtn').addEventListener('click', function () {
+    if (activeRemoveFormId) {
+        document.getElementById('removeForm-' + activeRemoveFormId).submit();
+    }
+});
 </script>
-</x-sidebar-layout>$enrolledIds = $currentTerm
-            ? $currentTerm->enrollments->pluck('student_id')->toArray()
-            : [];
-
-        $availableStudents = Student::where('status', 'active')
-            ->whereNotIn('id', $enrolledIds)
-            ->orderBy('last_name')
-            ->get();
-
-        return view('teacher.classes.show', compact('section', 'currentTerm', 'hasConfig', 'availableStudents'));
+{{-- Remove Student Confirmation Modal --}}
+<div id="removeModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40 backdrop-blur-sm">
+    <div class="w-full max-w-sm p-6 bg-white shadow-xl rounded-2xl">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+        </div>
+        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Remove Student</h3>
+        <p class="text-sm text-center text-gray-500">You are about to remove</p>
+        <p id="removeStudentName" class="mb-1 text-sm font-semibold text-center text-gray-800"></p>
+        <p class="mb-6 text-xs text-center text-gray-400">This will unenroll them from the class.<br>This action cannot be undone.</p>
+        <div class="flex gap-3">
+            <button onclick="closeRemoveModal()"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+            </button>
+            <button id="confirmRemoveBtn"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                Yes, Remove
+            </button>
+        </div>
+    </div>
+</div>
+</x-sidebar-layout>
