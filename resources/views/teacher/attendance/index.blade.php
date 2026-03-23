@@ -75,7 +75,7 @@
                                                {{ ($record?->status ?? 'present') === $val ? 'checked' : '' }}>
                                         <span class="status-btn border rounded-lg px-3 py-1 text-xs font-medium transition
                                                      {{ ($record?->status ?? 'present') === $val ? $cls . ' border-current' : 'border-gray-200 text-gray-400' }}">
-                                            {{ $lbl }}
+                                            {!! $lbl !!}
                                         </span>
                                     </label>
                                 @endforeach
