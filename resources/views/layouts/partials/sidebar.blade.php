@@ -110,7 +110,7 @@
                 'href'   => route('admin.deans.index'),
                 'active' => request()->routeIs('admin.deans.*'),
                 'icon'   => 'fa-user-tie',
-                'label'  => 'Deans',
+                'label'  => 'Faculty',
             ])
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('admin.subjects.index'),
@@ -124,6 +124,12 @@
                 'icon'   => 'fa-calendar-days',
                 'label'  => 'Academic Period',
             ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('admin.backup.index'),
+                'active' => request()->routeIs('admin.backup.*'),
+                'icon'   => 'fa-database',
+                'label'  => 'Backup & Restore',
+            ])
         @endif
 
         @if(auth()->user()->role === 'dean')
@@ -133,12 +139,7 @@
                 'icon'   => 'fa-gauge-high',
                 'label'  => 'Dashboard',
             ])
-            @include('layouts.partials.sidebar-link', [
-                'href'   => route('dean.teachers.pending'),
-                'active' => request()->routeIs('dean.teachers.*'),
-                'icon'   => 'fa-user-clock',
-                'label'  => 'Pending Teachers',
-            ])
+
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.sections.index'),
                 'active' => request()->routeIs('dean.sections.*'),
@@ -158,10 +159,25 @@
                 'label'  => 'Subjects',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.assignments.index'),
+                'active' => request()->routeIs('dean.assignments.*'),
+                'icon'   => 'fa-chalkboard-user',
+                'label'  => 'Assignments',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.enrollments.index'),
                 'active' => request()->routeIs('dean.enrollments.*'),
                 'icon'   => 'fa-clipboard-list',
                 'label'  => 'Enrollments',
+            ])
+        @endif
+
+        @if(auth()->user()->role === 'program_head')
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('program-head.dashboard'),
+                'active' => request()->routeIs('program-head.*'),
+                'icon'   => 'fa-shield-halved',
+                'label'  => 'Grade Verification',
             ])
         @endif
 

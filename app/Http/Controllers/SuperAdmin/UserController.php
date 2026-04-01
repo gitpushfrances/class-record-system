@@ -76,6 +76,56 @@ class UserController extends Controller
         return redirect()->route('admin.deans.index')->with('success', 'Dean account deactivated.');
     }
 
+
+    public function createTeacher()
+    {
+        return view('admin.users.create-teacher');
+    }
+
+    public function storeTeacher(Request $request)
+    {
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        User::create([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role'     => 'teacher',
+            'status'   => 'active',
+        ]);
+
+        return redirect()->route('admin.deans.index')->with('success', 'Teacher account created successfully.');
+    }
+    public function createProgramHead()
+    {
+        return view('admin.users.create-program-head');
+    }
+
+    public function storeProgramHead(Request $request)
+    {
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role'     => 'program_head',
+            'status'   => 'active',
+        ]);
+        $user->assignRole('program_head');
+
+        return redirect()->route('admin.deans.index')
+            ->with('success', 'Program Head account created successfully.');
+    }
+
     public function activate(User $dean)
     {
         abort_if(!$dean->isDean(), 403);

@@ -35,12 +35,26 @@ class Section extends Model
 
     public function gradeItems()
     {
-        return $this->hasMany(\App\Models\GradeItem::class);
+        return $this->hasMany(GradeItem::class);
     }
 
     public function gradeConfiguration()
     {
-        return $this->hasOne(\App\Models\GradeConfiguration::class);
+        return $this->hasOne(GradeConfiguration::class);
+    }
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'section_subject_teachers')
+            ->withPivot('teacher_id')
+            ->withTimestamps();
+    }
+
+    public function assignedTeachers()
+    {
+        return $this->belongsToMany(User::class, 'section_subject_teachers', 'section_id', 'teacher_id')
+            ->withPivot('subject_id')
+            ->withTimestamps();
     }
 
     public function getFullNameAttribute()

@@ -24,25 +24,37 @@ class GradeController extends Controller
     {
         $this->authorizeSection($section);
 
-        $data = $request->validate([
-            'quiz_weight'       => 'required|numeric|min:0|max:100',
-            'exam_weight'       => 'required|numeric|min:0|max:100',
-            'project_weight'    => 'required|numeric|min:0|max:100',
-            'assessment_weight' => 'required|numeric|min:0|max:100',
-            'attendance_weight' => 'required|numeric|min:0|max:100',
+        $request->validate([
+            'components'          => 'required|array|min:1',
+            'components.*.key'    => 'required|string|max:50',
+            'components.*.label'  => 'required|string|max:100',
+            'components.*.weight' => 'required|numeric|min:0|max:100',
+            'components.*.period' => 'required|in:midterm,final',
         ]);
 
-        $total = array_sum($data);
+        $components = $request->input('components');
 
-        if (abs($total - 100) > 0.01) {
+        $midtermTotal = array_sum(array_column(
+            array_filter($components, fn($c) => $c['period'] === 'midterm'), 'weight'
+        ));
+        $finalTotal = array_sum(array_column(
+            array_filter($components, fn($c) => $c['period'] === 'final'), 'weight'
+        ));
+
+        if (abs($midtermTotal - 100) > 0.01) {
             return back()
-                ->withErrors(['weights' => "Weights must sum to 100%. Current total: {$total}%"])
+                ->withErrors(['weights' => "Midterm weights must sum to 100%. Current: {$midtermTotal}%"])
+                ->withInput();
+        }
+        if (abs($finalTotal - 100) > 0.01) {
+            return back()
+                ->withErrors(['weights' => "Final weights must sum to 100%. Current: {$finalTotal}%"])
                 ->withInput();
         }
 
         GradeConfiguration::updateOrCreate(
             ['section_id' => $section->id],
-            $data + ['status' => 'active']
+            ['config_json' => $components, 'status' => 'active']
         );
 
         return redirect()->route('teacher.classes.show', $section)
@@ -54,15 +66,17 @@ class GradeController extends Controller
         $this->authorizeSection($section);
         $this->requireConfig($section);
 
-        $gradeItems = $section->gradeItems()
+        $allItems = $section->gradeItems()
+            ->orderBy('period')
             ->orderBy('component_type')
             ->orderBy('created_at')
-            ->get()
-            ->groupBy('component_type');
+            ->get();
 
-        $config = $section->gradeConfiguration;
+        $gradeItems = $allItems->groupBy('period');
+        $config     = $section->gradeConfiguration;
+        $components = collect($config->getComponents())->keyBy('key');
 
-        return view('teacher.grades.items', compact('section', 'gradeItems', 'config'));
+        return view('teacher.grades.items', compact('section', 'gradeItems', 'config', 'components'));
     }
 
     public function storeItem(Request $request, Section $section)
@@ -70,13 +84,23 @@ class GradeController extends Controller
         $this->authorizeSection($section);
         $this->requireConfig($section);
 
+        $config     = $section->gradeConfiguration;
+        $validKeys  = collect($config->getComponents())->pluck('key')->toArray();
+
         $data = $request->validate([
-            'component_type' => 'required|in:quiz,exam,project,assessment',
+            'component_type' => ['required', 'string', 'max:50', 'in:' . implode(',', $validKeys)],
+            'period'         => 'required|in:midterm,final',
             'name'           => 'required|string|max:100',
             'max_score'      => 'required|numeric|min:1',
             'date_given'     => 'nullable|date',
             'description'    => 'nullable|string|max:500',
         ]);
+
+        // Block if weight is 0
+        $weight = $config->getWeight($data['component_type']);
+        if ($weight === 0.0) {
+            return back()->withErrors(['component_type' => 'This component has 0% weight. Update grade configuration to enable it.'])->withInput();
+        }
 
         $section->gradeItems()->create($data + ['created_by' => auth()->id()]);
 
@@ -180,20 +204,24 @@ class GradeController extends Controller
         $liveGrades = [];
 
         foreach ($enrollments as $enrollment) {
-            $scores          = $this->calculateComponentScores($enrollment, $config);
-            $finalPercentage = round(array_sum($scores), 2);
-            $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
+            $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm');
+            $finScores = $this->calculatePeriodScores($enrollment, $config, 'final');
+            $midPct    = round(array_sum($midScores), 2);
+            $finPct    = round(array_sum($finScores), 2);
+            $midNum    = FinalGrade::convertToNumericalGrade($midPct);
+            $finNum    = FinalGrade::convertToNumericalGrade($finPct);
+            $avgNum    = round(($midNum + $finNum) / 2 * 4) / 4;
 
             $liveGrades[$enrollment->id] = [
-                'quiz_score'       => $scores['quiz'],
-                'exam_score'       => $scores['exam'],
-                'project_score'    => $scores['project'],
-                'assessment_score' => $scores['assessment'],
-                'attendance_score' => $scores['attendance'],
-                'final_grade'      => $finalPercentage,
-                'numerical_grade'  => $numerical,
-                'letter_grade'     => number_format($numerical, 2),
-                'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
+                'midterm_percentage' => $midPct,
+                'midterm_numerical'  => $midNum,
+                'final_percentage'   => $finPct,
+                'final_numerical'    => $finNum,
+                'average_numerical'  => $avgNum,
+                'final_grade'        => $midPct,
+                'numerical_grade'    => $avgNum,
+                'letter_grade'       => number_format($avgNum, 2),
+                'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
             ];
         }
 
@@ -225,23 +253,29 @@ class GradeController extends Controller
 
         foreach ($enrollments as $enrollment) {
             try {
-                $scores          = $this->calculateComponentScores($enrollment, $config);
-                $finalPercentage = round(array_sum($scores), 2);
-                $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
+                $midScores  = $this->calculatePeriodScores($enrollment, $config, 'midterm');
+                $finScores  = $this->calculatePeriodScores($enrollment, $config, 'final');
+                $midPct     = round(array_sum($midScores), 2);
+                $finPct     = round(array_sum($finScores), 2);
+                $midNum     = FinalGrade::convertToNumericalGrade($midPct);
+                $finNum     = FinalGrade::convertToNumericalGrade($finPct);
+                $avgNum     = round(($midNum + $finNum) / 2 * 4) / 4;
+                $allScores  = $this->calculateComponentScores($enrollment, $config);
+                $finalPct   = round(array_sum($allScores), 2);
 
                 FinalGrade::updateOrCreate(
                     ['enrollment_id' => $enrollment->id],
                     [
-                        'quiz_score'       => $scores['quiz'],
-                        'exam_score'       => $scores['exam'],
-                        'project_score'    => $scores['project'],
-                        'assessment_score' => $scores['assessment'],
-                        'attendance_score' => $scores['attendance'],
-                        'final_grade'      => $finalPercentage,
-                        'numerical_grade'  => $numerical,
-                        'letter_grade'     => number_format($numerical, 2),
-                        'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
-                        'computed_by'      => auth()->id(),
+                        'midterm_percentage' => $midPct,
+                        'midterm_numerical'  => $midNum,
+                        'final_percentage'   => $finPct,
+                        'final_numerical'    => $finNum,
+                        'average_numerical'  => $avgNum,
+                        'final_grade'        => $finalPct,
+                        'numerical_grade'    => $avgNum,
+                        'letter_grade'       => number_format($avgNum, 2),
+                        'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
+                        'computed_by'        => auth()->id(),
                     ]
                 );
             } catch (\Exception $e) {
@@ -266,6 +300,10 @@ class GradeController extends Controller
             return back()->with('error', 'No active term found.');
         }
 
+        if ($currentTerm->verification()->exists()) {
+            return back()->with('error', 'Grades are verified by Program Head and cannot be modified.');
+        }
+
         $currentTerm->enrollments()
             ->with('finalGrade')
             ->get()
@@ -283,51 +321,68 @@ class GradeController extends Controller
 
     private function calculateComponentScores($enrollment, $config): array
     {
-        $scores = [
-            'quiz'       => 0,
-            'exam'       => 0,
-            'project'    => 0,
-            'assessment' => 0,
-            'attendance' => 0,
-        ];
-
+        $components   = $config->getComponents();
+        $scores       = [];
         $activeWeight = 0;
 
-        foreach (['quiz', 'exam', 'project', 'assessment'] as $type) {
-            $weight = (float) $config->{$type . '_weight'};
+        foreach ($components as $comp) {
+            $key    = $comp['key'];
+            $weight = (float) $comp['weight'];
+            $scores[$key] = 0;
             if ($weight === 0.0) continue;
 
             $items = $enrollment->studentGrades->filter(
-                fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $type
+                fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $key
             );
 
             if ($items->isNotEmpty()) {
                 $earned   = $items->sum(fn($g) => (float) $g->score);
                 $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
-
-                $scores[$type] = $possible > 0
-                    ? round(($earned / $possible) * $weight, 2)
-                    : 0;
-
+                $scores[$key]  = $possible > 0 ? round(($earned / $possible) * $weight, 2) : 0;
                 $activeWeight += $weight;
-            }
-        }
-
-        $attendanceWeight = (float) $config->attendance_weight;
-        if ($attendanceWeight > 0) {
-            $total   = $enrollment->attendanceRecords->count();
-            $present = $enrollment->attendanceRecords->whereIn('status', ['present', 'late'])->count();
-
-            if ($total > 0) {
-                $scores['attendance'] = round(($present / $total) * $attendanceWeight, 2);
-                $activeWeight += $attendanceWeight;
             }
         }
 
         if ($activeWeight > 0 && $activeWeight < 100) {
             $factor = 100 / $activeWeight;
-            foreach ($scores as $key => $val) {
-                $scores[$key] = round($val * $factor, 2);
+            foreach ($scores as $k => $v) {
+                $scores[$k] = round($v * $factor, 2);
+            }
+        }
+
+        return $scores;
+    }
+
+    private function calculatePeriodScores($enrollment, $config, string $period): array
+    {
+        $components   = $config->getComponentsByPeriod($period);
+        $scores       = [];
+        $activeWeight = 0;
+
+        foreach ($components as $comp) {
+            $key    = $comp['key'];
+            $weight = (float) $comp['weight'];
+            $scores[$key] = 0;
+            if ($weight === 0.0) continue;
+
+            $items = $enrollment->studentGrades->filter(
+                fn($g) => $g->gradeItem !== null
+                    && $g->gradeItem->component_type === $key
+                    && $g->gradeItem->period === $period
+            );
+
+            if ($items->isNotEmpty()) {
+                $earned   = $items->sum(fn($g) => (float) $g->score);
+                $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
+                $scores[$key]  = $possible > 0 ? round(($earned / $possible) * $weight, 2) : 0;
+                $activeWeight += $weight;
+            }
+        }
+
+        if ($activeWeight > 0 && $activeWeight < 100) {
+            $factor = 100 / $activeWeight;
+            foreach ($scores as $k => $v) {
+                $scores[$k] = round($v * $factor, 2);
             }
         }
 

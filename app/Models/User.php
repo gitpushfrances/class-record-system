@@ -80,6 +80,11 @@ class User extends Authenticatable
         return $this->role === 'teacher';
     }
 
+    public function isProgramHead()
+    {
+        return $this->role === 'program_head';
+    }
+
     public function isActive()
     {
         return $this->status === 'active';

@@ -37,7 +37,7 @@
                                             <form action="{{ route('admin.deans.deactivate', $dean) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Deactivate this dean?')">Deactivate</button>
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Deactivate this dean?')">Change role</button>
                                             </form>
                                         @else
                                             <form action="{{ route('admin.deans.activate', $dean) }}" method="POST" class="inline">

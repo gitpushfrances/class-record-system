@@ -6,21 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
-{
-    Schema::table('subjects', function (Blueprint $table) {
-        $table->foreignId('teacher_id')->nullable()->constrained('users')->nullOnDelete()->after('department');
-    });
-}
+    {
+        Schema::create('section_subject_teachers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('section_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
+            $table->foreignId('teacher_id')->constrained('users')->onDelete('cascade');
+            $table->timestamps();
 
-public function down(): void
-{
-    Schema::table('subjects', function (Blueprint $table) {
-        $table->dropForeignIdFor(\App\Models\User::class, 'teacher_id');
-        $table->dropColumn('teacher_id');
-    });
-}
+            $table->unique(['section_id', 'subject_id', 'teacher_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('section_subject_teachers');
+    }
 };

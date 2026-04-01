@@ -12,26 +12,17 @@ class GradeConfiguration extends Model
 
     protected $fillable = [
         'section_id',
-        'quiz_weight',
-        'exam_weight',
-        'project_weight',
-        'assessment_weight',
-        'attendance_weight',
+        'config_json',
         'status',
         'approved_by',
         'approved_at',
     ];
 
     protected $casts = [
-        'quiz_weight' => 'decimal:2',
-        'exam_weight' => 'decimal:2',
-        'project_weight' => 'decimal:2',
-        'assessment_weight' => 'decimal:2',
-        'attendance_weight' => 'decimal:2',
+        'config_json' => 'array',
         'approved_at' => 'datetime',
     ];
 
-    // Relationships
     public function section()
     {
         return $this->belongsTo(Section::class);
@@ -42,11 +33,34 @@ class GradeConfiguration extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    // Check if weights sum to 100
-    public function isValidConfiguration()
+    public function getComponents(): array
     {
-        $total = $this->quiz_weight + $this->exam_weight + $this->project_weight +
-                 $this->assessment_weight + $this->attendance_weight;
-        return abs($total - 100) < 0.01; // Allow small floating point differences
+        return $this->config_json ?? [];
+    }
+
+    public function getComponentsByPeriod(string $period): array
+    {
+        return array_filter($this->getComponents(), fn($c) => $c['period'] === $period);
+    }
+
+    public function getWeight(string $key): float
+    {
+        foreach ($this->getComponents() as $c) {
+            if ($c['key'] === $key) return (float) $c['weight'];
+        }
+        return 0.0;
+    }
+
+    public function isValidConfiguration(): bool
+    {
+        $midterm = array_sum(array_column(
+            array_filter($this->getComponents(), fn($c) => $c['period'] === 'midterm'),
+            'weight'
+        ));
+        $final = array_sum(array_column(
+            array_filter($this->getComponents(), fn($c) => $c['period'] === 'final'),
+            'weight'
+        ));
+        return abs($midterm - 100) < 0.01 && abs($final - 100) < 0.01;
     }
 }

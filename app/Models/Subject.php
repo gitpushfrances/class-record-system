@@ -21,7 +21,6 @@ class Subject extends Model
         'approved_by',
         'approved_at',
         'rejected_reason',
-        'teacher_id',
     ];
 
     protected $casts = [
@@ -40,10 +39,15 @@ class Subject extends Model
 
     public function sections()
     {
-        return $this->hasMany(Section::class);
+        return $this->belongsToMany(Section::class, 'section_subject_teachers')
+            ->withPivot('teacher_id')
+            ->withTimestamps();
     }
-    public function teacher()
+
+    public function teachers()
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->belongsToMany(User::class, 'section_subject_teachers', 'subject_id', 'teacher_id')
+            ->withPivot('section_id')
+            ->withTimestamps();
     }
 }

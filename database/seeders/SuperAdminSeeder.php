@@ -56,6 +56,19 @@ class SuperAdminSeeder extends Seeder
         $teacher->assignRole('teacher');
         echo "Sample Teacher created successfully!\nEmail: teacher@classrecord.test\nPassword: password\n";
 
+        $programHead = User::create([
+            'name'              => 'Program Head Sample',
+            'email'             => 'programhead@classrecord.test',
+            'password'          => Hash::make('password'),
+            'role'              => 'program_head',
+            'status'            => 'active',
+            'approved_by'       => $superAdmin->id,
+            'approved_at'       => now(),
+            'email_verified_at' => now(),
+        ]);
+        $programHead->assignRole('program_head');
+        echo "Sample Program Head created!\nEmail: programhead@classrecord.test\nPassword: password\n";
+
         $pendingTeacher = User::create([
             'name'              => 'Pending Teacher',
             'email'             => 'pending@classrecord.test',

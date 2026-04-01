@@ -95,6 +95,15 @@ class RolePermissionSeeder extends Seeder
             'export data',
         ]);
 
+        // Program Head - Grade verification
+        $programHead = Role::create(['name' => 'program_head']);
+        $programHead->givePermissionTo([
+            'view sections',
+            'view grades',
+            'view students',
+            'view all reports',
+        ]);
+
         echo "Roles and permissions created successfully!\n";
     }
 }

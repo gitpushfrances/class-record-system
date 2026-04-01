@@ -25,10 +25,11 @@ class CheckRole
 
         // Map role strings to check methods
         $roleCheck = match($role) {
-            'super_admin' => $user->isSuperAdmin(),
-            'dean' => $user->isDean(),
-            'teacher' => $user->isTeacher(),
-            default => false,
+            'super_admin'  => $user->isSuperAdmin(),
+            'dean'         => $user->isDean(),
+            'teacher'      => $user->isTeacher(),
+            'program_head' => $user->isProgramHead(),
+            default        => false,
         };
 
         if (!$roleCheck) {

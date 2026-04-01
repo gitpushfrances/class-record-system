@@ -1,105 +1,108 @@
 <x-sidebar-layout>
 
-
-
-
-{{-- Alerts --}}
 @if(session('success'))
-    <div class="px-4 py-3 mb-4 text-sm text-green-700 bg-green-100 border border-green-200 rounded-lg">
-        {{ session('success') }}
-    </div>
+    <div class="px-4 py-3 mb-4 rounded-lg text-sm" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;">{{ session('success') }}</div>
 @endif
 @if(session('error'))
-    <div class="px-4 py-3 mb-4 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg">
-        {{ session('error') }}
-    </div>
+    <div class="px-4 py-3 mb-4 rounded-lg text-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;">{{ session('error') }}</div>
 @endif
 
 <div class="flex items-start justify-between mb-6">
     <div>
         <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
-        <h1 class="mt-1 text-2xl font-bold text-gray-800">Final Grades</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
+        <h1 class="mt-1 text-2xl font-bold" style="color:#f0dfc0;">Final Grades</h1>
+        <p class="mt-1 text-sm" style="color:rgba(200,169,126,0.6);">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
-    <div class="flex gap-3 mt-1">
+    @php
+    $currentTerm = $section->terms()->where('status', 'active')->first();
+    $verification = $currentTerm?->verification()->with('verifiedBy')->first();
+@endphp
+
+@if($verification)
+    <div class="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>✓ Verified by <strong>{{ $verification->verifiedBy->name }}</strong> on {{ $verification->verified_at->format('M d, Y') }}</span>
+    </div>
+@else
+    <div class="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:rgba(248,113,113,0.8);">
+        <i class="fa-solid fa-clock"></i>
+        <span>Pending verification by Program Head</span>
+    </div>
+@endif
+
+<div class="flex gap-3 mt-1">
         <form method="POST" action="{{ route('teacher.grades.final.compute', $section) }}">
             @csrf
-            <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+            <button class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#9a7a50,#c8a97e);color:#1c1814;">
                 <i class="fa-solid fa-floppy-disk"></i> Save Grades
             </button>
         </form>
+        @if(!isset($verification) || !$verification)
         <form method="POST" action="{{ route('teacher.grades.final.lock', $section) }}"
               onsubmit="return confirm('Lock all final grades? This cannot be undone.')">
             @csrf
-            <button class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+            <button class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:rgba(200,169,126,0.1);color:#c8a97e;border:1px solid rgba(200,169,126,0.2);">
                 <i class="fa-solid fa-lock"></i> Lock All
             </button>
         </form>
+        @else
+        <span class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:rgba(200,169,126,0.05);color:rgba(200,169,126,0.3);border:1px solid rgba(200,169,126,0.1);">
+            <i class="fa-solid fa-lock"></i> Locked by Verification
+        </span>
+        @endif
     </div>
 </div>
 
-{{-- Grade Config Summary --}}
-@php $config = $section->gradeConfiguration; @endphp
-<div class="flex flex-wrap gap-4 px-5 py-3 mb-6 text-sm text-indigo-700 border border-indigo-100 bg-indigo-50 rounded-xl">
-    <span>Quiz <strong>{{ $config->quiz_weight }}%</strong></span>
-    <span>Exam <strong>{{ $config->exam_weight }}%</strong></span>
-    <span>Project <strong>{{ $config->project_weight }}%</strong></span>
-    <span>Assessment <strong>{{ $config->assessment_weight }}%</strong></span>
-    <span>Attendance <strong>{{ $config->attendance_weight }}%</strong></span>
-</div>
-
-<div class="overflow-x-auto bg-white border border-gray-200 shadow-sm rounded-xl">
+<div class="overflow-x-auto rounded-xl" style="border:1px solid rgba(200,169,126,0.15);">
     <table class="w-full text-sm">
-        <thead class="text-xs text-gray-500 uppercase bg-gray-50">
-            <tr>
-                <th class="px-5 py-3 text-left">#</th>
-                <th class="px-5 py-3 text-left">Student</th>
-                <th class="px-5 py-3 text-center">Quiz<br><span class="font-normal normal-case">({{ $config->quiz_weight }}%)</span></th>
-                <th class="px-5 py-3 text-center">Exam<br><span class="font-normal normal-case">({{ $config->exam_weight }}%)</span></th>
-                <th class="px-5 py-3 text-center">Project<br><span class="font-normal normal-case">({{ $config->project_weight }}%)</span></th>
-                <th class="px-5 py-3 text-center">Assess.<br><span class="font-normal normal-case">({{ $config->assessment_weight }}%)</span></th>
-                <th class="px-5 py-3 text-center">Attend.<br><span class="font-normal normal-case">({{ $config->attendance_weight }}%)</span></th>
-                <th class="px-5 py-3 text-center">Final %</th>
-                <th class="px-5 py-3 text-center">Grade</th>
-                <th class="px-5 py-3 text-center">Remarks</th>
+        <thead>
+            <tr style="background:#211a12;border-bottom:1px solid rgba(200,169,126,0.15);">
+                <th class="px-5 py-3 text-left text-xs" style="color:rgba(200,169,126,0.6);">#</th>
+                <th class="px-5 py-3 text-left text-xs" style="color:rgba(200,169,126,0.6);">Student</th>
+                <th class="px-5 py-3 text-center text-xs" style="color:rgba(200,169,126,0.6);">Midterm %</th>
+                <th class="px-5 py-3 text-center text-xs" style="color:rgba(200,169,126,0.6);">Midterm Grade</th>
+                <th class="px-5 py-3 text-center text-xs" style="color:rgba(200,169,126,0.6);">Final %</th>
+                <th class="px-5 py-3 text-center text-xs" style="color:rgba(200,169,126,0.6);">Final Grade</th>
+                <th class="px-5 py-3 text-center text-xs" style="color:rgba(200,169,126,0.6);">Average</th>
+                <th class="px-5 py-3 text-center text-xs" style="color:rgba(200,169,126,0.6);">Remarks</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
             @forelse($enrollments as $i => $enrollment)
                 @php
                     $lg = $liveGrades[$enrollment->id];
                     $fg = $enrollment->finalGrade;
+                    $midPct  = $lg['midterm_percentage'] ?? 0;
+                    $midNum  = $lg['midterm_numerical']  ?? 5.00;
+                    $finPct  = $lg['final_percentage']   ?? 0;
+                    $finNum  = $lg['final_numerical']    ?? 5.00;
+                    $avgNum  = $lg['average_numerical']  ?? 5.00;
+                    $remarks = $avgNum <= 3.00 ? 'passed' : 'failed';
                 @endphp
-                <tr class="hover:bg-gray-50">
-                    <td class="px-5 py-3 text-gray-400">{{ $i + 1 }}</td>
+                <tr style="border-bottom:1px solid rgba(200,169,126,0.07);">
+                    <td class="px-5 py-3" style="color:rgba(200,169,126,0.4);">{{ $i + 1 }}</td>
                     <td class="px-5 py-3">
-                        <div class="font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</div>
-                        <div class="font-mono text-xs text-gray-400">{{ $enrollment->student?->student_number }}</div>
+                        <div class="font-medium" style="color:#f0dfc0;">{{ $enrollment->student?->full_name ?? 'N/A' }}</div>
+                        <div class="text-xs font-mono" style="color:rgba(200,169,126,0.4);">{{ $enrollment->student?->student_number }}</div>
                     </td>
-                    <td class="px-5 py-3 text-center text-gray-600">{{ number_format($lg['quiz_score'], 2) }}</td>
-                    <td class="px-5 py-3 text-center text-gray-600">{{ number_format($lg['exam_score'], 2) }}</td>
-                    <td class="px-5 py-3 text-center text-gray-600">{{ number_format($lg['project_score'], 2) }}</td>
-                    <td class="px-5 py-3 text-center text-gray-600">{{ number_format($lg['assessment_score'], 2) }}</td>
-                    <td class="px-5 py-3 text-center text-gray-600">{{ number_format($lg['attendance_score'], 2) }}</td>
-                    <td class="px-5 py-3 font-semibold text-center text-gray-800">
-                        {{ number_format($lg['final_grade'], 2) }}%
-                    </td>
-                    <td class="px-5 py-3 font-bold text-center text-indigo-600">
-                        {{ $lg['letter_grade'] }}
-                    </td>
+                    <td class="px-5 py-3 text-center" style="color:rgba(200,169,126,0.8);">{{ number_format($midPct, 2) }}%</td>
+                    <td class="px-5 py-3 text-center font-bold" style="color:#c8a97e;">{{ number_format($midNum, 2) }}</td>
+                    <td class="px-5 py-3 text-center" style="color:rgba(200,169,126,0.8);">{{ number_format($finPct, 2) }}%</td>
+                    <td class="px-5 py-3 text-center font-bold" style="color:#c8a97e;">{{ number_format($finNum, 2) }}</td>
+                    <td class="px-5 py-3 text-center font-bold text-lg" style="color:#f0dfc0;">{{ number_format($avgNum, 2) }}</td>
                     <td class="px-5 py-3 text-center">
                         @if($fg && $fg->is_locked)
-                            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
-                        @elseif($lg['remarks'] === 'passed')
-                            <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">Passed</span>
+                            <span class="px-2 py-1 text-xs rounded-full" style="background:rgba(200,169,126,0.1);color:rgba(200,169,126,0.6);"><i class="fa-solid fa-lock"></i> Locked</span>
+                        @elseif($remarks === 'passed')
+                            <span class="px-2 py-1 text-xs rounded-full" style="background:rgba(34,197,94,0.1);color:#86efac;">Passed</span>
                         @else
-                            <span class="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">Failed</span>
+                            <span class="px-2 py-1 text-xs rounded-full" style="background:rgba(239,68,68,0.1);color:#fca5a5;">Failed</span>
                         @endif
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="px-5 py-10 text-sm text-center text-gray-400">No students enrolled.</td>
+                    <td colspan="8" class="px-5 py-10 text-center text-sm" style="color:rgba(200,169,126,0.4);">No students enrolled.</td>
                 </tr>
             @endforelse
         </tbody>

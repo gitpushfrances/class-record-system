@@ -13,6 +13,7 @@ class GradeItem extends Model
     protected $fillable = [
         'section_id',
         'component_type',
+        'period',
         'name',
         'max_score',
         'date_given',
@@ -22,12 +23,11 @@ class GradeItem extends Model
     ];
 
     protected $casts = [
-        'max_score' => 'decimal:2',
+        'max_score'  => 'decimal:2',
         'date_given' => 'date',
-        'is_locked' => 'boolean',
+        'is_locked'  => 'boolean',
     ];
 
-    // Relationships
     public function section()
     {
         return $this->belongsTo(Section::class);

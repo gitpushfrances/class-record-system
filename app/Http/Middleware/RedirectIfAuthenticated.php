@@ -30,6 +30,8 @@ class RedirectIfAuthenticated
                     return redirect('/dean/dashboard');
                 } elseif ($user->isTeacher()) {
                     return redirect('/teacher/dashboard');
+                } elseif ($user->isProgramHead()) {
+                    return redirect('/program-head/dashboard');
                 }
 
                 // Default fallback

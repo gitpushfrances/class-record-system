@@ -15,7 +15,9 @@ use App\Http\Controllers\Teacher\DashboardController as TeacherDashboard;
 use App\Http\Controllers\Teacher\ClassController;
 use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\Teacher\AttendanceController;
+use App\Http\Controllers\ProgramHead\ProgramHeadController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SuperAdmin\BackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +31,7 @@ Route::get('/', function () {
         if ($user->role === 'super_admin') return redirect()->route('admin.dashboard');
         if ($user->role === 'dean')        return redirect()->route('dean.dashboard');
         if ($user->role === 'teacher')     return redirect()->route('teacher.dashboard');
+        if ($user->role === 'program_head') return redirect()->route('program-head.dashboard');
     }
     return redirect()->route('login');
 });
@@ -52,6 +55,18 @@ Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name
     Route::post('/academic', [AdminAcademic::class, 'store'])->name('academic.store');
     Route::patch('/academic/{period}/set-active', [AdminAcademic::class, 'setActive'])->name('academic.setActive');
     Route::delete('/academic/{period}', [AdminAcademic::class, 'destroy'])->name('academic.destroy');
+    Route::get('/users/teachers/create', [AdminUser::class, 'createTeacher'])->name('users.teachers.create');
+    Route::post('/users/teachers', [AdminUser::class, 'storeTeacher'])->name('users.teachers.store');
+
+    Route::get('/users/program-heads/create', [AdminUser::class, 'createProgramHead'])->name('users.program-heads.create');
+    Route::post('/users/program-heads', [AdminUser::class, 'storeProgramHead'])->name('users.program-heads.store');
+
+    Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
+    Route::post('/backup/run', [BackupController::class, 'run'])->name('backup.run');
+    Route::get('/backup/download/{filename}', [BackupController::class, 'download'])->name('backup.download');
+    Route::delete('/backup/{filename}', [BackupController::class, 'delete'])->name('backup.delete');
+    Route::post('/backup/restore', [BackupController::class, 'restore'])->name('backup.restore');
+
     Route::patch('/deans/{dean}/deactivate', [AdminUser::class, 'deactivate'])->name('deans.deactivate');
     Route::patch('/deans/{dean}/activate', [AdminUser::class, 'activate'])->name('deans.activate');
 });
@@ -74,6 +89,10 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
 
     Route::resource('students', DeanStudent::class);
     Route::resource('subjects', DeanSubject::class);
+
+    Route::get('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'index'])->name('assignments.index');
+    Route::post('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'store'])->name('assignments.store');
+    Route::delete('/assignments/{id}', [App\Http\Controllers\Dean\AssignmentController::class, 'destroy'])->name('assignments.destroy');
 
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
     Route::get('/sections/{section}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
@@ -121,6 +140,18 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     Route::get('/classes/{section}/record', [ClassController::class, 'record'])->name('classes.record');
     Route::get('/classes/{section}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
     Route::get('/classes/{section}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Program Head Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'status', 'role:program_head'])->prefix('program-head')->name('program-head.')->group(function () {
+    Route::get('/dashboard', [ProgramHeadController::class, 'dashboard'])->name('dashboard');
+    Route::post('/verify/{sectionTerm}', [ProgramHeadController::class, 'verify'])->name('verify');
+    Route::delete('/unverify/{sectionTerm}', [ProgramHeadController::class, 'unverify'])->name('unverify');
 });
 
 /*

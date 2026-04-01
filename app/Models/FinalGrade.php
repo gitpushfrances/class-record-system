@@ -12,11 +12,11 @@ class FinalGrade extends Model
 
     protected $fillable = [
         'enrollment_id',
-        'quiz_score',
-        'exam_score',
-        'project_score',
-        'assessment_score',
-        'attendance_score',
+        'midterm_percentage',
+        'midterm_numerical',
+        'final_percentage',
+        'final_numerical',
+        'average_numerical',
         'final_grade',
         'numerical_grade',
         'letter_grade',
@@ -27,18 +27,17 @@ class FinalGrade extends Model
     ];
 
     protected $casts = [
-        'quiz_score' => 'decimal:2',
-        'exam_score' => 'decimal:2',
-        'project_score' => 'decimal:2',
-        'assessment_score' => 'decimal:2',
-        'attendance_score' => 'decimal:2',
-        'final_grade' => 'decimal:2',
-        'numerical_grade' => 'decimal:2',
-        'is_locked' => 'boolean',
-        'locked_at' => 'datetime',
+        'midterm_percentage' => 'decimal:2',
+        'midterm_numerical'  => 'decimal:2',
+        'final_percentage'   => 'decimal:2',
+        'final_numerical'    => 'decimal:2',
+        'average_numerical'  => 'decimal:2',
+        'final_grade'        => 'decimal:2',
+        'numerical_grade'    => 'decimal:2',
+        'is_locked'          => 'boolean',
+        'locked_at'          => 'datetime',
     ];
 
-    // Relationships
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);
@@ -49,7 +48,6 @@ class FinalGrade extends Model
         return $this->belongsTo(User::class, 'computed_by');
     }
 
-    // Convert percentage to Philippine grading scale (1.00 - 5.00)
     public static function convertToNumericalGrade($percentage)
     {
         if ($percentage >= 97) return 1.00;
@@ -61,6 +59,6 @@ class FinalGrade extends Model
         if ($percentage >= 79) return 2.50;
         if ($percentage >= 76) return 2.75;
         if ($percentage >= 75) return 3.00;
-        return 5.00; // Failed
+        return 5.00;
     }
 }

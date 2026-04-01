@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('grade_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('section_id')->constrained()->onDelete('cascade');
-            $table->enum('component_type', ['quiz', 'exam', 'project', 'assessment']);
-            $table->string('name'); // e.g., "Quiz 1", "Midterm Exam"
-            $table->decimal('max_score', 8, 2); // e.g., 50.00
+            $table->string('component_type', 50);
+            $table->enum('period', ['midterm', 'final'])->default('midterm');
+            $table->string('name');
+            $table->decimal('max_score', 8, 2);
             $table->date('date_given')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_locked')->default(false);

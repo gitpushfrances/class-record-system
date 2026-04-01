@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['super_admin', 'dean', 'teacher'])->default('teacher')->after('email');
+            $table->enum('role', ['super_admin', 'dean', 'teacher', 'program_head'])->default('teacher')->after('email');
             $table->enum('status', ['pending', 'active', 'inactive', 'rejected'])->default('pending')->after('role');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null')->after('status');
             $table->timestamp('approved_at')->nullable()->after('approved_by');

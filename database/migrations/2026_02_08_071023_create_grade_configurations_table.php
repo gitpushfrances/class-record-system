@@ -11,11 +11,7 @@ return new class extends Migration
         Schema::create('grade_configurations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('section_id')->constrained()->onDelete('cascade');
-            $table->decimal('quiz_weight', 5, 2)->default(0); // e.g., 20.00%
-            $table->decimal('exam_weight', 5, 2)->default(0);
-            $table->decimal('project_weight', 5, 2)->default(0);
-            $table->decimal('assessment_weight', 5, 2)->default(0);
-            $table->decimal('attendance_weight', 5, 2)->default(0);
+            $table->text('config_json');
             $table->enum('status', ['active', 'pending_approval', 'inactive'])->default('active');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approved_at')->nullable();
