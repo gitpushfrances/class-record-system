@@ -56,7 +56,13 @@
                         </tbody>
                     </table>
 
-                    <div class="mt-4">
+                    <div class="mt-4 mb-2">
+    <a href="{{ route('admin.users.program-heads.create') }}"
+       class="inline-block px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700">
+        + Create Program Head
+    </a>
+</div>
+<div class="mt-4">
                         {{ $deans->links() }}
                     </div>
 </x-sidebar-layout>
