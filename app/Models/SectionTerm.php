@@ -16,6 +16,11 @@ class SectionTerm extends Model
         'academic_year',
         'semester',
         'status',
+        'midterm_cutoff_date',
+    ];
+
+    protected $casts = [
+        'midterm_cutoff_date' => 'date',
     ];
 
     public function section()

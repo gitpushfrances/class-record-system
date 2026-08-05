@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('student_type', ['regular', 'irregular'])->default('regular');
             $table->enum('status', ['active', 'inactive', 'graduated', 'dropped'])->default('active');
             $table->timestamps();
-            $table->softDeletes();
+
         });
     }
 

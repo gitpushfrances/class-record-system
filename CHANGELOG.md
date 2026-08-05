@@ -475,6 +475,45 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 
+## UI/UX REMINDER — Reusable Confirmation Component (Planned)
+
+- Delete/remove actions across the app currently use a mix of raw browser `confirm()` and inline SweetAlert2 blocks copy-pasted per view (Dean student delete, Dean subject cancel, Dean assignment remove, etc.)
+- Plan: build a single reusable `<x-confirm-form>` Blade component (action, method, title, description as props) backed by one global delegated-event script in the shared layout, then migrate every existing delete button to it in one consistent pass
+- Deferred — noted here so it isn't lost
+
+---
+
+### Dean Assignments Page — Schema Fix + Confirmation Modal
+- `Dean\AssignmentController` (a previously-undiscovered second interface to teacher assignment, separate from the Sections modal) broke after the `section_id` → `section_term_id` pivot change — rewritten to resolve each section's active term and enforce the same one-teacher-per-subject-per-term rule as the Sections modal
+- Native browser `confirm()` on assignment removal replaced with a SweetAlert2 modal naming the specific assignment being removed, matching the pattern already used elsewhere in the app
+- Noted in changelog: a reusable `<x-confirm-form>` component + one global delegated-event script is planned to replace all remaining raw `confirm()` / copy-pasted SweetAlert2 blocks across the app in one consistent pass — deferred, not yet built
+
+### Teacher Self-Registration — Re-enabled with Admin Review Queue
+- `Auth\RegisteredUserController@store` was a stub that saved nothing and redirected with "Self-registration is disabled" — rebuilt to actually create an account
+- New `pending_review` status added (distinct from the existing `pending`, which continues to mean "role assigned, account created, not yet activated") — self-registered accounts get `role = null`, `status = pending_review`
+- `role` column on `users` changed to nullable (previously defaulted to `teacher`) to support unassigned pending requests
+- Super Admin's Accounts page gains a "Pending Requests" tab (with count badge) showing self-registered signups; clicking Approve lets the Admin assign a role (Dean/Program Head/Teacher) and activates the account in one step; Reject sets status to `rejected`, matching the existing rejection pattern
+- No ID photo upload in this pass — deferred per client decision (no file storage package set up yet)
+
+### Dean Students Page — Icon Actions, Duplicate Banner, Hard Delete
+- Duplicate success banner removed (same root cause as the earlier Accounts/Sections/Final Grades instances — local `session('success')` block stacked on the global layout one)
+- Edit/Remove text links converted to pencil/trash icon buttons with visible contrast against the white table background
+- `SoftDeletes` removed from the `Student` model and the `deleted_at` column dropped from the `students` migration — previously, removing a student only soft-deleted them, so re-adding a student with the same `student_number` failed with a false "already taken" error since the old row still occupied it in the database
+- Existing delete confirmation modal (built March 23) kept as-is as the safety net, replacing the need for soft-delete — client confirmed this is sufficient protection against accidental removal
+
+### Attendance Now Counted Toward Final Grades (Previously Silently Ignored)
+- Root cause: grade computation only ever read from `student_grades` (manually entered scores per grade item); the "Attendance" component in grade configs required a teacher to manually create a gradeable item and type in scores, while real attendance was tracked separately in `attendance_records` and never connected to grade math — attendance components silently contributed 0% and had their weight redistributed to other components via the existing rescaling logic
+- Added `midterm_cutoff_date` to `section_terms` — teacher sets a single date per class per term (editable) from the Final Grades page; attendance records on or before this date count toward Midterm, after it count toward Final
+- Attendance components (matched by key `attendance` / `attendance_f`) are now auto-computed: Present and Excused = full credit, Late = half credit, Absent = no credit; rate is applied against the component's configured weight
+- Until a cutoff date is set, attendance components are treated as "not yet active" (same rescaling path as any other empty component) rather than guessing a boundary or silently scoring 0
+- New route/method `Teacher\GradeController@updateCutoff`; `calculateComponentScores()` and `calculatePeriodScores()` both updated to branch on attendance components before falling back to the manual-score path
+
+### Final Grades Page — Full UI Overhaul
+- Page previously used dark-sidebar text colors (cream/gold) on the light main content area, rendering almost the entire table near-invisible
+- Rewritten with proper light-background contrast throughout; duplicate success banner removed (same pattern as above); added the new Midterm Cutoff Date form with a visible warning when unset
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends

@@ -63,6 +63,8 @@ Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name
 
     Route::get('/users/create', [AdminUser::class, 'createAccount'])->name('users.create');
     Route::post('/users', [AdminUser::class, 'storeAccount'])->name('users.store');
+    Route::post('/deans/{dean}/approve-request', [AdminUser::class, 'approveRequest'])->name('deans.approve-request');
+    Route::post('/deans/{dean}/reject-request', [AdminUser::class, 'rejectRequest'])->name('deans.reject-request');
 
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
     Route::post('/backup/run', [BackupController::class, 'run'])->name('backup.run');
@@ -136,6 +138,7 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     Route::get('/classes/{section}/final-grades', [GradeController::class, 'finalGrades'])->name('grades.final');
     Route::post('/classes/{section}/final-grades/compute', [GradeController::class, 'computeGrades'])->name('grades.final.compute');
     Route::post('/classes/{section}/final-grades/lock', [GradeController::class, 'lockGrades'])->name('grades.final.lock');
+    Route::post('/classes/{section}/final-grades/cutoff', [GradeController::class, 'updateCutoff'])->name('grades.final.cutoff');
 
     // Attendance
     Route::get('/classes/{section}/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

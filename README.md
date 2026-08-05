@@ -34,6 +34,9 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Unified Admin Accounts Page — single view across Dean/Program Head/Teacher roles with filter tabs and one shared create form
 - ✅ Section-Term-Scoped Teacher Assignment — subjects are assigned to teachers per section per term, editable via a click-to-open modal on the Sections page
 - ✅ Assigned Teacher Visibility — Dean's Subject Requests list shows who's teaching each subject without needing to check each section individually
+- ✅ Teacher Self-Registration — sign up submits a request; Super Admin reviews, assigns a role, and activates from a dedicated Pending Requests queue
+- ✅ Attendance-Based Grading — attendance is auto-scored into the final grade using a teacher-set Midterm/Final cutoff date, no manual re-entry needed
+- ✅ Hard Delete with Confirmation — student records can be fully removed and their student number reused, protected by a confirmation modal instead of soft-delete
 
 ---
 
@@ -51,7 +54,7 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Phase 8: Sidebar Navigation (unified layout, role-aware, mobile-responsive)
 - ✅ QA Fixes (March 15): Schema migration cleanup, enrollment rewrite, grade calculation fix, academic period view, attendance auth fix
 - ✅ QA Fixes (March 23): Teacher enrollment UI, emoji replacement, student delete modal, cascading delete fix
-- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility
+- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility, Assignments page schema fix, teacher self-registration + review queue, Student page hard-delete + icon actions, attendance now counted in final grades, Final Grades UI overhaul
 
 **Next: Phase 9 — Reporting & Analytics**
 
@@ -321,6 +324,6 @@ All roles share a single sidebar layout (`resources/views/layouts/partials/sideb
 
 ---
 
-**Last Updated:** March 23, 2026  
+**Last Updated:** August 5, 2026  
 **Version:** 1.0.0-alpha  
 **Maintained By:** Frances Igop

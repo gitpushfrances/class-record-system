@@ -200,12 +200,13 @@ class GradeController extends Controller
             $enrollments = $currentTerm->enrollments;
         }
 
-        $config     = $section->gradeConfiguration;
-        $liveGrades = [];
+        $config      = $section->gradeConfiguration;
+        $cutoffDate  = $currentTerm?->midterm_cutoff_date;
+        $liveGrades  = [];
 
         foreach ($enrollments as $enrollment) {
-            $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm');
-            $finScores = $this->calculatePeriodScores($enrollment, $config, 'final');
+            $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm', $cutoffDate);
+            $finScores = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
             $midPct    = round(array_sum($midScores), 2);
             $finPct    = round(array_sum($finScores), 2);
             $midNum    = FinalGrade::convertToNumericalGrade($midPct);
@@ -225,7 +226,23 @@ class GradeController extends Controller
             ];
         }
 
-        return view('teacher.grades.final', compact('section', 'enrollments', 'liveGrades'));
+        return view('teacher.grades.final', compact('section', 'enrollments', 'liveGrades', 'currentTerm'));
+    }
+
+    public function updateCutoff(Request $request, Section $section)
+    {
+        $this->authorizeSection($section);
+
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(!$currentTerm, 422, 'No active term found.');
+
+        $request->validate([
+            'midterm_cutoff_date' => 'required|date',
+        ]);
+
+        $currentTerm->update(['midterm_cutoff_date' => $request->midterm_cutoff_date]);
+
+        return back()->with('success', 'Midterm cutoff date saved. Attendance grades will now reflect the split.');
     }
 
     public function computeGrades(Section $section)
@@ -249,18 +266,19 @@ class GradeController extends Controller
             $enrollments = $currentTerm->enrollments;
         }
 
+        $cutoffDate = $currentTerm?->midterm_cutoff_date;
         $errors = [];
 
         foreach ($enrollments as $enrollment) {
             try {
-                $midScores  = $this->calculatePeriodScores($enrollment, $config, 'midterm');
-                $finScores  = $this->calculatePeriodScores($enrollment, $config, 'final');
+                $midScores  = $this->calculatePeriodScores($enrollment, $config, 'midterm', $cutoffDate);
+                $finScores  = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
                 $midPct     = round(array_sum($midScores), 2);
                 $finPct     = round(array_sum($finScores), 2);
                 $midNum     = FinalGrade::convertToNumericalGrade($midPct);
                 $finNum     = FinalGrade::convertToNumericalGrade($finPct);
                 $avgNum     = round(($midNum + $finNum) / 2 * 4) / 4;
-                $allScores  = $this->calculateComponentScores($enrollment, $config);
+                $allScores  = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
                 $finalPct   = round(array_sum($allScores), 2);
 
                 FinalGrade::updateOrCreate(
@@ -319,7 +337,37 @@ class GradeController extends Controller
         return back()->with('success', 'All final grades locked.');
     }
 
-    private function calculateComponentScores($enrollment, $config): array
+    private function isAttendanceComponent(string $key): bool
+    {
+        return in_array($key, ['attendance', 'attendance_f'], true);
+    }
+
+    private function calculateAttendanceRate($enrollment, string $period, $cutoffDate): ?float
+    {
+        if (!$cutoffDate) {
+            return null;
+        }
+
+        $records = $enrollment->attendanceRecords->filter(
+            fn($r) => $period === 'midterm' ? $r->date->lte($cutoffDate) : $r->date->gt($cutoffDate)
+        );
+
+        if ($records->isEmpty()) {
+            return null;
+        }
+
+        $creditSum = $records->sum(function ($r) {
+            return match ($r->status) {
+                'present', 'excused' => 1.0,
+                'late'                => 0.5,
+                default               => 0.0,
+            };
+        });
+
+        return round(($creditSum / $records->count()) * 100, 2);
+    }
+
+    private function calculateComponentScores($enrollment, $config, $cutoffDate = null): array
     {
         $components   = $config->getComponents();
         $scores       = [];
@@ -330,6 +378,16 @@ class GradeController extends Controller
             $weight = (float) $comp['weight'];
             $scores[$key] = 0;
             if ($weight === 0.0) continue;
+
+            if ($this->isAttendanceComponent($key)) {
+                $period = $comp['period'] ?? 'midterm';
+                $rate   = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
+                if ($rate !== null) {
+                    $scores[$key]  = round(($rate / 100) * $weight, 2);
+                    $activeWeight += $weight;
+                }
+                continue;
+            }
 
             $items = $enrollment->studentGrades->filter(
                 fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $key
@@ -353,7 +411,7 @@ class GradeController extends Controller
         return $scores;
     }
 
-    private function calculatePeriodScores($enrollment, $config, string $period): array
+    private function calculatePeriodScores($enrollment, $config, string $period, $cutoffDate = null): array
     {
         $components   = $config->getComponentsByPeriod($period);
         $scores       = [];
@@ -364,6 +422,15 @@ class GradeController extends Controller
             $weight = (float) $comp['weight'];
             $scores[$key] = 0;
             if ($weight === 0.0) continue;
+
+            if ($this->isAttendanceComponent($key)) {
+                $rate = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
+                if ($rate !== null) {
+                    $scores[$key]  = round(($rate / 100) * $weight, 2);
+                    $activeWeight += $weight;
+                }
+                continue;
+            }
 
             $items = $enrollment->studentGrades->filter(
                 fn($g) => $g->gradeItem !== null

@@ -16,20 +16,59 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::whereIn('role', $this->managedRoles)
-            ->orderBy('created_at', 'desc');
+        $filter = $request->get('role');
 
-        if ($request->filled('role') && in_array($request->role, $this->managedRoles, true)) {
-            $query->where('role', $request->role);
+        if ($filter === 'pending_review') {
+            $accounts = User::where('status', 'pending_review')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20)
+                ->withQueryString();
+        } else {
+            $query = User::whereIn('role', $this->managedRoles)
+                ->orderBy('created_at', 'desc');
+
+            if ($filter && in_array($filter, $this->managedRoles, true)) {
+                $query->where('role', $filter);
+            }
+
+            $accounts = $query->paginate(20)->withQueryString();
         }
 
-        $accounts = $query->paginate(20)->withQueryString();
+        $pendingCount = User::where('status', 'pending_review')->count();
 
         return view('admin.deans.index', [
             'deans' => $accounts,
             'managedRoles' => $this->managedRoles,
-            'activeRoleFilter' => $request->get('role'),
+            'activeRoleFilter' => $filter,
+            'pendingCount' => $pendingCount,
         ]);
+    }
+
+    public function approveRequest(Request $request, User $dean)
+    {
+        abort_if($dean->status !== 'pending_review', 403);
+
+        $validated = $request->validate([
+            'role' => 'required|in:' . implode(',', $this->managedRoles),
+        ]);
+
+        $dean->update([
+            'role'   => $validated['role'],
+            'status' => 'active',
+        ]);
+
+        $label = ucwords(str_replace('_', ' ', $validated['role']));
+
+        return redirect()->route('admin.deans.index')->with('success', "Request approved as {$label}.");
+    }
+
+    public function rejectRequest(User $dean)
+    {
+        abort_if($dean->status !== 'pending_review', 403);
+
+        $dean->update(['status' => 'rejected']);
+
+        return redirect()->route('admin.deans.index')->with('success', 'Request rejected.');
     }
 
     public function create()

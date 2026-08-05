@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('academic_year');
             $table->enum('semester', ['1st Semester', '2nd Semester', 'Summer']);
             $table->enum('status', ['active', 'completed', 'inactive'])->default('active');
+            $table->date('midterm_cutoff_date')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

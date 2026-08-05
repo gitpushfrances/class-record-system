@@ -1,14 +1,15 @@
 <x-sidebar-layout>
-
 <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">My Classes</h1>
+    <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">My Classes</h1>
     <p class="mt-1 text-sm text-gray-500">Welcome back, {{ auth()->user()->name }}</p>
 </div>
-
 @if($sectionTerms->isEmpty())
     <div class="p-12 text-center bg-white border border-gray-200 rounded-xl">
-        <div class="mb-3 text-4xl">í³š</div>
-        <p class="text-sm text-gray-500">No classes assigned yet. Contact your Dean to get assigned to a section.</p>
+        <div class="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full" style="background:rgba(200,169,126,0.12);">
+            <i class="fa-solid fa-chalkboard-user text-xl" style="color:#c8a97e;"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">No classes assigned yet</p>
+        <p class="mt-1 text-sm text-gray-500">Contact your Dean to get assigned to a section.</p>
     </div>
 @else
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -28,15 +29,29 @@
                         </span>
                     </div>
                 </div>
-                <div class="px-5 py-3 space-y-1 text-sm text-gray-600">
-                    <div>Year Level: <span class="font-medium text-gray-800">{{ $term->section->year_level }}</span></div>
-                    <div>Department: <span class="font-medium text-gray-800">{{ $term->section->program->department->name }}</span></div>
-                    <div>Students: <span class="font-medium text-gray-800">{{ $term->enrollments->count() }}</span></div>
-                    <div>{{ $term->semester }} &bull; {{ $term->academic_year }}</div>
+                <div class="px-5 py-3 space-y-1.5 text-sm text-gray-600">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group w-4 text-xs" style="color:#c8a97e;"></i>
+                        Year Level: <span class="font-medium text-gray-800">{{ $term->section->year_level }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns w-4 text-xs" style="color:#c8a97e;"></i>
+                        Department: <span class="font-medium text-gray-800">{{ $term->section->program->department->name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-users w-4 text-xs" style="color:#c8a97e;"></i>
+                        Students: <span class="font-medium text-gray-800">{{ $term->enrollments->count() }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-calendar w-4 text-xs" style="color:#c8a97e;"></i>
+                        {{ $term->semester }} &bull; {{ $term->academic_year }}
+                    </div>
                 </div>
                 <div class="px-5 py-3 border-t border-gray-100">
                     <a href="{{ route('teacher.classes.show', $term->section) }}"
-                       class="block w-full py-2 text-sm font-semibold text-center text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                       class="block w-full py-2 text-sm font-semibold text-center rounded-lg transition"
+                       style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;"
+                       onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                         Open Class
                     </a>
                 </div>
@@ -44,5 +59,4 @@
         @endforeach
     </div>
 @endif
-
 </x-sidebar-layout>
