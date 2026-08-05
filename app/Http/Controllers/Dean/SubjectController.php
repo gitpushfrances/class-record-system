@@ -12,7 +12,7 @@ class SubjectController extends Controller
     public function index()
     {
         $subjects = Subject::where('requested_by', auth()->id())
-            ->with('teacher')
+            ->with(['sectionTerms.section.program'])
             ->orderByDesc('created_at')
             ->paginate(20);
 
@@ -59,16 +59,6 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         abort_if($subject->requested_by !== auth()->id(), 403);
-
-        // Handle teacher assignment separately (allowed for approved subjects too)
-        if ($request->has('assign_teacher')) {
-            $request->validate([
-                'teacher_id' => 'nullable|exists:users,id',
-            ]);
-            $subject->update(['teacher_id' => $request->teacher_id ?: null]);
-            return redirect()->route('dean.subjects.index')
-                ->with('success', 'Teacher assigned successfully.');
-        }
 
         abort_if($subject->status !== 'pending', 403, 'Only pending subjects can be edited.');
 

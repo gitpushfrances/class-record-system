@@ -61,6 +61,9 @@ Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name
     Route::get('/users/program-heads/create', [AdminUser::class, 'createProgramHead'])->name('users.program-heads.create');
     Route::post('/users/program-heads', [AdminUser::class, 'storeProgramHead'])->name('users.program-heads.store');
 
+    Route::get('/users/create', [AdminUser::class, 'createAccount'])->name('users.create');
+    Route::post('/users', [AdminUser::class, 'storeAccount'])->name('users.store');
+
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
     Route::post('/backup/run', [BackupController::class, 'run'])->name('backup.run');
     Route::get('/backup/download/{filename}', [BackupController::class, 'download'])->name('backup.download');
@@ -86,6 +89,8 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
 
     Route::resource('sections', DeanSection::class);
     Route::post('/sections/{section}/change-adviser', [DeanSection::class, 'changeAdviser'])->name('sections.change-adviser');
+    Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
+    Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
 
     Route::resource('students', DeanStudent::class);
     Route::resource('subjects', DeanSubject::class);

@@ -434,6 +434,47 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 
+## QA FIXES & PATCHES — August 5, 2026
+
+### Grade Configuration Page — Row Alignment & Validation
+- `teacher/grades/config.blade.php` rebuilt onto a single fixed CSS grid so preset and custom components render identically (label, weight, %, action icons no longer drift based on row type)
+- Trash icon added to every row, including presets — previously only custom "Others" rows had a delete action
+- Blank-name guard added in two layers: confirming a component with an empty name shows an inline error and blocks collapse into a saved row; form submit re-validates and blocks save if any component still has a blank name
+- Confirmed backend already enforced `components.*.label => required`, so no invalid data had reached the database — this was purely a missing browser-side feedback gap
+
+### Admin Accounts — Unified Index & Duplicate Banner Fix
+- Root cause: `SuperAdmin\UserController@index` only ever queried `role = dean`, so Program Head and Teacher accounts created via `storeProgramHead()` / `storeTeacher()` succeeded but never appeared in the list
+- Fixed: `index()` now queries all managed roles (`dean`, `program_head`, `teacher`) with an optional `?role=` filter; `admin.deans.index` view reframed as a general "Accounts" page with role badges and filter tabs
+- Duplicate "success" banner fixed — was rendering once globally in `layouts/app.blade.php` and again locally in the index view; local copy removed
+- New unified `createAccount()` / `storeAccount()` methods added with a role dropdown, replacing the need for per-role create screens going forward (old `createProgramHead`/`storeProgramHead`/`createTeacher`/`storeTeacher` routes and methods left in place, untouched, for backward compatibility)
+- `edit()`, `update()`, `deactivate()`, `activate()` updated to authorize against all managed roles instead of `isDean()` only — previously non-Dean accounts would 403 on these actions
+
+### Dean Subjects Page — RelationNotFoundException Fix
+- `Dean\SubjectController@index` called `Subject::with('teacher')` — no singular `teacher()` relationship exists on `Subject`; real relationship is `teachers()` (plural, many-to-many via `section_subject_teachers`)
+- Fixed: controller updated to `->with('teachers')`
+
+### Teacher Assignment — Moved from Subject-Global to Section-Term-Scoped (Schema Change)
+- Root cause: Dean's Subjects page had a leftover "Assign Teacher" modal writing to `subjects.teacher_id` — a column that never existed in the schema; real teacher assignment lives in the `section_subject_teachers` pivot, keyed by section
+- Migration `2026_03_23_180812_add_teacher_id_to_subjects_table.php` updated in place (no new migration file) — pivot table `section_subject_teachers` now keys on `section_term_id` instead of `section_id`, matching how `adviser_id` is already scoped per `SectionTerm` rather than per `Section`
+- Unique constraint changed to `[section_term_id, subject_id]` — one teacher per subject per term; reassigning a teacher replaces the existing pivot row instead of creating a duplicate
+- `Section::subjects()` and `Section::assignedTeachers()` removed (confirmed unused elsewhere via grep)
+- `SectionTerm::subjects()` added (belongsToMany Subject through the pivot, mirrors `adviser()`)
+- `Subject::sectionTerms()` added; `Subject::teachers()` and `Subject::sections()` rewritten to join through `section_term_id`
+- `Dean\SectionController` gains `attachSubject()` and `changeSubjectTeacher()`, both scoped to the section's active term
+- Broken `assign_teacher` branch removed from `Dean\SubjectController@update()`
+- Applied via `migrate:fresh --seed` (no production data to preserve)
+
+### Dean Sections — Subjects & Teachers Management UI
+- New "Subjects & Teachers" panel added to section details: lists subjects attached to the section's active term with assigned teacher, inline reassignment dropdown, and an "Add Subject" form (subject + teacher, filtered to approved subjects not yet attached to the term)
+- Section cards on the Sections index converted from static display into a click-to-open modal (matches the existing "Change Adviser" modal pattern already used on the same page) — modal shows section details, current term/adviser, the Subjects & Teachers panel, and Edit/Delete actions, replacing the earlier plan of a separate details page
+- `Dean\SectionController@index` and `@show` updated to eager-load `terms.subjects` and pass `$teachers` / available-subjects lists to the view
+
+### Subject Requests Page — Assigned Teacher Visibility
+- Dean's flat Subject Requests list now shows the assigned teacher name(s) directly per subject (deduplicated across sections), instead of a static "Manage via Sections page" placeholder — removes the need to check each section individually to see who's teaching a given subject
+- `Dean\SubjectController@index` updated to eager-load `sectionTerms.section.program` for this display
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -460,6 +501,6 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 
-**Last Updated:** March 23, 2026  
+**Last Updated:** August 5, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

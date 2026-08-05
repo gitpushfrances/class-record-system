@@ -31,6 +31,9 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Cascading Student Delete — deleting a student from master list also removes all their enrollments
 - ✅ Font Awesome Icons — all hardcoded emojis replaced with FA 6.5.1 icons across all views
 - ✅ Styled Confirmation Modals — Dean student delete uses a proper modal instead of browser confirm()
+- ✅ Unified Admin Accounts Page — single view across Dean/Program Head/Teacher roles with filter tabs and one shared create form
+- ✅ Section-Term-Scoped Teacher Assignment — subjects are assigned to teachers per section per term, editable via a click-to-open modal on the Sections page
+- ✅ Assigned Teacher Visibility — Dean's Subject Requests list shows who's teaching each subject without needing to check each section individually
 
 ---
 
@@ -48,6 +51,7 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Phase 8: Sidebar Navigation (unified layout, role-aware, mobile-responsive)
 - ✅ QA Fixes (March 15): Schema migration cleanup, enrollment rewrite, grade calculation fix, academic period view, attendance auth fix
 - ✅ QA Fixes (March 23): Teacher enrollment UI, emoji replacement, student delete modal, cascading delete fix
+- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility
 
 **Next: Phase 9 — Reporting & Analytics**
 

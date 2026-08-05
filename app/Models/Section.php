@@ -43,19 +43,7 @@ class Section extends Model
         return $this->hasOne(GradeConfiguration::class);
     }
 
-    public function subjects()
-    {
-        return $this->belongsToMany(Subject::class, 'section_subject_teachers')
-            ->withPivot('teacher_id')
-            ->withTimestamps();
-    }
 
-    public function assignedTeachers()
-    {
-        return $this->belongsToMany(User::class, 'section_subject_teachers', 'section_id', 'teacher_id')
-            ->withPivot('subject_id')
-            ->withTimestamps();
-    }
 
     public function getFullNameAttribute()
     {

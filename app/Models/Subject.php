@@ -37,17 +37,17 @@ class Subject extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function sections()
+    public function sectionTerms()
     {
-        return $this->belongsToMany(Section::class, 'section_subject_teachers')
-            ->withPivot('teacher_id')
+        return $this->belongsToMany(SectionTerm::class, 'section_subject_teachers')
+            ->withPivot('id', 'teacher_id')
             ->withTimestamps();
     }
 
     public function teachers()
     {
         return $this->belongsToMany(User::class, 'section_subject_teachers', 'subject_id', 'teacher_id')
-            ->withPivot('section_id')
+            ->withPivot('section_term_id')
             ->withTimestamps();
     }
 }

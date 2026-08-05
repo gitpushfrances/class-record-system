@@ -32,7 +32,7 @@ class GradeController extends Controller
             'components.*.period' => 'required|in:midterm,final',
         ]);
 
-        $components = $request->input('components');
+        $components = array_values($request->input('components'));
 
         $midtermTotal = array_sum(array_column(
             array_filter($components, fn($c) => $c['period'] === 'midterm'), 'weight'

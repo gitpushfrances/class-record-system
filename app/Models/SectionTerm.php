@@ -44,4 +44,11 @@ class SectionTerm extends Model
             ->withPivot('status', 'enrolled_at')
             ->withTimestamps();
     }
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'section_subject_teachers')
+            ->withPivot('id', 'teacher_id')
+            ->withTimestamps();
+    }
 }

@@ -15,7 +15,7 @@ class SectionController extends Controller
     {
         $sections = Section::with([
                 'program.department',
-                'terms' => fn($q) => $q->where('status', 'active')->with(['adviser', 'enrollments']),
+                'terms' => fn($q) => $q->where('status', 'active')->with(['adviser', 'enrollments', 'subjects']),
             ])
             ->where('status', 'active')
             ->orderBy('year_level')
@@ -23,7 +23,10 @@ class SectionController extends Controller
             ->get()
             ->groupBy('year_level');
 
-        return view('dean.sections.index', compact('sections'));
+        $teachers = User::where('role', 'teacher')->where('status', 'active')->orderBy('name')->get();
+        $allSubjects = \App\Models\Subject::where('status', 'approved')->orderBy('name')->get();
+
+        return view('dean.sections.index', compact('sections', 'teachers', 'allSubjects'));
     }
 
     public function create()
@@ -57,9 +60,17 @@ class SectionController extends Controller
 
     public function show(Section $section)
     {
-        $section->load(['program.department', 'terms.adviser', 'terms.enrollments.student']);
+        $section->load(['program.department', 'terms.adviser', 'terms.enrollments.student', 'terms.subjects.teachers']);
         $currentTerm = $section->terms->where('status', 'active')->first();
-        return view('dean.sections.show', compact('section', 'currentTerm'));
+
+        $availableSubjects = \App\Models\Subject::where('status', 'approved')
+            ->when($currentTerm, fn($q) => $q->whereNotIn('id', $currentTerm->subjects->pluck('id')))
+            ->orderBy('name')
+            ->get();
+
+        $teachers = User::where('role', 'teacher')->where('status', 'active')->orderBy('name')->get();
+
+        return view('dean.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers'));
     }
 
     public function edit(Section $section)
@@ -108,6 +119,40 @@ class SectionController extends Controller
 
         $section->delete();
         return redirect()->route('dean.sections.index')->with('success', 'Section deleted.');
+    }
+
+    public function attachSubject(Request $request, Section $section)
+    {
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(!$currentTerm, 422, 'This section has no active term.');
+
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:users,id',
+        ]);
+
+        $currentTerm->subjects()->syncWithoutDetaching([
+            $request->subject_id => ['teacher_id' => $request->teacher_id],
+        ]);
+
+        return redirect()->route('dean.sections.show', $section)->with('success', 'Subject added and teacher assigned.');
+    }
+
+    public function changeSubjectTeacher(Request $request, Section $section)
+    {
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(!$currentTerm, 422, 'This section has no active term.');
+
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:users,id',
+        ]);
+
+        $currentTerm->subjects()->updateExistingPivot($request->subject_id, [
+            'teacher_id' => $request->teacher_id,
+        ]);
+
+        return redirect()->route('dean.sections.show', $section)->with('success', 'Teacher updated.');
     }
 
     public function changeAdviser(Request $request, Section $section)

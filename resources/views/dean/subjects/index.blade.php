@@ -47,20 +47,12 @@
                     <td class="px-4 py-3 text-gray-600">{{ $subject->department }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
                     <td class="px-4 py-3">
-                        @if($subject->status === 'approved')
-                            <button onclick="openAssignModal({{ $subject->id }}, '{{ addslashes($subject->name) }}', {{ $subject->teacher_id ?? 'null' }})"
-                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium transition border rounded-lg hover:bg-gray-50"
-                                    style="border-color:#d1d5db; color:#374151;">
-                                @if($subject->teacher)
-                                    <i class="text-green-500 fa-solid fa-user-check"></i>
-                                    {{ $subject->teacher->name }}
-                                @else
-                                    <i class="text-gray-400 fa-solid fa-user-plus"></i>
-                                    Assign Teacher
-                                @endif
-                            </button>
+                        @if($subject->sectionTerms->isNotEmpty())
+                            <div class="text-sm text-gray-700">
+                                {{ $subject->sectionTerms->pluck('pivot.teacher_id')->unique()->map(fn($id) => $teachers->firstWhere('id', $id)?->name ?? '—')->implode(', ') }}
+                            </div>
                         @else
-                            <span class="text-xs italic text-gray-400">— pending approval</span>
+                            <span class="text-xs italic text-gray-400">Not assigned</span>
                         @endif
                     </td>
                     <td class="px-4 py-3">
@@ -108,42 +100,6 @@
     <div class="mt-4">{{ $subjects->links() }}</div>
 </div>
 
-{{-- Assign Teacher Modal --}}
-<div id="assignModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40 backdrop-blur-sm">
-    <div class="w-full max-w-sm p-6 bg-white shadow-xl rounded-2xl">
-        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-indigo-50">
-            <i class="text-indigo-600 fa-solid fa-chalkboard-user"></i>
-        </div>
-        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Assign Teacher</h3>
-        <p id="assignSubjectName" class="mb-4 text-sm font-medium text-center text-gray-500"></p>
-
-        <form id="assignForm" method="POST">
-            @csrf @method('PATCH')
-            <input type="hidden" name="assign_teacher" value="1">
-
-            <select name="teacher_id" id="teacherSelect"
-                    class="w-full px-3 py-2 mb-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                <option value="">— No teacher assigned —</option>
-                @foreach($teachers as $teacher)
-                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                @endforeach
-            </select>
-
-            <div class="flex gap-3">
-                <button type="button" onclick="closeAssignModal()"
-                        class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    Cancel
-                </button>
-                <button type="submit"
-                        class="flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90"
-                        style="background:#1c1814;">
-                    Save
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.querySelectorAll('.delete-form').forEach(form => {
@@ -162,16 +118,6 @@ document.querySelectorAll('.delete-form').forEach(form => {
     });
 });
 
-function openAssignModal(subjectId, subjectName, currentTeacherId) {
-    document.getElementById('assignSubjectName').textContent = subjectName;
-    document.getElementById('assignForm').action = '/dean/subjects/' + subjectId;
-    const select = document.getElementById('teacherSelect');
-    select.value = currentTeacherId ?? '';
-    document.getElementById('assignModal').classList.replace('hidden', 'flex');
-}
 
-function closeAssignModal() {
-    document.getElementById('assignModal').classList.replace('flex', 'hidden');
-}
 </script>
 @endsection

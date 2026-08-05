@@ -8,7 +8,7 @@
             <a href="{{ route('dean.sections.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back</a>
         </div>
 
-        <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+        <div class="mb-6 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h3 class="text-sm font-semibold text-gray-700">Section Details</h3>
             </div>
@@ -35,7 +35,7 @@
         </div>
 
         @if($currentTerm)
-        <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+        <div class="mb-6 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h3 class="text-sm font-semibold text-gray-700">Current Term — {{ $currentTerm->semester }}, {{ $currentTerm->academic_year }}</h3>
             </div>
@@ -48,6 +48,61 @@
                     <span class="text-gray-500">Enrolled Students</span>
                     <span class="font-medium">{{ $currentTerm->enrollments->count() }}</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="mb-6 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-sm font-semibold text-gray-700">Subjects & Teachers</h3>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Subject</th>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Teacher</th>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($currentTerm->subjects as $subj)
+                        <tr>
+                            <td class="px-6 py-4 text-sm">{{ $subj->code }} — {{ $subj->name }}</td>
+                            <td class="px-6 py-4 text-sm">{{ $subj->pivot->teacher_id ? \App\Models\User::find($subj->pivot->teacher_id)?->name : '—' }}</td>
+                            <td class="px-6 py-4">
+                                <form method="POST" action="{{ route('dean.sections.change-subject-teacher', $section) }}" class="flex items-center gap-2">
+                                    @csrf
+                                    <input type="hidden" name="subject_id" value="{{ $subj->id }}">
+                                    <select name="teacher_id" class="px-2 py-1 text-xs border border-gray-300 rounded-lg">
+                                        @foreach($teachers as $t)
+                                            <option value="{{ $t->id }}" {{ $subj->pivot->teacher_id == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="px-3 py-1 text-xs font-medium border rounded-lg" style="border-color:#d1d5db; color:#374151;">Update</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="3" class="px-6 py-4 text-sm text-center text-gray-400">No subjects added to this term yet.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div class="px-6 py-4 border-t border-gray-100">
+                <form method="POST" action="{{ route('dean.sections.attach-subject', $section) }}" class="flex items-center gap-2">
+                    @csrf
+                    <select name="subject_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
+                        <option value="">— Select subject —</option>
+                        @foreach($availableSubjects as $s)
+                            <option value="{{ $s->id }}">{{ $s->code }} — {{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="teacher_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
+                        <option value="">— Select teacher —</option>
+                        @foreach($teachers as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white rounded-lg" style="background:#1c1814;">Add</button>
+                </form>
             </div>
         </div>
 
