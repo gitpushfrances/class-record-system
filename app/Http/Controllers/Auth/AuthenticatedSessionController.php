@@ -50,10 +50,12 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended('/dean/dashboard');
         } elseif ($user->isTeacher()) {
             return redirect()->intended('/teacher/dashboard');
+        } elseif ($user->isProgramHead()) {
+            return redirect()->intended('/program-head/dashboard');
         }
 
         // Default fallback
-        return redirect()->intended(RouteServiceProvider::HOME);
+        return redirect()->intended('/login');
     }
 
     /**

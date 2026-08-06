@@ -54,7 +54,7 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Phase 8: Sidebar Navigation (unified layout, role-aware, mobile-responsive)
 - ✅ QA Fixes (March 15): Schema migration cleanup, enrollment rewrite, grade calculation fix, academic period view, attendance auth fix
 - ✅ QA Fixes (March 23): Teacher enrollment UI, emoji replacement, student delete modal, cascading delete fix
-- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility, Assignments page schema fix, teacher self-registration + review queue, Student page hard-delete + icon actions, attendance now counted in final grades, Final Grades UI overhaul
+- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility, Assignments page schema fix, teacher self-registration + review queue, Student page hard-delete + icon actions, attendance now counted in final grades, Final Grades UI overhaul, Program Head login 404/419 fix
 
 **Next: Phase 9 — Reporting & Analytics**
 

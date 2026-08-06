@@ -512,6 +512,12 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 - Page previously used dark-sidebar text colors (cream/gold) on the light main content area, rendering almost the entire table near-invisible
 - Rewritten with proper light-background contrast throughout; duplicate success banner removed (same pattern as above); added the new Midterm Cutoff Date form with a visible warning when unset
 
+### Program Head Login — 404 on Login, 419 on Logout (CRITICAL)
+- Root cause: `AuthenticatedSessionController@store`'s role-based redirect after login checked Super Admin, Dean, and Teacher only — no branch existed for Program Head, so it fell through to a hardcoded fallback (`RouteServiceProvider::HOME` = `/dashboard`), a route that doesn't exist anywhere in the app, producing a 404 on every Program Head login regardless of device or session state
+- A separate, correct redirect for Program Head already existed on the `/` catch-all route, but was never reached since the broken `/dashboard` redirect failed first
+- The downstream 419 on logout was a side effect of the broken login leaving the session in an inconsistent state
+- Fixed: added the missing `isProgramHead()` branch pointing to `/program-head/dashboard`; fallback changed from the nonexistent `/dashboard` to `/login` so any future unhandled role degrades safely instead of 404ing
+
 ---
 
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
