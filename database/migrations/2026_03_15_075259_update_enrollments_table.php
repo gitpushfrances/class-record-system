@@ -20,7 +20,6 @@ return new class extends Migration
             $table->enum('status', ['enrolled', 'dropped', 'completed'])->default('enrolled');
             $table->timestamp('enrolled_at')->useCurrent();
             $table->timestamps();
-            $table->softDeletes();
 
             $table->unique(['student_id', 'section_term_id']);
         });

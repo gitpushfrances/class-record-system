@@ -518,6 +518,17 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 - The downstream 419 on logout was a side effect of the broken login leaving the session in an inconsistent state
 - Fixed: added the missing `isProgramHead()` branch pointing to `/program-head/dashboard`; fallback changed from the nonexistent `/dashboard` to `/login` so any future unhandled role degrades safely instead of 404ing
 
+### Enrollment Re-Add Failure — Soft Delete Removed (Same Pattern as Students)
+- Same root cause as the earlier Student fix: `Enrollment` used `SoftDeletes`, so removing a student from a section and re-enrolling them into the same section/term hit the database's real unique constraint (`[student_id, section_term_id]`) against the old soft-deleted row, even though the app's own duplicate-check query (which excludes soft-deleted rows by default) said it was fine — resulting in a `UniqueConstraintViolationException`
+- `SoftDeletes` removed from the `Enrollment` model; `deleted_at` column removed from the migration that actually defines the live `enrollments` table (`2026_03_15_075259_update_enrollments_table.php`, which fully recreates the table — the original `2026_02_08_071022` migration's `softDeletes()` call is dead code on a fresh install)
+- Existing confirmation prompts on both Dean's and Teacher's removal actions confirmed adequate as the safety net in place of soft-delete
+
+### Dean Enrollments Page — UI Overhaul + Confirmation Modal
+- Duplicate success banner removed (same recurring pattern — local `session('success')` block stacked on the global layout one)
+- Header restyled to match the rest of the app (Fraunces serif title, proper "← Back" link placement)
+- "Remove" text link converted to a trash icon button matching the Students page style
+- Native browser `confirm()` on removal replaced with a SweetAlert2 modal naming the specific student being removed, consistent with the Assignments and Students pages
+
 ---
 
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
