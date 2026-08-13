@@ -531,6 +531,32 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 
+## QA FIXES & PATCHES — August 13, 2026
+
+### Add Student — Dean Master List (CRITICAL, client-reported)
+- Client reported "Add Student" button non-functional on their device; root cause traced through source inspection since client device was unreachable for live debugging
+- `Dean\StudentController@store()` — `status` was never explicitly set on new students; relied entirely on the migration's DB-level `default('active')`. Confirmed via tinker that this default does apply correctly at the database layer, so this was not an active data-corruption bug (`whereNull('status')->count()` returned 0 across all existing students) — but the app's own `Teacher\ClassController@show()` query (`where('status', 'active')`) depends on that value being reliably set, so leaving it implicit was fragile
+- Fixed: `status = 'active'` now set explicitly in the validated array before `Student::create()`, rather than relying on the DB default
+
+### Teacher Class View — Dead Event Listener on Page Load (CRITICAL)
+- `resources/views/teacher/classes/show.blade.php` had its `<script>` block (containing `document.getElementById('confirmRemoveBtn').addEventListener(...)`) placed *before* the `#removeModal` HTML in the DOM, so the listener attach ran against a `null` element on every page load, throwing a silent `TypeError` in console and killing the Remove-confirmation flow
+- Fixed: entire inline script wrapped in `DOMContentLoaded`; all previously-global functions (`openEnrollModal`, `closeEnrollModal`, `filterStudents`, `openRemoveModal`, `closeRemoveModal`) reattached to `window` explicitly so existing inline `onclick="..."` HTML attributes still resolve them correctly
+
+### Dean Add Student Form — No Fallback if SweetAlert2 CDN Fails
+- `confirmSubmit()` in `resources/views/dean/students/create.blade.php` called `Swal.fire(...)` with no guard — if `cdn.jsdelivr.net` failed to load (blocked, slow, or offline network), `Swal` would be `undefined` and the Add Student button would silently do nothing, with no visible error to a non-technical user
+- Fixed: added `typeof Swal === 'undefined'` check with a native `confirm()` fallback so the button still functions if the CDN is unreachable
+- Noted as a recurring pattern — same CDN-dependency risk exists on every other SweetAlert2-based confirm dialog across the app (Sections, Subjects, Assignments, Enrollments); only this instance was patched today. The already-planned `<x-confirm-form>` component (see UI/UX Reminder above) would resolve this app-wide in one pass instead of repeated one-off patches
+
+### Verification
+- Confirmed via `php artisan tinker` that explicit `status = 'active'` assignment behaves correctly end-to-end
+- Confirmed via browser test (DevTools Console open) that both Dean-side Add Student and Teacher-side Add/Remove Student flows complete with zero console errors
+- Confirmed SweetAlert2 loads successfully in current environment (Network tab, 200 response) — fallback path is written but not yet exercised by a real CDN failure
+
+### Known Gap Identified (not fixed — flagged for Phase 9/10 planning)
+- No UI path exists for a Dean to change a student's `status` after creation (`active` → `inactive`/`graduated`/`dropped`). Schema supports it (enum already defines all four values); neither `create.blade.php` nor `edit.blade.php` expose a status field. Students who graduate or drop out will remain permanently eligible for class enrollment under the current `where('status','active')` query. Needs a deliberate scope decision before capstone defense.
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -557,6 +583,6 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 
-**Last Updated:** August 5, 2026  
+**Last Updated:** August 13, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

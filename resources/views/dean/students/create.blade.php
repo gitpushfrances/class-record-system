@@ -77,6 +77,12 @@
                 form.reportValidity();
                 return;
             }
+            if (typeof Swal === 'undefined') {
+                if (confirm('Are you sure you want to add this student to the master list?')) {
+                    form.submit();
+                }
+                return;
+            }
             Swal.fire({
                 title: 'Confirm Add Student',
                 text: 'Are you sure you want to add this student to the master list?',

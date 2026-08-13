@@ -176,33 +176,35 @@
 </div>
 
 <script>
-function openEnrollModal()  { document.getElementById('enrollModal').classList.replace('hidden','flex'); }
-function closeEnrollModal() { document.getElementById('enrollModal').classList.replace('flex','hidden'); }
-function filterStudents(q) {
-    q = q.toLowerCase();
-    document.querySelectorAll('.student-row').forEach(row => {
-        const match = row.dataset.name.includes(q) || row.dataset.number.includes(q);
-        row.closest('form').style.display = match ? '' : 'none';
+document.addEventListener('DOMContentLoaded', function () {
+    window.openEnrollModal  = function () { document.getElementById('enrollModal').classList.replace('hidden','flex'); };
+    window.closeEnrollModal = function () { document.getElementById('enrollModal').classList.replace('flex','hidden'); };
+    window.filterStudents   = function (q) {
+        q = q.toLowerCase();
+        document.querySelectorAll('.student-row').forEach(row => {
+            const match = row.dataset.name.includes(q) || row.dataset.number.includes(q);
+            row.closest('form').style.display = match ? '' : 'none';
+        });
+    };
+
+    let activeRemoveFormId = null;
+
+    window.openRemoveModal = function (enrollmentId, studentName) {
+        activeRemoveFormId = enrollmentId;
+        document.getElementById('removeStudentName').textContent = studentName;
+        document.getElementById('removeModal').classList.replace('hidden', 'flex');
+    };
+
+    window.closeRemoveModal = function () {
+        activeRemoveFormId = null;
+        document.getElementById('removeModal').classList.replace('flex', 'hidden');
+    };
+
+    document.getElementById('confirmRemoveBtn').addEventListener('click', function () {
+        if (activeRemoveFormId) {
+            document.getElementById('removeForm-' + activeRemoveFormId).submit();
+        }
     });
-}
-
-let activeRemoveFormId = null;
-
-function openRemoveModal(enrollmentId, studentName) {
-    activeRemoveFormId = enrollmentId;
-    document.getElementById('removeStudentName').textContent = studentName;
-    document.getElementById('removeModal').classList.replace('hidden', 'flex');
-}
-
-function closeRemoveModal() {
-    activeRemoveFormId = null;
-    document.getElementById('removeModal').classList.replace('flex', 'hidden');
-}
-
-document.getElementById('confirmRemoveBtn').addEventListener('click', function () {
-    if (activeRemoveFormId) {
-        document.getElementById('removeForm-' + activeRemoveFormId).submit();
-    }
 });
 </script>
 {{-- Remove Student Confirmation Modal --}}

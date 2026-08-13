@@ -102,7 +102,7 @@
                                                 @method('DELETE')
                                                 <input type="hidden" class="enrollment-label" value="{{ $enrollment->student->last_name }}, {{ $enrollment->student->first_name }} ({{ $enrollment->student->student_number }})">
                                                 <button type="submit" title="Remove"
-                                                        class="flex items-center justify-center w-8 h-8 rounded-lg transition hover:opacity-80"
+                                                        class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
                                                         style="color:#dc2626; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3);">
                                                     <i class="text-xs fa-solid fa-trash"></i>
                                                 </button>

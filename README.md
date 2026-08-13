@@ -40,8 +40,8 @@ This system streamlines grade management and class record keeping with a DepEd-s
 
 ---
 
-## 🚀 Current Status: Phase 8 Complete + QA Fixes ✅
-
+- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility, Assignments page schema fix, teacher self-registration + review queue, Student page hard-delete + icon actions, attendance now counted in final grades, Final Grades UI overhaul, Program Head login 404/419 fix, Enrollment hard-delete fix + Enrollments page UI overhaul
+- ✅ QA Fixes (August 13): Client-reported Add Student bug fixed — dead JS event listener on Teacher class view, explicit student status assignment on creation, SweetAlert2 CDN fallback on Dean's Add Student confirm
 **Completed:**
 - ✅ Phase 1: Foundation Setup
 - ✅ Phase 2: Database Architecture (11 custom tables, 24 total)
@@ -54,7 +54,7 @@ This system streamlines grade management and class record keeping with a DepEd-s
 - ✅ Phase 8: Sidebar Navigation (unified layout, role-aware, mobile-responsive)
 - ✅ QA Fixes (March 15): Schema migration cleanup, enrollment rewrite, grade calculation fix, academic period view, attendance auth fix
 - ✅ QA Fixes (March 23): Teacher enrollment UI, emoji replacement, student delete modal, cascading delete fix
-- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility, Assignments page schema fix, teacher self-registration + review queue, Student page hard-delete + icon actions, attendance now counted in final grades, Final Grades UI overhaul, Program Head login 404/419 fix
+- ✅ QA Fixes (August 5): Grade config row alignment/validation, unified Admin Accounts page, section-term-scoped teacher assignment (schema change), Sections modal UI, Subject Requests teacher visibility, Assignments page schema fix, teacher self-registration + review queue, Student page hard-delete + icon actions, attendance now counted in final grades, Final Grades UI overhaul, Program Head login 404/419 fix, Enrollment hard-delete fix + Enrollments page UI overhaul
 
 **Next: Phase 9 — Reporting & Analytics**
 
@@ -324,6 +324,6 @@ All roles share a single sidebar layout (`resources/views/layouts/partials/sideb
 
 ---
 
-**Last Updated:** August 5, 2026  
+**Last Updated:** August 13, 2026  
 **Version:** 1.0.0-alpha  
 **Maintained By:** Frances Igop

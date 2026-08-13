@@ -32,6 +32,8 @@ class StudentController extends Controller
             'email'          => 'nullable|email|unique:students,email',
         ]);
 
+        $validated['status'] = 'active'; // explicit — don't rely on DB default
+
         Student::create($validated);
 
         return redirect()->route('dean.students.index')->with('success', 'Student added successfully.');
