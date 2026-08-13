@@ -105,6 +105,10 @@
 document.querySelectorAll('.delete-form').forEach(form => {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (typeof Swal === 'undefined') {
+            if (confirm('Cancel this request? This subject request will be permanently removed.')) form.submit();
+            return;
+        }
         Swal.fire({
             title: 'Cancel this request?',
             text: 'This subject request will be permanently removed.',

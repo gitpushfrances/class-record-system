@@ -39,8 +39,6 @@
                     @if($availableStudents->isNotEmpty())
                         <form action="{{ route('dean.enrollments.store', $section) }}" method="POST" class="flex items-end gap-3">
                             @csrf
-                            <input type="hidden" name="academic_year" value="{{ $currentTerm->academic_year }}">
-                            <input type="hidden" name="semester" value="{{ $currentTerm->semester }}">
                             <div class="flex-1">
                                 <label class="block mb-1 text-sm font-medium text-gray-700">Select Student</label>
                                 <select name="student_id" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1" required>
@@ -131,6 +129,10 @@
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const label = form.querySelector('.enrollment-label').value;
+                if (typeof Swal === 'undefined') {
+                    if (confirm('Remove this student?\n' + label)) form.submit();
+                    return;
+                }
                 Swal.fire({
                     title: 'Remove this student?',
                     text: label,

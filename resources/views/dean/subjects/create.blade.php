@@ -84,7 +84,18 @@ document.getElementById('preview-btn').addEventListener('click', function () {
     const desc  = document.getElementById('description').value.trim();
 
     if (!code || !name || !dept || !units) {
-        Swal.fire({ icon: 'warning', title: 'Incomplete', text: 'Please fill in all required fields.' });
+        if (typeof Swal === 'undefined') {
+            alert('Please fill in all required fields.');
+        } else {
+            Swal.fire({ icon: 'warning', title: 'Incomplete', text: 'Please fill in all required fields.' });
+        }
+        return;
+    }
+
+    if (typeof Swal === 'undefined') {
+        if (confirm(`Confirm Subject Request\n\nCode: ${code}\nName: ${name}\nDepartment: ${dept}\nUnits: ${units}${desc ? '\nDescription: ' + desc : ''}\n\nThis will be sent to the Admin for approval.`)) {
+            document.getElementById('subject-form').submit();
+        }
         return;
     }
 

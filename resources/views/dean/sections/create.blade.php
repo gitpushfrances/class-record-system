@@ -100,6 +100,13 @@
             const yearLevel = document.getElementById('year_level').value;
             const section = document.getElementById('section_letter').value;
 
+            if (typeof Swal === 'undefined') {
+                if (confirm(`Confirm Section\n\nProgram: ${program}\nYear Level: ${yearLevel}\nSection: ${section}`)) {
+                    form.submit();
+                }
+                return;
+            }
+
             Swal.fire({
                 title: 'Confirm Section',
                 html: `

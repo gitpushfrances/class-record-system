@@ -555,6 +555,23 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 ### Known Gap Identified (not fixed — flagged for Phase 9/10 planning)
 - No UI path exists for a Dean to change a student's `status` after creation (`active` → `inactive`/`graduated`/`dropped`). Schema supports it (enum already defines all four values); neither `create.blade.php` nor `edit.blade.php` expose a status field. Students who graduate or drop out will remain permanently eligible for class enrollment under the current `where('status','active')` query. Needs a deliberate scope decision before capstone defense.
 
+### Dean Enrollments — Duplicate Active Term Bug (CRITICAL, client-reported)
+- Client reported students enrolled by the Dean were not appearing on the Teacher's class roster
+- Root cause: `Dean\EnrollmentController@store()` used `SectionTerm::firstOrCreate()` keyed on the Dean's freely-typed `academic_year`/`semester` values. Any mismatch against the section's actual active term (extra whitespace, different formatting) silently created a **second active `SectionTerm`** for the same section, and the enrollment landed on that duplicate — a term the Teacher's `where('status','active')->first()` query wasn't necessarily returning
+- Fixed: `store()` now resolves the section's existing active term directly (`$section->terms()->where('status','active')->first()`) instead of creating one; the Dean's enrollment form no longer sends `academic_year`/`semester` fields at all
+- Confirmed via tinker: zero existing sections had duplicate active terms at time of fix (no historical data damage)
+- Confirmed via browser test: Dean-enrolled student now appears immediately on Teacher's roster with no separate action needed
+
+### SweetAlert2 CDN Fallback — App-Wide Sweep
+- Following the Add Student CDN-fallback fix (see above), audited all remaining Dean-side confirm dialogs for the same unguarded `Swal.fire()` gap
+- Patched: `dean/assignments/index.blade.php` (remove assignment), `dean/enrollments/show.blade.php` (remove enrollment), `dean/sections/create.blade.php` (confirm section creation), `dean/subjects/create.blade.php` (incomplete-fields warning + confirm request), `dean/subjects/index.blade.php` (cancel request) — each now falls back to a native `confirm()` if SweetAlert2 fails to load
+- Verified via `grep -rl "Swal.fire" resources/views/dean/` that all instances are accounted for
+- `<x-confirm-form>` reusable component (already noted as planned above) still not built — this was a one-off patch across six files, not a structural fix; remains recommended for a future session to prevent this pattern recurring on any new confirm dialog added later
+
+### Data Note — `dean/subjects/index.blade.php` still uses legacy layout
+- Uses `@extends('layouts.app')` instead of `<x-sidebar-layout>` — the same root cause documented under Issue 4 (March 15) for `subjects/create.blade.php`, which was fixed at the time but this sibling view was apparently missed
+- Not fixed this session — flagged for follow-up; unclear whether this currently causes any visible/functional issue since page has not been visually inspected against the correct layout
+
 ---
 
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED

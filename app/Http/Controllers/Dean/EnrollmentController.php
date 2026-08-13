@@ -35,19 +35,14 @@ class EnrollmentController extends Controller
     public function store(Request $request, Section $section)
     {
         $request->validate([
-            'student_id'    => 'required|exists:students,id',
-            'academic_year' => 'required|string|max:20',
-            'semester'      => 'required|in:1st Semester,2nd Semester,Summer',
+            'student_id' => 'required|exists:students,id',
         ]);
 
-        $term = SectionTerm::firstOrCreate(
-            [
-                'section_id'    => $section->id,
-                'academic_year' => $request->academic_year,
-                'semester'      => $request->semester,
-            ],
-            ['status' => 'active']
-        );
+        $term = $section->terms()->where('status', 'active')->first();
+
+        if (!$term) {
+            return back()->with('error', 'This section has no active term. Set one up on the Sections page first.');
+        }
 
         $already = Enrollment::where('section_term_id', $term->id)
             ->where('student_id', $request->student_id)

@@ -118,6 +118,10 @@
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const label = form.querySelector('.assignment-label').value;
+                if (typeof Swal === 'undefined') {
+                    if (confirm('Remove this assignment?\n' + label)) form.submit();
+                    return;
+                }
                 Swal.fire({
                     title: 'Remove this assignment?',
                     text: label,
