@@ -38,9 +38,32 @@ class Section extends Model
         return $this->hasMany(GradeItem::class);
     }
 
+    public function gradeItemsFor(int $subjectId)
+    {
+        return $this->gradeItems()->where('subject_id', $subjectId);
+    }
+
+    /**
+     * @deprecated Old section-level design — returns whichever config row
+     * happens to be found for this section, ignoring subject. Left in place
+     * only in case something else still calls it; new code should use
+     * gradeConfigurationFor() instead.
+     */
     public function gradeConfiguration()
     {
         return $this->hasOne(GradeConfiguration::class);
+    }
+
+    public function gradeConfigurations()
+    {
+        return $this->hasMany(GradeConfiguration::class);
+    }
+
+    public function gradeConfigurationFor(int $subjectId): ?GradeConfiguration
+    {
+        return $this->gradeConfigurations()
+            ->where('subject_id', $subjectId)
+            ->first();
     }
 
 

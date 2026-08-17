@@ -574,6 +574,201 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 f
+## QA FIXES & PATCHES — August 17, 2026
+
+### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
+- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
+- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
+- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
+- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
+- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
+- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
+- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
+- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
+- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
+- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
+
+### Section Roster Page — Per-Subject Action Cards
+- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
+- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
+
+### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
+- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
+- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
+
+### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
+- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
+- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
+- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
+- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
+- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
+
+### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
+- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
+- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
+
+### SweetAlert2 Migration — Shared Layout Flash Messages
+- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
+- SweetAlert2 CDN script tag added to the shared layout `<head>`
+
+---
+
+## QA FIXES & PATCHES — August 17, 2026
+
+### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
+- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
+- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
+- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
+- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
+- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
+- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
+- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
+- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
+- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
+- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
+
+### Section Roster Page — Per-Subject Action Cards
+- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
+- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
+
+### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
+- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
+- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
+
+### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
+- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
+- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
+- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
+- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
+- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
+
+### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
+- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
+- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
+
+### SweetAlert2 Migration — Shared Layout Flash Messages
+- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
+- SweetAlert2 CDN script tag added to the shared layout `<head>`
+
+---
+
+## QA FIXES & PATCHES — August 17, 2026
+
+### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
+- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
+- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
+- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
+- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
+- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
+- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
+- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
+- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
+- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
+- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
+
+### Section Roster Page — Per-Subject Action Cards
+- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
+- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
+
+### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
+- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
+- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
+
+### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
+- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
+- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
+- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
+- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
+- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
+
+### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
+- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
+- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
+
+### SweetAlert2 Migration — Shared Layout Flash Messages
+- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
+- SweetAlert2 CDN script tag added to the shared layout `<head>`
+
+---
+
+## QA FIXES & PATCHES — August 17, 2026
+
+### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
+- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
+- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
+- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
+- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
+- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
+- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
+- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
+- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
+- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
+- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
+
+### Section Roster Page — Per-Subject Action Cards
+- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
+- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
+
+### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
+- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
+- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
+
+### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
+- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
+- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
+- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
+- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
+- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
+
+### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
+- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
+- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
+
+### SweetAlert2 Migration — Shared Layout Flash Messages
+- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
+- SweetAlert2 CDN script tag added to the shared layout `<head>`
+
+---
+
+## QA FIXES & PATCHES — August 17, 2026
+
+### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
+- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
+- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
+- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
+- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
+- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
+- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
+- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
+- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
+- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
+- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
+
+### Section Roster Page — Per-Subject Action Cards
+- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
+- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
+
+### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
+- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
+- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
+
+### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
+- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
+- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
+- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
+- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
+- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
+
+### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
+- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
+- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
+
+### SweetAlert2 Migration — Shared Layout Flash Messages
+- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
+- SweetAlert2 CDN script tag added to the shared layout `<head>`
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -600,6 +795,6 @@ f
 
 ---
 
-**Last Updated:** August 17, 2026  
+**Last Updated:** August 17, 2026 (evening session)  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

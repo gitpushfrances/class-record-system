@@ -7,22 +7,24 @@ use App\Models\FinalGrade;
 use App\Models\GradeConfiguration;
 use App\Models\GradeItem;
 use App\Models\Section;
+use App\Models\SectionTerm;
 use App\Models\StudentGrade;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class GradeController extends Controller
 {
-    public function config(Section $section)
+    public function config(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
-        $config = $section->gradeConfiguration;
-        return view('teacher.grades.config', compact('section', 'config'));
+        $this->authorizeSectionSubject($section, $subject);
+        $config = $section->gradeConfigurationFor($subject->id);
+        return view('teacher.grades.config', compact('section', 'subject', 'config'));
     }
 
-    public function storeConfig(Request $request, Section $section)
+    public function storeConfig(Request $request, Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
+        $this->authorizeSectionSubject($section, $subject);
 
         $request->validate([
             'components'          => 'required|array|min:1',
@@ -53,39 +55,39 @@ class GradeController extends Controller
         }
 
         GradeConfiguration::updateOrCreate(
-            ['section_id' => $section->id],
+            ['section_id' => $section->id, 'subject_id' => $subject->id],
             ['config_json' => $components, 'status' => 'active']
         );
 
-        return redirect()->route('teacher.classes.show', $section)
+        return redirect()->route('teacher.grades.items', [$section, $subject])
             ->with('success', 'Grade configuration saved.');
     }
 
-    public function items(Section $section)
+    public function items(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
-        $this->requireConfig($section);
+        $this->authorizeSectionSubject($section, $subject);
+        $this->requireConfig($section, $subject);
 
-        $allItems = $section->gradeItems()
+        $allItems = $section->gradeItemsFor($subject->id)
             ->orderBy('period')
             ->orderBy('component_type')
             ->orderBy('created_at')
             ->get();
 
         $gradeItems = $allItems->groupBy('period');
-        $config     = $section->gradeConfiguration;
+        $config     = $section->gradeConfigurationFor($subject->id);
         $components = collect($config->getComponents())->keyBy('key');
 
-        return view('teacher.grades.items', compact('section', 'gradeItems', 'config', 'components'));
+        return view('teacher.grades.items', compact('section', 'subject', 'gradeItems', 'config', 'components'));
     }
 
-    public function storeItem(Request $request, Section $section)
+    public function storeItem(Request $request, Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
-        $this->requireConfig($section);
+        $this->authorizeSectionSubject($section, $subject);
+        $this->requireConfig($section, $subject);
 
-        $config     = $section->gradeConfiguration;
-        $validKeys  = collect($config->getComponents())->pluck('key')->toArray();
+        $config    = $section->gradeConfigurationFor($subject->id);
+        $validKeys = collect($config->getComponents())->pluck('key')->toArray();
 
         $data = $request->validate([
             'component_type' => ['required', 'string', 'max:50', 'in:' . implode(',', $validKeys)],
@@ -96,21 +98,23 @@ class GradeController extends Controller
             'description'    => 'nullable|string|max:500',
         ]);
 
-        // Block if weight is 0
         $weight = $config->getWeight($data['component_type']);
         if ($weight === 0.0) {
             return back()->withErrors(['component_type' => 'This component has 0% weight. Update grade configuration to enable it.'])->withInput();
         }
 
-        $section->gradeItems()->create($data + ['created_by' => auth()->id()]);
+        $section->gradeItems()->create($data + [
+            'subject_id' => $subject->id,
+            'created_by' => auth()->id(),
+        ]);
 
         return back()->with('success', 'Grade item added.');
     }
 
-    public function destroyItem(Section $section, GradeItem $gradeItem)
+    public function destroyItem(Section $section, Subject $subject, GradeItem $gradeItem)
     {
-        $this->authorizeSection($section);
-        abort_if($gradeItem->section_id !== $section->id, 403);
+        $this->authorizeSectionSubject($section, $subject);
+        abort_if($gradeItem->section_id !== $section->id || $gradeItem->subject_id !== $subject->id, 403);
         abort_if($gradeItem->is_locked, 403, 'Cannot delete a locked grade item.');
 
         $gradeItem->delete();
@@ -118,10 +122,10 @@ class GradeController extends Controller
         return back()->with('success', 'Grade item removed.');
     }
 
-    public function scores(Section $section, GradeItem $gradeItem)
+    public function scores(Section $section, Subject $subject, GradeItem $gradeItem)
     {
-        $this->authorizeSection($section);
-        abort_if($gradeItem->section_id !== $section->id, 403);
+        $this->authorizeSectionSubject($section, $subject);
+        abort_if($gradeItem->section_id !== $section->id || $gradeItem->subject_id !== $subject->id, 403);
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
         $enrollments = $currentTerm
@@ -133,13 +137,13 @@ class GradeController extends Controller
                 ->get()
             : collect();
 
-        return view('teacher.grades.scores', compact('section', 'gradeItem', 'enrollments'));
+        return view('teacher.grades.scores', compact('section', 'subject', 'gradeItem', 'enrollments'));
     }
 
-    public function storeScores(Request $request, Section $section, GradeItem $gradeItem)
+    public function storeScores(Request $request, Section $section, Subject $subject, GradeItem $gradeItem)
     {
-        $this->authorizeSection($section);
-        abort_if($gradeItem->section_id !== $section->id, 403);
+        $this->authorizeSectionSubject($section, $subject);
+        abort_if($gradeItem->section_id !== $section->id || $gradeItem->subject_id !== $subject->id, 403);
         abort_if($gradeItem->is_locked, 403, 'Grade item is locked.');
 
         $request->validate([
@@ -174,33 +178,29 @@ class GradeController extends Controller
             }
         });
 
-        return redirect()->route('teacher.grades.items', $section)->with('success', 'Scores saved.');
+        return redirect()->route('teacher.grades.items', [$section, $subject])->with('success', 'Scores saved.');
     }
 
-    public function finalGrades(Section $section)
+    public function finalGrades(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
-        $this->requireConfig($section);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->requireConfig($section, $subject);
 
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-
-        $section->load([
-            'gradeConfiguration',
-            'gradeItems',
-        ]);
+        $config = $section->gradeConfigurationFor($subject->id);
 
         $enrollments = collect();
         if ($currentTerm) {
             $currentTerm->load([
                 'enrollments.student',
-                'enrollments.finalGrade',
-                'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
+                'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
+                'enrollments.studentGrades' => fn($q) => $q
+                    ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
+                    ->with('gradeItem'),
                 'enrollments.attendanceRecords',
             ]);
             $enrollments = $currentTerm->enrollments;
         }
 
-        $config      = $section->gradeConfiguration;
         $cutoffDate  = $currentTerm?->midterm_cutoff_date;
         $liveGrades  = [];
 
@@ -226,12 +226,12 @@ class GradeController extends Controller
             ];
         }
 
-        return view('teacher.grades.final', compact('section', 'enrollments', 'liveGrades', 'currentTerm'));
+        return view('teacher.grades.final', compact('section', 'subject', 'enrollments', 'liveGrades', 'currentTerm'));
     }
 
-    public function updateCutoff(Request $request, Section $section)
+    public function updateCutoff(Request $request, Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
+        $this->authorizeSectionSubject($section, $subject);
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
         abort_if(!$currentTerm, 422, 'No active term found.');
@@ -245,14 +245,11 @@ class GradeController extends Controller
         return back()->with('success', 'Midterm cutoff date saved. Attendance grades will now reflect the split.');
     }
 
-    public function computeGrades(Section $section)
+    public function computeGrades(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-        $section->load(['gradeConfiguration']);
-        $config = $section->gradeConfiguration;
-
+        $config = $section->gradeConfigurationFor($subject->id);
         if (!$config) {
             return back()->with('error', 'No grade configuration found.');
         }
@@ -260,7 +257,9 @@ class GradeController extends Controller
         $enrollments = collect();
         if ($currentTerm) {
             $currentTerm->load([
-                'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
+                'enrollments.studentGrades' => fn($q) => $q
+                    ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
+                    ->with('gradeItem'),
                 'enrollments.attendanceRecords',
             ]);
             $enrollments = $currentTerm->enrollments;
@@ -282,7 +281,7 @@ class GradeController extends Controller
                 $finalPct   = round(array_sum($allScores), 2);
 
                 FinalGrade::updateOrCreate(
-                    ['enrollment_id' => $enrollment->id],
+                    ['enrollment_id' => $enrollment->id, 'subject_id' => $subject->id],
                     [
                         'midterm_percentage' => $midPct,
                         'midterm_numerical'  => $midNum,
@@ -308,22 +307,16 @@ class GradeController extends Controller
         return back()->with('success', 'Final grades computed and saved successfully.');
     }
 
-    public function lockGrades(Section $section)
+    public function lockGrades(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
-
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-
-        if (!$currentTerm) {
-            return back()->with('error', 'No active term found.');
-        }
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
         if ($currentTerm->verification()->exists()) {
             return back()->with('error', 'Grades are verified by Program Head and cannot be modified.');
         }
 
         $currentTerm->enrollments()
-            ->with('finalGrade')
+            ->with(['finalGrade' => fn($q) => $q->where('subject_id', $subject->id)])
             ->get()
             ->each(function ($enrollment) {
                 if ($enrollment->finalGrade && !$enrollment->finalGrade->is_locked) {
@@ -334,7 +327,7 @@ class GradeController extends Controller
                 }
             });
 
-        return back()->with('success', 'All final grades locked.');
+        return back()->with('success', 'Final grades for this subject locked.');
     }
 
     private function isAttendanceComponent(string $key): bool
@@ -456,20 +449,30 @@ class GradeController extends Controller
         return $scores;
     }
 
-    private function authorizeSection(Section $section): void
+    /**
+     * Only the teacher assigned to THIS subject in this section's active term
+     * may access its grade screens. Being adviser alone is not sufficient —
+     * advisory is roster-only per current design.
+     */
+    private function authorizeSectionSubject(Section $section, Subject $subject): SectionTerm
     {
         $currentTerm = $section->terms()->where('status', 'active')->first();
-        abort_if(
-            !$currentTerm || $currentTerm->adviser_id !== auth()->id(),
-            403,
-            'You are not assigned to this section.'
-        );
+        abort_if(!$currentTerm, 403, 'No active term for this section.');
+
+        $isSubjectTeacher = $currentTerm->subjects()
+            ->wherePivot('teacher_id', auth()->id())
+            ->where('subjects.id', $subject->id)
+            ->exists();
+
+        abort_if(!$isSubjectTeacher, 403, 'You are not assigned to teach this subject in this section.');
+
+        return $currentTerm;
     }
 
-    private function requireConfig(Section $section): void
+    private function requireConfig(Section $section, Subject $subject): void
     {
-        if (!$section->gradeConfiguration) {
-            redirect()->route('teacher.grades.config', $section)
+        if (!$section->gradeConfigurationFor($subject->id)) {
+            redirect()->route('teacher.grades.config', [$section, $subject])
                 ->with('warning', 'Set up grade configuration first.')
                 ->send();
             exit;

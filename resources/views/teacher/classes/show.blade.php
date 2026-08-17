@@ -14,50 +14,71 @@
     </p>
 </div>
 
-{{-- No Config Warning --}}
-@if(! $hasConfig)
-    <div class="flex items-center justify-between px-4 py-4 mb-6 text-yellow-800 border border-yellow-300 rounded-lg bg-yellow-50">
-        <span class="text-sm font-medium"><i class="fa-solid fa-triangle-exclamation"></i> Grade configuration not set. Configure weights to enable grade entry.</span>
-        <a href="{{ route('teacher.grades.config', $section) }}"
-           class="px-4 py-2 ml-4 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600">
-            Configure Now
-        </a>
-    </div>
-@endif
-
-{{-- Quick Actions --}}
-<div class="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-5">
-    <a href="{{ route('teacher.grades.config', $section) }}"
-       class="p-4 transition bg-white border border-gray-200 rounded-xl hover:border-indigo-400 hover:shadow-sm group">
-        <div class="mb-1 text-2xl text-indigo-500"><i class="fa-solid fa-gear"></i></div>
-        <div class="text-sm font-semibold text-gray-700 group-hover:text-indigo-600">Grade Config</div>
-        <div class="text-xs text-gray-400 mt-0.5">{{ $hasConfig ? 'Configured' : 'Not set' }}</div>
-    </a>
-    <a href="{{ route('teacher.grades.items', $section) }}"
-       class="{{ ! $hasConfig ? 'pointer-events-none opacity-50' : '' }} bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-400 hover:shadow-sm transition group">
-        <div class="mb-1 text-2xl text-indigo-500"><i class="fa-solid fa-pen-to-square"></i></div>
-        <div class="text-sm font-semibold text-gray-700 group-hover:text-indigo-600">Grade Items</div>
-        <div class="text-xs text-gray-400 mt-0.5">{{ $section->gradeItems->count() }} item(s)</div>
-    </a>
+{{-- Attendance is section-level, not per-subject --}}
+<div class="mb-6">
     <a href="{{ route('teacher.attendance.index', $section) }}"
-       class="{{ ! $hasConfig ? 'pointer-events-none opacity-50' : '' }} bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-400 hover:shadow-sm transition group">
-        <div class="mb-1 text-2xl text-indigo-500"><i class="fa-solid fa-calendar-days"></i></div>
-        <div class="text-sm font-semibold text-gray-700 group-hover:text-indigo-600">Attendance</div>
-        <div class="text-xs text-gray-400 mt-0.5">Mark daily attendance</div>
-    </a>
-    <a href="{{ route('teacher.grades.final', $section) }}"
-       class="{{ ! $hasConfig ? 'pointer-events-none opacity-50' : '' }} bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-400 hover:shadow-sm transition group">
-        <div class="mb-1 text-2xl text-indigo-500"><i class="fa-solid fa-graduation-cap"></i></div>
-        <div class="text-sm font-semibold text-gray-700 group-hover:text-indigo-600">Final Grades</div>
-        <div class="text-xs text-gray-400 mt-0.5">View & compute</div>
-    </a>
-    <a href="{{ route('teacher.classes.record', $section) }}"
-       class="{{ ! $hasConfig ? 'pointer-events-none opacity-50' : '' }} bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-400 hover:shadow-sm transition group">
-        <div class="mb-1 text-2xl text-indigo-500"><i class="fa-solid fa-chart-bar"></i></div>
-        <div class="text-sm font-semibold text-gray-700 group-hover:text-indigo-600">Class Record</div>
-        <div class="text-xs text-gray-400 mt-0.5">Full spreadsheet view</div>
+       class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:border-indigo-400 hover:shadow-sm transition">
+        <i class="text-indigo-500 fa-solid fa-calendar-days"></i> Mark Attendance
     </a>
 </div>
+
+{{-- Per-subject grading actions --}}
+@if($subjectsData->isEmpty())
+    <div class="p-6 mb-8 text-sm text-center text-gray-400 bg-white border border-gray-200 rounded-xl">
+        No subjects assigned to this section yet.
+    </div>
+@else
+    <div class="mb-8 space-y-4">
+        @foreach($subjectsData as $row)
+            @php $subject = $row['subject']; @endphp
+            <div class="overflow-hidden bg-white border border-gray-200 rounded-xl">
+                <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
+                    <div>
+                        <span class="font-semibold text-gray-800">{{ $subject->code }}</span>
+                        <span class="ml-1 text-sm text-gray-500">{{ $subject->name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if(!$row['isMine'])
+                            <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full">Not your subject</span>
+                        @elseif(!$row['hasConfig'])
+                            <span class="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Not configured
+                            </span>
+                        @else
+                            <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">Configured</span>
+                        @endif
+                    </div>
+                </div>
+
+                @if($row['isMine'])
+                    <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+                        <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
+                           class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
+                            <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-gear"></i></div>
+                            <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Grade Config</div>
+                        </a>
+                        <a href="{{ route('teacher.grades.items', [$section, $subject]) }}"
+                           class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
+                            <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-pen-to-square"></i></div>
+                            <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Grade Items</div>
+                            <div class="text-xs text-gray-400 mt-0.5">{{ $row['itemCount'] }} item(s)</div>
+                        </a>
+                        <a href="{{ route('teacher.grades.final', [$section, $subject]) }}"
+                           class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
+                            <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-graduation-cap"></i></div>
+                            <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Final Grades</div>
+                        </a>
+                        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}"
+                           class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
+                            <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-chart-bar"></i></div>
+                            <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Class Record</div>
+                        </a>
+                    </div>
+                @endif
+            </div>
+        @endforeach
+    </div>
+@endif
 
 {{-- Add Student Modal --}}
 <div id="enrollModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40">

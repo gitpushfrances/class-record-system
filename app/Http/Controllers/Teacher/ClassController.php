@@ -7,7 +7,9 @@ use App\Exports\ClassRecordExport;
 use App\Models\Enrollment;
 use App\Models\FinalGrade;
 use App\Models\Section;
+use App\Models\SectionTerm;
 use App\Models\Student;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -28,10 +30,23 @@ class ClassController extends Controller
             $currentTerm->load([
                 'enrollments.student',
                 'enrollments.finalGrade',
+                'subjects',
             ]);
         }
 
-        $hasConfig = $section->gradeConfiguration !== null;
+        // Per-subject grading state for this section, used to render one
+        // action row per subject instead of a single section-wide gate.
+        $subjectsData = collect();
+        if ($currentTerm) {
+            foreach ($currentTerm->subjects as $subject) {
+                $subjectsData->push([
+                    'subject'   => $subject,
+                    'isMine'    => (int) $subject->pivot->teacher_id === (int) auth()->id(),
+                    'hasConfig' => $section->gradeConfigurationFor($subject->id) !== null,
+                    'itemCount' => $section->gradeItemsFor($subject->id)->count(),
+                ]);
+            }
+        }
 
         $enrolledIds = $currentTerm
             ? $currentTerm->enrollments->pluck('student_id')->toArray()
@@ -42,106 +57,109 @@ class ClassController extends Controller
             ->orderBy('last_name')
             ->get();
 
-        return view('teacher.classes.show', compact('section', 'currentTerm', 'hasConfig', 'availableStudents'));
+        return view('teacher.classes.show', compact('section', 'currentTerm', 'subjectsData', 'availableStudents'));
     }
 
-    public function record(Section $section)
+    public function record(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
-        if (!$section->gradeConfiguration) {
-            return redirect()->route('teacher.grades.config', $section)
+        $config = $section->gradeConfigurationFor($subject->id);
+        if (!$config) {
+            return redirect()->route('teacher.grades.config', [$section, $subject])
                 ->with('warning', 'Set up grade configuration first.');
         }
-
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-
-        $section->load([
-            'program.department',
-            'gradeConfiguration',
-            'gradeItems',
-        ]);
 
         if ($currentTerm) {
             $currentTerm->load([
                 'enrollments.student',
-                'enrollments.finalGrade',
-                'enrollments.studentGrades' => fn($q) => $q->with('gradeItem'),
+                'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
+                'enrollments.studentGrades' => fn($q) => $q
+                    ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
+                    ->with('gradeItem'),
                 'enrollments.attendanceRecords',
             ]);
         }
 
-        $config     = $section->gradeConfiguration;
-        $gradeItems = $section->gradeItems->sortBy('created_at')->groupBy('component_type');
-        $enrollments = $currentTerm ? $currentTerm->enrollments : collect();
+        $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
+        $matrix           = $config->buildComponentMatrix($gradeItemsByType);
+        $enrollments      = $currentTerm ? $currentTerm->enrollments : collect();
+        $cutoffDate       = $currentTerm?->midterm_cutoff_date;
 
-        $liveGrades = [];
+        $liveGrades        = [];
+        $attendanceDisplay = [];
+
         foreach ($enrollments as $enrollment) {
-            $scores          = $this->calculateComponentScores($enrollment, $config);
+            $scores          = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
             $finalPercentage = round(array_sum($scores), 2);
             $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
 
             $liveGrades[$enrollment->id] = [
-                'quiz_score'       => $scores['quiz'],
-                'exam_score'       => $scores['exam'],
-                'project_score'    => $scores['project'],
-                'assessment_score' => $scores['assessment'],
-                'attendance_score' => $scores['attendance'],
-                'final_grade'      => $finalPercentage,
-                'numerical_grade'  => $numerical,
-                'letter_grade'     => number_format($numerical, 2),
-                'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
+                'scores'          => $scores,
+                'final_grade'     => $finalPercentage,
+                'numerical_grade' => $numerical,
+                'letter_grade'    => number_format($numerical, 2),
+                'remarks'         => $numerical <= 3.00 ? 'passed' : 'failed',
             ];
+
+            foreach ($matrix as $comp) {
+                if ($comp['type'] !== 'attendance') continue;
+                $period  = $comp['period'];
+                $records = $enrollment->attendanceRecords->filter(
+                    fn($r) => $cutoffDate
+                        ? ($period === 'midterm' ? $r->date->lte($cutoffDate) : $r->date->gt($cutoffDate))
+                        : false
+                );
+                $attendanceDisplay[$enrollment->id][$comp['key']] = [
+                    'present' => $records->whereIn('status', ['present', 'late'])->count(),
+                    'total'   => $records->count(),
+                ];
+            }
         }
 
-        return view('teacher.classes.record', compact('section', 'currentTerm', 'config', 'gradeItems', 'enrollments', 'liveGrades'));
+        return view('teacher.classes.record', compact(
+            'section', 'subject', 'currentTerm', 'config', 'matrix',
+            'enrollments', 'liveGrades', 'attendanceDisplay'
+        ));
     }
 
-    public function export(Section $section)
+    public function export(Section $section, Subject $subject)
     {
-        $this->authorizeSection($section);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
-        if (!$section->gradeConfiguration) {
-            return redirect()->route('teacher.grades.config', $section)
+        $config = $section->gradeConfigurationFor($subject->id);
+        if (!$config) {
+            return redirect()->route('teacher.grades.config', [$section, $subject])
                 ->with('warning', 'Set up grade configuration before exporting.');
         }
-
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-
-        $section->load([
-            'program.department',
-            'gradeConfiguration',
-            'gradeItems',
-        ]);
 
         if ($currentTerm) {
             $currentTerm->load([
                 'enrollments.student',
-                'enrollments.studentGrades.gradeItem',
+                'enrollments.studentGrades' => fn($q) => $q
+                    ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
+                    ->with('gradeItem'),
                 'enrollments.attendanceRecords',
-                'enrollments.finalGrade',
+                'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
             ]);
         }
 
-        $config      = $section->gradeConfiguration;
-        $gradeItems  = $section->gradeItems->sortBy('created_at')->groupBy('component_type');
-        $enrollments = $currentTerm ? $currentTerm->enrollments : collect();
+        $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
+        $matrix           = $config->buildComponentMatrix($gradeItemsByType);
+        $enrollments      = $currentTerm ? $currentTerm->enrollments : collect();
+        $cutoffDate       = $currentTerm?->midterm_cutoff_date;
 
         $liveGrades = [];
         foreach ($enrollments as $enrollment) {
-            $scores   = $this->calculateComponentScores($enrollment, $config);
-            $finalPct = round(array_sum($scores), 2);
+            $scores    = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
+            $finalPct  = round(array_sum($scores), 2);
             $numerical = FinalGrade::convertToNumericalGrade($finalPct);
 
             $liveGrades[$enrollment->id] = [
-                'quiz_score'       => $scores['quiz'],
-                'exam_score'       => $scores['exam'],
-                'project_score'    => $scores['project'],
-                'assessment_score' => $scores['assessment'],
-                'attendance_score' => $scores['attendance'],
-                'final_grade'      => $finalPct,
-                'numerical_grade'  => $numerical,
-                'remarks'          => $numerical <= 3.00 ? 'passed' : 'failed',
+                'scores'          => $scores,
+                'final_grade'     => $finalPct,
+                'numerical_grade' => $numerical,
+                'remarks'         => $numerical <= 3.00 ? 'passed' : 'failed',
             ];
         }
 
@@ -149,9 +167,9 @@ class ClassController extends Controller
         $termLabel    = $currentTerm
             ? str_replace(' ', '-', $currentTerm->semester) . '_' . $currentTerm->academic_year
             : 'no-term';
-        $filename = $sectionLabel . '_' . $termLabel . '.xlsx';
+        $filename = $sectionLabel . '_' . $subject->code . '_' . $termLabel . '.xlsx';
 
-        return Excel::download(new ClassRecordExport($section, $liveGrades), $filename);
+        return Excel::download(new ClassRecordExport($section, $currentTerm, $subject, $matrix, $enrollments, $liveGrades), $filename);
     }
 
     public function enrollStudent(Request $request, Section $section)
@@ -194,24 +212,90 @@ class ClassController extends Controller
     private function authorizeSection(Section $section): void
     {
         $currentTerm = $section->terms()->where('status', 'active')->first();
+
+        $isAdviser = $currentTerm && $currentTerm->adviser_id === auth()->id();
+        $isSubjectTeacher = $currentTerm && $currentTerm->subjects()
+            ->where('section_subject_teachers.teacher_id', auth()->id())
+            ->exists();
+
         abort_if(
-            !$currentTerm || $currentTerm->adviser_id !== auth()->id(),
+            !$currentTerm || (!$isAdviser && !$isSubjectTeacher),
             403,
             'You are not assigned to this section.'
         );
     }
 
-    private function calculateComponentScores($enrollment, $config): array
+    /**
+     * Stricter than authorizeSection() — used by record()/export(), which are
+     * subject-specific gradebooks. Only the teacher assigned to THIS subject
+     * may open it, not just any adviser or any subject-teacher of the section.
+     */
+    private function authorizeSectionSubject(Section $section, Subject $subject): SectionTerm
     {
-        $components = $config->getComponents();
-        $scores     = [];
-        $gradeMap   = $enrollment->studentGrades->keyBy(fn($g) => $g->gradeItem?->id);
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(!$currentTerm, 403, 'No active term for this section.');
+
+        $isSubjectTeacher = $currentTerm->subjects()
+            ->wherePivot('teacher_id', auth()->id())
+            ->where('subjects.id', $subject->id)
+            ->exists();
+
+        abort_if(!$isSubjectTeacher, 403, 'You are not assigned to teach this subject in this section.');
+
+        return $currentTerm;
+    }
+
+    private function isAttendanceComponent(string $key): bool
+    {
+        return in_array($key, ['attendance', 'attendance_f'], true);
+    }
+
+    private function calculateAttendanceRate($enrollment, string $period, $cutoffDate): ?float
+    {
+        if (!$cutoffDate) {
+            return null;
+        }
+
+        $records = $enrollment->attendanceRecords->filter(
+            fn($r) => $period === 'midterm' ? $r->date->lte($cutoffDate) : $r->date->gt($cutoffDate)
+        );
+
+        if ($records->isEmpty()) {
+            return null;
+        }
+
+        $creditSum = $records->sum(function ($r) {
+            return match ($r->status) {
+                'present', 'excused' => 1.0,
+                'late'                => 0.5,
+                default               => 0.0,
+            };
+        });
+
+        return round(($creditSum / $records->count()) * 100, 2);
+    }
+
+    private function calculateComponentScores($enrollment, $config, $cutoffDate = null): array
+    {
+        $components   = $config->getComponents();
+        $scores       = [];
+        $activeWeight = 0;
 
         foreach ($components as $comp) {
             $key    = $comp['key'];
             $weight = (float) $comp['weight'];
             $scores[$key] = 0;
             if ($weight === 0.0) continue;
+
+            if ($this->isAttendanceComponent($key)) {
+                $period = $comp['period'] ?? 'midterm';
+                $rate   = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
+                if ($rate !== null) {
+                    $scores[$key]  = round(($rate / 100) * $weight, 2);
+                    $activeWeight += $weight;
+                }
+                continue;
+            }
 
             $items = $enrollment->studentGrades->filter(
                 fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $key
@@ -220,7 +304,15 @@ class ClassController extends Controller
             if ($items->isNotEmpty()) {
                 $earned   = $items->sum(fn($g) => (float) $g->score);
                 $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
-                $scores[$key] = $possible > 0 ? round(($earned / $possible) * $weight, 2) : 0;
+                $scores[$key]  = $possible > 0 ? round(($earned / $possible) * $weight, 2) : 0;
+                $activeWeight += $weight;
+            }
+        }
+
+        if ($activeWeight > 0 && $activeWeight < 100) {
+            $factor = 100 / $activeWeight;
+            foreach ($scores as $k => $v) {
+                $scores[$k] = round($v * $factor, 2);
             }
         }
 

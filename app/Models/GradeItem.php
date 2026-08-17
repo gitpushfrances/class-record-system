@@ -12,6 +12,7 @@ class GradeItem extends Model
 
     protected $fillable = [
         'section_id',
+        'subject_id',
         'component_type',
         'period',
         'name',

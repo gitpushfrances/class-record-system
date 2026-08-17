@@ -4,7 +4,7 @@
 
 
 <div class="mb-6">
-    <a href="{{ route('teacher.grades.items', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Grade Items</a>
+    <a href="{{ route('teacher.grades.items', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Grade Items</a>
     <h1 class="mt-1 text-2xl font-bold text-gray-800">{{ $gradeItem->name }}</h1>
     <p class="mt-1 text-sm text-gray-500">
         {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }} &bull;
@@ -24,7 +24,7 @@
 
 <div class="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
 
-    <form method="POST" action="{{ route('teacher.grades.scores.store', [$section, $gradeItem]) }}">
+    <form method="POST" action="{{ route('teacher.grades.scores.store', [$section, $subject, $gradeItem]) }}">
         @csrf
 
         <table class="w-full text-sm">

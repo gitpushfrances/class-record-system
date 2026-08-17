@@ -184,12 +184,24 @@
         @if(auth()->user()->role === 'teacher')
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('teacher.dashboard'),
-                'active' => request()->routeIs('teacher.dashboard')
+                'active' => request()->routeIs('teacher.dashboard'),
+                'icon'   => 'fa-gauge-high',
+                'label'  => 'Dashboard',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('teacher.advisory'),
+                'active' => request()->routeIs('teacher.advisory')
                            || request()->routeIs('teacher.classes.*')
-                           || request()->routeIs('teacher.grades.*')
                            || request()->routeIs('teacher.attendance.*'),
+                'icon'   => 'fa-user-tie',
+                'label'  => 'My Advisory',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('teacher.teaching'),
+                'active' => request()->routeIs('teacher.teaching')
+                           || request()->routeIs('teacher.grades.*'),
                 'icon'   => 'fa-chalkboard-teacher',
-                'label'  => 'My Classes',
+                'label'  => 'My Subjects',
             ])
         @endif
 

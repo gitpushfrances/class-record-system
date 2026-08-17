@@ -115,6 +115,8 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
 
 Route::middleware(['auth', 'status', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherDashboard::class, 'index'])->name('dashboard');
+    Route::get('/advisory', [TeacherDashboard::class, 'advisory'])->name('advisory');
+    Route::get('/teaching', [TeacherDashboard::class, 'teaching'])->name('teaching');
 
     // Class overview
     Route::get('/classes/{section}', [ClassController::class, 'show'])->name('classes.show');
@@ -122,32 +124,32 @@ Route::post('/classes/{section}/enroll', [ClassController::class, 'enrollStudent
 Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class, 'unenrollStudent'])->name('classes.unenroll');
 
     // Grade configuration
-    Route::get('/classes/{section}/grade-config', [GradeController::class, 'config'])->name('grades.config');
-    Route::post('/classes/{section}/grade-config', [GradeController::class, 'storeConfig'])->name('grades.config.store');
+    Route::get('/classes/{section}/subjects/{subject}/grade-config', [GradeController::class, 'config'])->name('grades.config');
+    Route::post('/classes/{section}/subjects/{subject}/grade-config', [GradeController::class, 'storeConfig'])->name('grades.config.store');
 
     // Grade items
-    Route::get('/classes/{section}/grade-items', [GradeController::class, 'items'])->name('grades.items');
-    Route::post('/classes/{section}/grade-items', [GradeController::class, 'storeItem'])->name('grades.items.store');
-    Route::delete('/classes/{section}/grade-items/{gradeItem}', [GradeController::class, 'destroyItem'])->name('grades.items.destroy');
+    Route::get('/classes/{section}/subjects/{subject}/grade-items', [GradeController::class, 'items'])->name('grades.items');
+    Route::post('/classes/{section}/subjects/{subject}/grade-items', [GradeController::class, 'storeItem'])->name('grades.items.store');
+    Route::delete('/classes/{section}/subjects/{subject}/grade-items/{gradeItem}', [GradeController::class, 'destroyItem'])->name('grades.items.destroy');
 
     // Score entry
-    Route::get('/classes/{section}/grade-items/{gradeItem}/scores', [GradeController::class, 'scores'])->name('grades.scores');
-    Route::post('/classes/{section}/grade-items/{gradeItem}/scores', [GradeController::class, 'storeScores'])->name('grades.scores.store');
+    Route::get('/classes/{section}/subjects/{subject}/grade-items/{gradeItem}/scores', [GradeController::class, 'scores'])->name('grades.scores');
+    Route::post('/classes/{section}/subjects/{subject}/grade-items/{gradeItem}/scores', [GradeController::class, 'storeScores'])->name('grades.scores.store');
 
     // Final grades
-    Route::get('/classes/{section}/final-grades', [GradeController::class, 'finalGrades'])->name('grades.final');
-    Route::post('/classes/{section}/final-grades/compute', [GradeController::class, 'computeGrades'])->name('grades.final.compute');
-    Route::post('/classes/{section}/final-grades/lock', [GradeController::class, 'lockGrades'])->name('grades.final.lock');
-    Route::post('/classes/{section}/final-grades/cutoff', [GradeController::class, 'updateCutoff'])->name('grades.final.cutoff');
+    Route::get('/classes/{section}/subjects/{subject}/final-grades', [GradeController::class, 'finalGrades'])->name('grades.final');
+    Route::post('/classes/{section}/subjects/{subject}/final-grades/compute', [GradeController::class, 'computeGrades'])->name('grades.final.compute');
+    Route::post('/classes/{section}/subjects/{subject}/final-grades/lock', [GradeController::class, 'lockGrades'])->name('grades.final.lock');
+    Route::post('/classes/{section}/subjects/{subject}/final-grades/cutoff', [GradeController::class, 'updateCutoff'])->name('grades.final.cutoff');
 
     // Attendance
     Route::get('/classes/{section}/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/classes/{section}/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::get('/classes/{section}/attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
 
-    Route::get('/classes/{section}/record', [ClassController::class, 'record'])->name('classes.record');
-    Route::get('/classes/{section}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
-    Route::get('/classes/{section}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
+    Route::get('/classes/{section}/subjects/{subject}/record', [ClassController::class, 'record'])->name('classes.record');
+    Route::get('/classes/{section}/subjects/{subject}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
+    Route::get('/classes/{section}/subjects/{subject}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
 });
 
 /*

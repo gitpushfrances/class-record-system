@@ -1,10 +1,10 @@
 <x-sidebar-layout>
 
-<div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+<div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <div>
-        <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
+        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
         <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Final Grades</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
 
     @php
@@ -24,8 +24,8 @@
     @endif
 </div>
 
-<div class="mb-4 px-4 py-3 rounded-lg bg-white border border-gray-200">
-    <div class="flex items-center justify-between flex-wrap gap-3">
+<div class="px-4 py-3 mb-4 bg-white border border-gray-200 rounded-lg">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2 text-sm text-gray-700">
             <i class="fa-solid fa-calendar-check" style="color:#c8a97e;"></i>
             <span>
@@ -35,7 +35,7 @@
                 </strong>
             </span>
         </div>
-        <form method="POST" action="{{ route('teacher.grades.final.cutoff', $section) }}" class="flex items-center gap-2">
+        <form method="POST" action="{{ route('teacher.grades.final.cutoff', [$section, $subject]) }}" class="flex items-center gap-2">
             @csrf
             <input type="date" name="midterm_cutoff_date"
                    value="{{ $currentTerm?->midterm_cutoff_date?->format('Y-m-d') }}"
@@ -55,14 +55,14 @@
 </div>
 
 <div class="flex gap-3 mb-4">
-    <form method="POST" action="{{ route('teacher.grades.final.compute', $section) }}">
+    <form method="POST" action="{{ route('teacher.grades.final.compute', [$section, $subject]) }}">
         @csrf
         <button class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
             <i class="fa-solid fa-floppy-disk"></i> Save Grades
         </button>
     </form>
     @if(!$verification)
-        <form method="POST" action="{{ route('teacher.grades.final.lock', $section) }}"
+        <form method="POST" action="{{ route('teacher.grades.final.lock', [$section, $subject]) }}"
               onsubmit="return confirm('Lock all final grades? This cannot be undone.')">
             @csrf
             <button class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-white border border-gray-300 text-gray-700">
@@ -107,20 +107,20 @@
                         <td class="px-5 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-5 py-3">
                             <div class="font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</div>
-                            <div class="text-xs font-mono text-gray-400">{{ $enrollment->student?->student_number }}</div>
+                            <div class="font-mono text-xs text-gray-400">{{ $enrollment->student?->student_number }}</div>
                         </td>
                         <td class="px-5 py-3 text-center text-gray-700">{{ number_format($midPct, 2) }}%</td>
-                        <td class="px-5 py-3 text-center font-bold" style="color:#8a6a3d;">{{ number_format($midNum, 2) }}</td>
+                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($midNum, 2) }}</td>
                         <td class="px-5 py-3 text-center text-gray-700">{{ number_format($finPct, 2) }}%</td>
-                        <td class="px-5 py-3 text-center font-bold" style="color:#8a6a3d;">{{ number_format($finNum, 2) }}</td>
-                        <td class="px-5 py-3 text-center font-bold text-lg text-gray-900">{{ number_format($avgNum, 2) }}</td>
+                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($finNum, 2) }}</td>
+                        <td class="px-5 py-3 text-lg font-bold text-center text-gray-900">{{ number_format($avgNum, 2) }}</td>
                         <td class="px-5 py-3 text-center">
                             @if($fg && $fg->is_locked)
-                                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-500"><i class="fa-solid fa-lock"></i> Locked</span>
+                                <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
                             @elseif($remarks === 'passed')
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Passed</span>
+                                <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Passed</span>
                             @else
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Failed</span>
+                                <span class="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">Failed</span>
                             @endif
                         </td>
                     </tr>

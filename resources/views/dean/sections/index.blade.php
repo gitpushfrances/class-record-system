@@ -6,11 +6,7 @@
         </div>
     @endif
 
-    @if(session('error'))
-        <div class="px-4 py-3 mb-4 text-red-700 bg-red-100 border border-red-400 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
+
 
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800">Sections</h2>
@@ -29,7 +25,7 @@
                         $availableSubjects = $allSubjects->whereNotIn('id', $termSubjects->pluck('id'));
                     @endphp
                     <div onclick="openSectionModal({{ $section->id }})"
-                         class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition">
+                         class="overflow-hidden transition bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:shadow-md">
                         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                             <div>
                                 <div class="font-semibold text-gray-800">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</div>

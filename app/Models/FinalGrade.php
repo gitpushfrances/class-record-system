@@ -12,6 +12,7 @@ class FinalGrade extends Model
 
     protected $fillable = [
         'enrollment_id',
+        'subject_id',
         'midterm_percentage',
         'midterm_numerical',
         'final_percentage',
@@ -41,6 +42,11 @@ class FinalGrade extends Model
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
     }
 
     public function computedBy()

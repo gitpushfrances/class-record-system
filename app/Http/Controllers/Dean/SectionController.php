@@ -165,6 +165,23 @@ class SectionController extends Controller
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
 
+        // A teacher may only advise one section at a time. Exclude this
+        // section's own current term from the check, so re-saving the same
+        // adviser (or changing other fields on the same term) isn't blocked.
+        $alreadyAdvising = SectionTerm::where('adviser_id', $request->adviser_id)
+            ->where('status', 'active')
+            ->when($currentTerm, fn($q) => $q->where('id', '!=', $currentTerm->id))
+            ->first();
+
+        if ($alreadyAdvising) {
+            $conflictingSection = Section::find($alreadyAdvising->section_id);
+            $conflictingLabel   = $conflictingSection?->full_name ?? 'another section';
+
+            return back()
+                ->withErrors(['adviser_id' => "This teacher already advises {$conflictingLabel}. A teacher can only advise one section at a time."])
+                ->withInput();
+        }
+
         if ($currentTerm) {
             $currentTerm->update([
                 'academic_year' => $request->academic_year,

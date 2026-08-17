@@ -1,9 +1,9 @@
 <x-sidebar-layout>
 
 <div class="mb-6">
-    <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
+    <a href="{{ route('teacher.classes.record', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
     <h1 class="mt-1 text-2xl font-bold" style="color: #f0dfc0;">Grade Configuration</h1>
-    <p class="mt-1 text-sm" style="color: rgba(200,169,126,0.6);">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
+    <p class="mt-1 text-sm" style="color: rgba(200,169,126,0.6);">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
 </div>
 
 @if($errors->any())
@@ -30,7 +30,7 @@
     $components = $config ? $config->getComponents() : $defaultComponents;
 @endphp
 
-<form method="POST" action="{{ route('teacher.grades.config.store', $section) }}" id="configForm">
+<form method="POST" action="{{ route('teacher.grades.config.store', [$section, $subject]) }}" id="configForm">
     @csrf
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

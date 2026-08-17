@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-stone-100" style="font-family: 'DM Sans', sans-serif;">
@@ -50,35 +51,50 @@
             {{-- Flash messages --}}
             <div class="px-6 pt-5 space-y-2">
                 @if(session('success'))
-                    <div class="flex items-center gap-2.5 px-4 py-3 text-sm font-medium rounded-xl border"
-                         style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">
-                        <i class="text-xs fas fa-circle-check"></i>
-                        {{ session('success') }}
-                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: @json(session('success')),
+                                timer: 2500,
+                                showConfirmButton: false,
+                            });
+                        });
+                    </script>
                 @endif
                 @if(session('warning'))
-                    <div class="flex items-center gap-2.5 px-4 py-3 text-sm font-medium rounded-xl border"
-                         style="background: #fffbeb; color: #92400e; border-color: #fde68a;">
-                        <i class="text-xs fas fa-triangle-exclamation"></i>
-                        {{ session('warning') }}
-                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: @json(session('warning')),
+                            });
+                        });
+                    </script>
                 @endif
                 @if(session('error'))
-                    <div class="flex items-center gap-2.5 px-4 py-3 text-sm font-medium rounded-xl border"
-                         style="background: #fef2f2; color: #991b1b; border-color: #fecaca;">
-                        <i class="text-xs fas fa-circle-xmark"></i>
-                        {{ session('error') }}
-                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: @json(session('error')),
+                            });
+                        });
+                    </script>
                 @endif
                 @if($errors->any())
-                    <div class="px-4 py-3 text-sm border rounded-xl"
-                         style="background: #fef2f2; color: #991b1b; border-color: #fecaca;">
-                        <ul class="pl-4 space-y-1 list-disc">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: @json(implode('<br>', $errors->all())),
+                            });
+                        });
+                    </script>
                 @endif
             </div>
 
