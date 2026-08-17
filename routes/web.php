@@ -102,9 +102,9 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
     Route::delete('/assignments/{id}', [App\Http\Controllers\Dean\AssignmentController::class, 'destroy'])->name('assignments.destroy');
 
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
-    Route::get('/sections/{section}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
-    Route::post('/sections/{section}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
-    Route::delete('/sections/{section}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
+    Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
+    Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
+    Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
 });
 
 /*

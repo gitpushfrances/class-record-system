@@ -21,30 +21,28 @@ class EnrollmentController extends Controller
         return view('dean.enrollments.index', compact('sectionTerms'));
     }
 
-    public function show(Section $section)
+    public function show(SectionTerm $sectionTerm)
     {
-        $currentTerm = $section->terms()->where('status', 'active')->with('enrollments.student')->first();
-        $enrolledStudentIds = $currentTerm ? $currentTerm->enrollments->pluck('student_id') : collect();
+        $sectionTerm->load(['section.program', 'enrollments.student']);
+        $enrolledStudentIds = $sectionTerm->enrollments->pluck('student_id');
         $availableStudents = Student::whereNotIn('id', $enrolledStudentIds)
             ->orderBy('student_number')
             ->get();
 
-        return view('dean.enrollments.show', compact('section', 'currentTerm', 'availableStudents'));
+        return view('dean.enrollments.show', [
+            'section'            => $sectionTerm->section,
+            'currentTerm'        => $sectionTerm,
+            'availableStudents'  => $availableStudents,
+        ]);
     }
 
-    public function store(Request $request, Section $section)
+    public function store(Request $request, SectionTerm $sectionTerm)
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
         ]);
 
-        $term = $section->terms()->where('status', 'active')->first();
-
-        if (!$term) {
-            return back()->with('error', 'This section has no active term. Set one up on the Sections page first.');
-        }
-
-        $already = Enrollment::where('section_term_id', $term->id)
+        $already = Enrollment::where('section_term_id', $sectionTerm->id)
             ->where('student_id', $request->student_id)
             ->exists();
 
@@ -54,7 +52,7 @@ class EnrollmentController extends Controller
 
         Enrollment::create([
             'student_id'      => $request->student_id,
-            'section_term_id' => $term->id,
+            'section_term_id' => $sectionTerm->id,
             'status'          => 'enrolled',
             'enrolled_at'     => now(),
         ]);
@@ -62,7 +60,7 @@ class EnrollmentController extends Controller
         return back()->with('success', 'Student enrolled successfully.');
     }
 
-    public function destroy(Section $section, Enrollment $enrollment)
+    public function destroy(SectionTerm $sectionTerm, Enrollment $enrollment)
     {
         $enrollment->delete();
         return back()->with('success', 'Student removed from enrollment.');

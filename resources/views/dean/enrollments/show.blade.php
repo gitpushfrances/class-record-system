@@ -37,7 +37,7 @@
                 </div>
                 <div class="px-6 py-4">
                     @if($availableStudents->isNotEmpty())
-                        <form action="{{ route('dean.enrollments.store', $section) }}" method="POST" class="flex items-end gap-3">
+                        <form action="{{ route('dean.enrollments.store', $currentTerm) }}" method="POST" class="flex items-end gap-3">
                             @csrf
                             <div class="flex-1">
                                 <label class="block mb-1 text-sm font-medium text-gray-700">Select Student</label>
@@ -95,7 +95,7 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex justify-center">
-                                            <form action="{{ route('dean.enrollments.destroy', [$section, $enrollment]) }}" method="POST" class="remove-enrollment-form">
+                                            <form action="{{ route('dean.enrollments.destroy', [$currentTerm, $enrollment]) }}" method="POST" class="remove-enrollment-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <input type="hidden" class="enrollment-label" value="{{ $enrollment->student->last_name }}, {{ $enrollment->student->first_name }} ({{ $enrollment->student->student_number }})">

@@ -163,18 +163,24 @@ class SectionController extends Controller
             'semester'      => 'required|in:1st Semester,2nd Semester,Summer',
         ]);
 
-        SectionTerm::updateOrCreate(
-            [
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+
+        if ($currentTerm) {
+            $currentTerm->update([
+                'academic_year' => $request->academic_year,
+                'semester'      => $request->semester,
+                'adviser_id'    => $request->adviser_id,
+            ]);
+        } else {
+            SectionTerm::create([
                 'section_id'    => $section->id,
                 'academic_year' => $request->academic_year,
                 'semester'      => $request->semester,
-            ],
-            [
-                'adviser_id' => $request->adviser_id,
-                'status'     => 'active',
-            ]
-        );
+                'adviser_id'    => $request->adviser_id,
+                'status'        => 'active',
+            ]);
+        }
 
-        return redirect()->route('dean.sections.index')->with('success', 'Adviser updated successfully.');
+        return redirect()->route('dean.sections.index')->with('success', 'Term saved successfully.');
     }
 }

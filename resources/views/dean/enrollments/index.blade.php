@@ -47,7 +47,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4">
-                                <a href="{{ route('dean.enrollments.show', $term->section) }}" class="text-blue-600 hover:text-blue-900">
+                                <a href="{{ route('dean.enrollments.show', $term) }}" class="text-blue-600 hover:text-blue-900">
                                     Manage Enrollments
                                 </a>
                             </td>

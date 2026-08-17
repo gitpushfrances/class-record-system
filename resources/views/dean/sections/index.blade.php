@@ -154,7 +154,14 @@
                                             </div>
                                         </div>
                                     @else
-                                        <div class="py-4 text-sm text-center text-gray-400 border-t">No active term this semester.</div>
+                                        <div class="pt-4 text-center border-t">
+                                            <div class="py-2 text-sm text-gray-400">No active term this semester.</div>
+                                            <button
+                                                onclick="closeSectionModal({{ $section->id }}); openAdviserModal({{ $section->id }}, '{{ addslashes($section->program->code . ' ' . $section->year_number . '-' . $section->section_letter) }}', null, '', '')"
+                                                class="text-xs text-blue-600 hover:text-blue-800">
+                                                Set Term
+                                            </button>
+                                        </div>
                                     @endif
                                 </div>
 
