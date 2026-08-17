@@ -77,7 +77,7 @@ class ClassController extends Controller
                 'enrollments.studentGrades' => fn($q) => $q
                     ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
                     ->with('gradeItem'),
-                'enrollments.attendanceRecords',
+                'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
             ]);
         }
 
@@ -139,7 +139,7 @@ class ClassController extends Controller
                 'enrollments.studentGrades' => fn($q) => $q
                     ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
                     ->with('gradeItem'),
-                'enrollments.attendanceRecords',
+                'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
                 'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
             ]);
         }

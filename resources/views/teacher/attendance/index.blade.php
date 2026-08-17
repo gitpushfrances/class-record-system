@@ -5,11 +5,11 @@
 
 <div class="flex items-start justify-between mb-6">
     <div>
-        <a href="{{ route('teacher.classes.show', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
+        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class Record</a>
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Attendance</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
-    <a href="{{ route('teacher.attendance.summary', $section) }}"
+    <a href="{{ route('teacher.attendance.summary', [$section, $subject]) }}"
        class="px-4 py-2 mt-1 text-sm font-medium text-indigo-600 transition border border-indigo-300 rounded-lg hover:bg-indigo-50">
         View Summary
     </a>
@@ -19,7 +19,7 @@
 
     {{-- Date Selector --}}
     <div class="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
-        <form method="GET" action="{{ route('teacher.attendance.index', $section) }}" class="flex items-center gap-3">
+        <form method="GET" action="{{ route('teacher.attendance.index', [$section, $subject]) }}" class="flex items-center gap-3">
             <label class="text-sm font-medium text-gray-600">Date:</label>
             <input type="date" name="date" value="{{ $date }}"
                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -27,7 +27,7 @@
         </form>
     </div>
 
-    <form method="POST" action="{{ route('teacher.attendance.store', $section) }}" id="attendanceForm">
+    <form method="POST" action="{{ route('teacher.attendance.store', [$section, $subject]) }}" id="attendanceForm">
         @csrf
         <input type="hidden" name="date" value="{{ $date }}">
 

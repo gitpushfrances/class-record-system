@@ -2,10 +2,10 @@
 
 <div class="flex items-start justify-between mb-6">
     <div>
-        <a href="{{ route('teacher.attendance.index', $section) }}" class="text-sm text-indigo-600 hover:underline">← Back to Attendance</a>
+        <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Attendance</a>
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Attendance Summary</h1>
         <p class="mt-1 text-sm text-gray-500">
-            {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
+            {{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
         </p>
     </div>
 </div>

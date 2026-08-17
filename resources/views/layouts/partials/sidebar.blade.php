@@ -182,6 +182,17 @@
         @endif
 
         @if(auth()->user()->role === 'teacher')
+            @php
+                $currentSection = request()->route('section');
+                $isAdviserHere = $currentSection instanceof \App\Models\Section
+                    && $currentSection->terms()
+                        ->where('status', 'active')
+                        ->where('adviser_id', auth()->id())
+                        ->exists();
+                $onSectionRoute = request()->routeIs('teacher.classes.show')
+                    || request()->routeIs('teacher.classes.enroll')
+                    || request()->routeIs('teacher.classes.unenroll');
+            @endphp
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('teacher.dashboard'),
                 'active' => request()->routeIs('teacher.dashboard'),
@@ -191,15 +202,16 @@
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('teacher.advisory'),
                 'active' => request()->routeIs('teacher.advisory')
-                           || request()->routeIs('teacher.classes.*')
-                           || request()->routeIs('teacher.attendance.*'),
+                           || ($onSectionRoute && $isAdviserHere),
                 'icon'   => 'fa-user-tie',
                 'label'  => 'My Advisory',
             ])
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('teacher.teaching'),
                 'active' => request()->routeIs('teacher.teaching')
-                           || request()->routeIs('teacher.grades.*'),
+                           || request()->routeIs('teacher.grades.*')
+                           || request()->routeIs('teacher.classes.record*')
+                           || ($onSectionRoute && !$isAdviserHere),
                 'icon'   => 'fa-chalkboard-teacher',
                 'label'  => 'My Subjects',
             ])

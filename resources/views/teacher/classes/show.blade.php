@@ -14,14 +14,6 @@
     </p>
 </div>
 
-{{-- Attendance is section-level, not per-subject --}}
-<div class="mb-6">
-    <a href="{{ route('teacher.attendance.index', $section) }}"
-       class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:border-indigo-400 hover:shadow-sm transition">
-        <i class="text-indigo-500 fa-solid fa-calendar-days"></i> Mark Attendance
-    </a>
-</div>
-
 {{-- Per-subject grading actions --}}
 @if($subjectsData->isEmpty())
     <div class="p-6 mb-8 text-sm text-center text-gray-400 bg-white border border-gray-200 rounded-xl">
@@ -51,7 +43,7 @@
                 </div>
 
                 @if($row['isMine'])
-                    <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+                    <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-5">
                         <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
                            class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-gear"></i></div>
@@ -72,6 +64,11 @@
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-chart-bar"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Class Record</div>
+                        </a>
+                        <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}"
+                           class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
+                            <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-calendar-days"></i></div>
+                            <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Attendance</div>
                         </a>
                     </div>
                 @endif

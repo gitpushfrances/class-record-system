@@ -1,7 +1,7 @@
 <x-sidebar-layout>
 
 {{-- Header --}}
-<div class="flex items-start justify-between flex-wrap gap-3 mb-6">
+<div class="flex flex-wrap items-start justify-between gap-3 mb-6">
     <div>
         <a href="{{ route('teacher.dashboard') }}" class="text-sm text-indigo-600 hover:underline">← Back to My Classes</a>
         <h1 class="mt-1 text-2xl font-bold text-gray-800">{{ $subject->code }} — {{ $subject->name }}</h1>
@@ -22,6 +22,10 @@
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-graduation-cap"></i> Final Grades
         </a>
+        <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}"
+           class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
+            <i class="fa-solid fa-clipboard-check"></i> Attendance
+        </a>
         <a href="{{ route('teacher.classes.record.export', [$section, $subject]) }}"
            class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             <i class="fa-solid fa-file-excel"></i> Export Excel
@@ -34,11 +38,31 @@
 </div>
 
 {{-- Grade Config Summary --}}
-<div class="flex flex-wrap gap-4 px-5 py-3 mb-6 text-sm text-indigo-700 border border-indigo-100 bg-indigo-50 rounded-xl">
+<div class="flex flex-wrap items-center gap-4 px-5 py-3 mb-6 text-sm text-indigo-700 border border-indigo-100 bg-indigo-50 rounded-xl">
     @foreach($config->getComponents() as $comp)
         <span>{{ $comp['label'] }} <strong>{{ $comp['weight'] }}%</strong> <span class="text-xs text-indigo-400">({{ ucfirst($comp['period']) }})</span></span>
     @endforeach
     <span class="ml-auto text-gray-400">{{ $enrollments->count() }} students</span>
+</div>
+
+{{-- Midterm Cutoff Date — required for attendance-based grading to compute --}}
+<div class="flex flex-wrap items-center gap-3 px-5 py-3 mb-6 text-sm bg-white border border-gray-200 rounded-xl">
+    <span class="font-medium text-gray-600">Midterm Cutoff Date:</span>
+    @if($currentTerm?->midterm_cutoff_date)
+        <span class="font-semibold text-gray-800">{{ $currentTerm->midterm_cutoff_date->format('M d, Y') }}</span>
+    @else
+        <span class="text-yellow-700">Not set — attendance scores will not compute until this is set.</span>
+    @endif
+    <form method="POST" action="{{ route('teacher.grades.final.cutoff', [$section, $subject]) }}" class="flex items-center gap-2 ml-auto">
+        @csrf
+        <input type="date" name="midterm_cutoff_date"
+               value="{{ $currentTerm?->midterm_cutoff_date?->format('Y-m-d') }}"
+               class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg">
+        <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+            Save
+        </button>
+    </form>
 </div>
 
 {{-- Spreadsheet --}}

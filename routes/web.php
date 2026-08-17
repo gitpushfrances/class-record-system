@@ -143,9 +143,9 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     Route::post('/classes/{section}/subjects/{subject}/final-grades/cutoff', [GradeController::class, 'updateCutoff'])->name('grades.final.cutoff');
 
     // Attendance
-    Route::get('/classes/{section}/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/classes/{section}/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
-    Route::get('/classes/{section}/attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
+    Route::get('/classes/{section}/subjects/{subject}/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/classes/{section}/subjects/{subject}/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/classes/{section}/subjects/{subject}/attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
 
     Route::get('/classes/{section}/subjects/{subject}/record', [ClassController::class, 'record'])->name('classes.record');
     Route::get('/classes/{section}/subjects/{subject}/record/print', [ClassController::class, 'record'])->name('classes.record.print');

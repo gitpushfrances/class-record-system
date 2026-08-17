@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('attendance_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('enrollment_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
             $table->date('date');
             $table->enum('status', ['present', 'absent', 'late', 'excused'])->default('present');
             $table->text('remarks')->nullable();
@@ -18,8 +19,8 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Prevent duplicate attendance for same student on same date
-            $table->unique(['enrollment_id', 'date']);
+            // Prevent duplicate attendance for same student, same subject, same date
+            $table->unique(['enrollment_id', 'subject_id', 'date']);
         });
     }
 

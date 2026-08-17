@@ -59,7 +59,7 @@ class GradeController extends Controller
             ['config_json' => $components, 'status' => 'active']
         );
 
-        return redirect()->route('teacher.grades.items', [$section, $subject])
+        return redirect()->route('teacher.classes.record', [$section, $subject])
             ->with('success', 'Grade configuration saved.');
     }
 
@@ -196,7 +196,7 @@ class GradeController extends Controller
                 'enrollments.studentGrades' => fn($q) => $q
                     ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
                     ->with('gradeItem'),
-                'enrollments.attendanceRecords',
+                'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
             ]);
             $enrollments = $currentTerm->enrollments;
         }
@@ -260,7 +260,7 @@ class GradeController extends Controller
                 'enrollments.studentGrades' => fn($q) => $q
                     ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
                     ->with('gradeItem'),
-                'enrollments.attendanceRecords',
+                'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
             ]);
             $enrollments = $currentTerm->enrollments;
         }
