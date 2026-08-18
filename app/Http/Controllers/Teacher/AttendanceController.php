@@ -29,7 +29,8 @@ class AttendanceController extends Controller
     }
     public function store(Request $request, Section $section, Subject $subject)
     {
-        $this->authorizeSectionSubject($section, $subject);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->assertNotLocked($subject, $currentTerm);
         $request->validate([
             'date'                       => 'required|date',
             'attendance'                 => 'required|array',
@@ -103,5 +104,20 @@ class AttendanceController extends Controller
         abort_if(!$isSubjectTeacher, 403, 'You are not assigned to teach this subject in this section.');
 
         return $currentTerm;
+    }
+
+    /**
+     * Blocks attendance edits once this subject's grades have been submitted
+     * (pending) or verified. Rejected submissions are excluded so the teacher
+     * can correct and resubmit.
+     */
+    private function assertNotLocked(Subject $subject, SectionTerm $currentTerm): void
+    {
+        $locked = $currentTerm->verifications()
+            ->where('subject_id', $subject->id)
+            ->whereIn('status', ['pending', 'verified'])
+            ->exists();
+
+        abort_if($locked, 403, 'Grades for this subject are locked pending or after verification and attendance cannot be edited.');
     }
 }

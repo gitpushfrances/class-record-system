@@ -38,9 +38,14 @@ class SectionTerm extends Model
         return $this->hasMany(Enrollment::class);
     }
 
-    public function verification()
+    public function verifications()
     {
-        return $this->hasOne(\App\Models\GradeVerification::class, 'section_term_id');
+        return $this->hasMany(\App\Models\GradeVerification::class, 'section_term_id');
+    }
+
+    public function verificationFor(int $subjectId): ?\App\Models\GradeVerification
+    {
+        return $this->verifications()->where('subject_id', $subjectId)->first();
     }
 
     public function students()

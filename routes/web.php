@@ -138,8 +138,7 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
 
     // Final grades
     Route::get('/classes/{section}/subjects/{subject}/final-grades', [GradeController::class, 'finalGrades'])->name('grades.final');
-    Route::post('/classes/{section}/subjects/{subject}/final-grades/compute', [GradeController::class, 'computeGrades'])->name('grades.final.compute');
-    Route::post('/classes/{section}/subjects/{subject}/final-grades/lock', [GradeController::class, 'lockGrades'])->name('grades.final.lock');
+    Route::post('/classes/{section}/subjects/{subject}/final-grades/submit', [GradeController::class, 'submitForVerification'])->name('grades.submit');
     Route::post('/classes/{section}/subjects/{subject}/final-grades/cutoff', [GradeController::class, 'updateCutoff'])->name('grades.final.cutoff');
 
     // Attendance
@@ -160,8 +159,9 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
 
 Route::middleware(['auth', 'status', 'role:program_head'])->prefix('program-head')->name('program-head.')->group(function () {
     Route::get('/dashboard', [ProgramHeadController::class, 'dashboard'])->name('dashboard');
-    Route::post('/verify/{sectionTerm}', [ProgramHeadController::class, 'verify'])->name('verify');
-    Route::delete('/unverify/{sectionTerm}', [ProgramHeadController::class, 'unverify'])->name('unverify');
+    Route::post('/verify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'verify'])->name('verify');
+    Route::post('/reject/{sectionTerm}/{subject}', [ProgramHeadController::class, 'reject'])->name('reject');
+    Route::delete('/unverify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'unverify'])->name('unverify');
 });
 
 /*

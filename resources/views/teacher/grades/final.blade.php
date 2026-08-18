@@ -8,18 +8,29 @@
     </div>
 
     @php
-        $verification = $currentTerm?->verification()->with('verifiedBy')->first();
+        $verification = $currentTerm?->verifications->firstWhere('subject_id', $subject->id);
+        $status = $verification->status ?? 'not_submitted';
     @endphp
 
-    @if($verification)
+    @if($status === 'verified')
         <div class="px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 bg-green-50 border border-green-200 text-green-700">
             <i class="fa-solid fa-shield-halved"></i>
-            Verified by <strong>{{ $verification->verifiedBy->name }}</strong> on {{ $verification->verified_at->format('M d, Y') }}
+            Verified by <strong>{{ $verification->verifiedBy->name ?? '—' }}</strong> on {{ $verification->verified_at?->format('M d, Y') }}
         </div>
-    @else
+    @elseif($status === 'pending')
         <div class="px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700">
             <i class="fa-solid fa-clock"></i>
             Pending verification by Program Head
+        </div>
+    @elseif($status === 'rejected')
+        <div class="px-4 py-2.5 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700">
+            <div class="flex items-center gap-2 font-medium"><i class="fa-solid fa-circle-xmark"></i> Rejected</div>
+            <div class="mt-1 text-xs">{{ $verification->rejection_reason }}</div>
+        </div>
+    @else
+        <div class="px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 bg-gray-50 border border-gray-200 text-gray-500">
+            <i class="fa-solid fa-circle-info"></i>
+            Not yet submitted
         </div>
     @endif
 </div>
@@ -34,8 +45,12 @@
                     {{ $currentTerm?->midterm_cutoff_date ? $currentTerm->midterm_cutoff_date->format('M d, Y') : 'Not set' }}
                 </strong>
             </span>
+            @if($currentTerm?->midterm_cutoff_date)
+                <button type="button" onclick="toggleCutoffForm('final')" class="text-xs font-medium text-indigo-600 hover:underline">Edit</button>
+            @endif
         </div>
-        <form method="POST" action="{{ route('teacher.grades.final.cutoff', [$section, $subject]) }}" class="flex items-center gap-2">
+        <form id="cutoff-form-final" method="POST" action="{{ route('teacher.grades.final.cutoff', [$section, $subject]) }}"
+              class="items-center gap-2 {{ $currentTerm?->midterm_cutoff_date ? 'hidden' : 'flex' }}">
             @csrf
             <input type="date" name="midterm_cutoff_date"
                    value="{{ $currentTerm?->midterm_cutoff_date?->format('Y-m-d') }}"
@@ -54,27 +69,45 @@
     @endif
 </div>
 
+<script>
+function toggleCutoffForm(key) {
+    document.getElementById('cutoff-form-' + key).classList.toggle('hidden');
+}
+</script>
+
 <div class="flex gap-3 mb-4">
-    <form method="POST" action="{{ route('teacher.grades.final.compute', [$section, $subject]) }}">
-        @csrf
-        <button class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
-            <i class="fa-solid fa-floppy-disk"></i> Save Grades
-        </button>
-    </form>
-    @if(!$verification)
-        <form method="POST" action="{{ route('teacher.grades.final.lock', [$section, $subject]) }}"
-              onsubmit="return confirm('Lock all final grades? This cannot be undone.')">
+    @if(in_array($status, ['pending', 'verified']))
+        <span class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 border border-gray-200 text-gray-400">
+            <i class="fa-solid fa-lock"></i> {{ $status === 'verified' ? 'Verified — editing locked' : 'Pending review — editing locked' }}
+        </span>
+    @else
+        <form id="submitVerificationForm" method="POST" action="{{ route('teacher.grades.submit', [$section, $subject]) }}">
             @csrf
-            <button class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-white border border-gray-300 text-gray-700">
-                <i class="fa-solid fa-lock"></i> Lock All
+            <button type="button" onclick="confirmSubmitVerification()" class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
+                <i class="fa-solid fa-paper-plane"></i> Submit for Verification
             </button>
         </form>
-    @else
-        <span class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 border border-gray-200 text-gray-400">
-            <i class="fa-solid fa-lock"></i> Locked by Verification
-        </span>
     @endif
 </div>
+
+<script>
+function confirmSubmitVerification() {
+    Swal.fire({
+        title: 'Submit for verification?',
+        text: 'Grades, items, and attendance for this subject will be locked until the Program Head reviews them.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, submit',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#9a7a50',
+        cancelButtonColor: '#9ca3af',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('submitVerificationForm').submit();
+        }
+    });
+}
+</script>
 
 <div class="overflow-hidden bg-white border border-gray-200 rounded-xl">
     <div class="overflow-x-auto">

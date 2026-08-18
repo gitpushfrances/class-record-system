@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FinalGrade;
 use App\Models\GradeConfiguration;
 use App\Models\GradeItem;
+use App\Models\GradeVerification;
 use App\Models\Section;
 use App\Models\SectionTerm;
 use App\Models\StudentGrade;
@@ -24,7 +25,8 @@ class GradeController extends Controller
 
     public function storeConfig(Request $request, Section $section, Subject $subject)
     {
-        $this->authorizeSectionSubject($section, $subject);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->assertNotLocked($subject, $currentTerm);
 
         $request->validate([
             'components'          => 'required|array|min:1',
@@ -83,7 +85,8 @@ class GradeController extends Controller
 
     public function storeItem(Request $request, Section $section, Subject $subject)
     {
-        $this->authorizeSectionSubject($section, $subject);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->assertNotLocked($subject, $currentTerm);
         $this->requireConfig($section, $subject);
 
         $config    = $section->gradeConfigurationFor($subject->id);
@@ -307,27 +310,69 @@ class GradeController extends Controller
         return back()->with('success', 'Final grades computed and saved successfully.');
     }
 
-    public function lockGrades(Section $section, Subject $subject)
+    public function submitForVerification(Section $section, Subject $subject)
     {
         $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->assertNotLocked($subject, $currentTerm);
 
-        if ($currentTerm->verification()->exists()) {
-            return back()->with('error', 'Grades are verified by Program Head and cannot be modified.');
+        $config = $section->gradeConfigurationFor($subject->id);
+        if (!$config) {
+            return back()->with('error', 'No grade configuration found.');
         }
 
-        $currentTerm->enrollments()
-            ->with(['finalGrade' => fn($q) => $q->where('subject_id', $subject->id)])
-            ->get()
-            ->each(function ($enrollment) {
-                if ($enrollment->finalGrade && !$enrollment->finalGrade->is_locked) {
-                    $enrollment->finalGrade->update([
-                        'is_locked' => true,
-                        'locked_at' => now(),
-                    ]);
-                }
-            });
+        $currentTerm->load([
+            'enrollments.studentGrades' => fn($q) => $q
+                ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
+                ->with('gradeItem'),
+            'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
+        ]);
 
-        return back()->with('success', 'Final grades for this subject locked.');
+        $cutoffDate = $currentTerm->midterm_cutoff_date;
+
+        foreach ($currentTerm->enrollments as $enrollment) {
+            $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm', $cutoffDate);
+            $finScores = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
+            $midPct    = round(array_sum($midScores), 2);
+            $finPct    = round(array_sum($finScores), 2);
+            $midNum    = FinalGrade::convertToNumericalGrade($midPct);
+            $finNum    = FinalGrade::convertToNumericalGrade($finPct);
+            $avgNum    = round(($midNum + $finNum) / 2 * 4) / 4;
+            $allScores = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
+            $finalPct  = round(array_sum($allScores), 2);
+
+            FinalGrade::updateOrCreate(
+                ['enrollment_id' => $enrollment->id, 'subject_id' => $subject->id],
+                [
+                    'midterm_percentage' => $midPct,
+                    'midterm_numerical'  => $midNum,
+                    'final_percentage'   => $finPct,
+                    'final_numerical'    => $finNum,
+                    'average_numerical'  => $avgNum,
+                    'final_grade'        => $finalPct,
+                    'numerical_grade'    => $avgNum,
+                    'letter_grade'       => number_format($avgNum, 2),
+                    'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
+                    'computed_by'        => auth()->id(),
+                    'is_locked'          => true,
+                    'locked_at'          => now(),
+                ]
+            );
+        }
+
+        $section->gradeItemsFor($subject->id)->update(['is_locked' => true]);
+
+        GradeVerification::updateOrCreate(
+            ['section_term_id' => $currentTerm->id, 'subject_id' => $subject->id],
+            [
+                'status'           => 'pending',
+                'verified_by'      => null,
+                'verified_at'      => null,
+                'rejection_reason' => null,
+            ]
+        );
+
+        return redirect()->route('teacher.grades.final', [$section, $subject])
+            ->with('success', 'Final grades submitted for verification.');
     }
 
     private function isAttendanceComponent(string $key): bool
@@ -467,6 +512,21 @@ class GradeController extends Controller
         abort_if(!$isSubjectTeacher, 403, 'You are not assigned to teach this subject in this section.');
 
         return $currentTerm;
+    }
+
+    /**
+     * Blocks writes once a subject's grades have been submitted (pending) or
+     * verified. Rejected submissions are excluded so the teacher can correct
+     * and resubmit.
+     */
+    private function assertNotLocked(Subject $subject, SectionTerm $currentTerm): void
+    {
+        $locked = $currentTerm->verifications()
+            ->where('subject_id', $subject->id)
+            ->whereIn('status', ['pending', 'verified'])
+            ->exists();
+
+        abort_if($locked, 403, 'Grades for this subject are locked pending or after verification.');
     }
 
     private function requireConfig(Section $section, Subject $subject): void

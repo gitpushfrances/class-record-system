@@ -11,8 +11,11 @@ class GradeVerification extends Model
 
     protected $fillable = [
         'section_term_id',
+        'subject_id',
+        'status',
         'verified_by',
         'verified_at',
+        'rejection_reason',
         'notes',
     ];
 
@@ -23,6 +26,11 @@ class GradeVerification extends Model
     public function sectionTerm()
     {
         return $this->belongsTo(SectionTerm::class);
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
     }
 
     public function verifiedBy()
