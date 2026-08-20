@@ -9,9 +9,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $departmentId = auth()->user()->department_id;
+
         $stats = [
-            'total_teachers' => User::where('role', 'teacher')->where('status', 'active')->count(),
-            'total_sections' => Section::count(),
+            'total_teachers' => User::where('role', 'teacher')
+                ->where('status', 'active')
+                ->where('department_id', $departmentId)
+                ->count(),
+            'total_sections' => Section::whereHas('program', fn($q) => $q->where('department_id', $departmentId))->count(),
+            // total_students left unscoped — see open question on student scoping.
             'total_students' => Student::count(),
         ];
         return view('dean.dashboard', compact('stats'));

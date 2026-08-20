@@ -16,6 +16,7 @@ class Subject extends Model
         'description',
         'units',
         'department',
+        'program_id',
         'status',
         'requested_by',
         'approved_by',
@@ -26,6 +27,11 @@ class Subject extends Model
     protected $casts = [
         'approved_at' => 'datetime',
     ];
+
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
 
     public function requester()
     {

@@ -18,6 +18,8 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
+        'department_id',
+        'program_id',
         'approved_by',
         'approved_at',
     ];
@@ -37,6 +39,16 @@ class User extends Authenticatable
     public function assignedSections()
     {
         return $this->hasMany(Section::class, 'teacher_id');
+    }
+
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function approvedUsers()

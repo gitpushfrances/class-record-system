@@ -3,9 +3,9 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Student Master List</h1>
-            <p class="mt-1 text-sm text-gray-500">Manage the institution's student records.</p>
+            <p class="mt-1 text-sm text-gray-500">Manage your program's student records.</p>
         </div>
-        <a href="{{ route('dean.students.create') }}"
+        <a href="{{ route('program-head.students.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
            style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
             <i class="text-xs fa-solid fa-plus"></i> Add Student
@@ -13,10 +13,17 @@
     </div>
 
     <form method="GET" class="flex items-center gap-3 mb-4">
-        <select name="program_id" onchange="this.form.submit()" class="px-3 py-2 text-sm border rounded-lg" style="border-color:#d1d5db;">
-            <option value="">All Programs</option>
-            @foreach($programs as $program)
-                <option value="{{ $program->id }}" {{ request('program_id') == $program->id ? 'selected' : '' }}>{{ $program->code }}</option>
+        <select name="year_level" onchange="this.form.submit()" class="px-3 py-2 text-sm border rounded-lg" style="border-color:#d1d5db;">
+            <option value="">All Years</option>
+            @foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $level)
+                <option value="{{ $level }}" {{ request('year_level') == $level ? 'selected' : '' }}>{{ $level }}</option>
+            @endforeach
+        </select>
+        <select name="section_id" onchange="this.form.submit()" class="px-3 py-2 text-sm border rounded-lg" style="border-color:#d1d5db;">
+            <option value="">All Sections</option>
+            <option value="unassigned" {{ request('section_id') === 'unassigned' ? 'selected' : '' }}>Unassigned</option>
+            @foreach($sections as $section)
+                <option value="{{ $section->id }}" {{ request('section_id') == $section->id ? 'selected' : '' }}>{{ $section->year_number }}-{{ $section->section_letter }}</option>
             @endforeach
         </select>
         <input type="hidden" name="sort" value="{{ $sort }}">
@@ -41,7 +48,6 @@
                     </th>
                     <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Year Level</th>
                     <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Type</th>
-                    <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Program</th>
                     <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">
                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => $sort === 'created_at' && $direction === 'asc' ? 'desc' : 'asc']) }}" class="flex items-center gap-1 hover:text-gray-800">
                             Date Added
@@ -69,11 +75,10 @@
                                 {{ ucfirst($student->student_type) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">{{ $student->program->code ?? '—' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-600">{{ $student->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-center gap-3">
-                                <a href="{{ route('dean.students.edit', $student) }}" title="Edit"
+                                <a href="{{ route('program-head.students.edit', $student) }}" title="Edit"
                                    class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
                                    style="color:#8a6a3d; background:rgba(200,169,126,0.18); border:1px solid rgba(200,169,126,0.35);">
                                     <i class="text-xs fa-solid fa-pen"></i>
@@ -85,7 +90,7 @@
                                     <i class="text-xs fa-solid fa-trash"></i>
                                 </button>
                                 <form id="delete-form-{{ $student->id }}"
-                                    action="{{ route('dean.students.destroy', $student) }}"
+                                    action="{{ route('program-head.students.destroy', $student) }}"
                                     method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
@@ -95,7 +100,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-10 text-sm text-center text-gray-400">No students found.</td>
+                        <td colspan="6" class="px-6 py-10 text-sm text-center text-gray-400">No students found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -106,39 +111,23 @@
         {{ $students->links() }}
     </div>
 
-{{-- Delete Confirmation Modal --}}
-<div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40">
-    <div class="w-full max-w-sm p-6 bg-white shadow-lg rounded-xl">
-        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
-            <i class="text-xl text-red-600 fa-solid fa-triangle-exclamation"></i>
-        </div>
-        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Remove Student</h3>
-        <p class="mb-1 text-sm text-center text-gray-500">You are about to remove:</p>
-        <p id="deleteStudentName" class="mb-4 text-sm font-semibold text-center text-gray-800"></p>
-        <p class="mb-6 text-xs text-center text-red-500">This will remove them from all enrolled classes permanently.</p>
-        <div class="flex gap-3">
-            <button onclick="closeDeleteModal()"
-                class="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Cancel
-            </button>
-            <button id="confirmDeleteBtn"
-                class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
-                Yes, Remove
-            </button>
-        </div>
-    </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function confirmDelete(id, name) {
-    document.getElementById('deleteStudentName').textContent = name;
-    document.getElementById('confirmDeleteBtn').onclick = function () {
-        document.getElementById('delete-form-' + id).submit();
-    };
-    document.getElementById('deleteModal').classList.replace('hidden', 'flex');
-}
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.replace('flex', 'hidden');
+    Swal.fire({
+        title: 'Remove Student',
+        html: `You are about to remove:<br><strong>${name}</strong><br><br><span style="color:#dc2626; font-size: 0.8rem;">This will remove them from all enrolled classes permanently.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Remove',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
 }
 </script>
 </x-sidebar-layout>

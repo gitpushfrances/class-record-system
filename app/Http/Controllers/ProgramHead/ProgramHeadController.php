@@ -13,6 +13,10 @@ class ProgramHeadController extends Controller
 {
     public function dashboard()
     {
+        $programId = auth()->user()->program_id;
+
+        abort_if(!$programId, 403, 'You have not been assigned a program yet. Contact your Dean.');
+
         $sectionTerms = SectionTerm::with([
             'section.program',
             'adviser',
@@ -21,6 +25,7 @@ class ProgramHeadController extends Controller
             'enrollments.student',
         ])
         ->where('status', 'active')
+        ->whereHas('section', fn($q) => $q->where('program_id', $programId))
         ->get();
 
         $enrollmentIds = $sectionTerms->pluck('enrollments')->flatten()->pluck('id');
@@ -34,6 +39,8 @@ class ProgramHeadController extends Controller
 
     public function verify(Request $request, SectionTerm $sectionTerm, Subject $subject)
     {
+        abort_if($sectionTerm->section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+
         $verification = $sectionTerm->verificationFor($subject->id);
         abort_if(!$verification || $verification->status !== 'pending', 404, 'No pending submission found for this subject.');
 
@@ -50,6 +57,8 @@ class ProgramHeadController extends Controller
 
     public function reject(Request $request, SectionTerm $sectionTerm, Subject $subject)
     {
+        abort_if($sectionTerm->section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+
         $request->validate(['reason' => 'required|string|max:500']);
 
         $verification = $sectionTerm->verificationFor($subject->id);
@@ -75,6 +84,8 @@ class ProgramHeadController extends Controller
 
     public function unverify(SectionTerm $sectionTerm, Subject $subject)
     {
+        abort_if($sectionTerm->section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+
         $verification = $sectionTerm->verificationFor($subject->id);
         abort_if(!$verification || $verification->status !== 'verified', 404, 'This subject is not currently verified.');
 

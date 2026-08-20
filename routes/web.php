@@ -55,12 +55,6 @@ Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name
     Route::post('/academic', [AdminAcademic::class, 'store'])->name('academic.store');
     Route::patch('/academic/{period}/set-active', [AdminAcademic::class, 'setActive'])->name('academic.setActive');
     Route::delete('/academic/{period}', [AdminAcademic::class, 'destroy'])->name('academic.destroy');
-    Route::get('/users/teachers/create', [AdminUser::class, 'createTeacher'])->name('users.teachers.create');
-    Route::post('/users/teachers', [AdminUser::class, 'storeTeacher'])->name('users.teachers.store');
-
-    Route::get('/users/program-heads/create', [AdminUser::class, 'createProgramHead'])->name('users.program-heads.create');
-    Route::post('/users/program-heads', [AdminUser::class, 'storeProgramHead'])->name('users.program-heads.store');
-
     Route::get('/users/create', [AdminUser::class, 'createAccount'])->name('users.create');
     Route::post('/users', [AdminUser::class, 'storeAccount'])->name('users.store');
     Route::post('/deans/{dean}/approve-request', [AdminUser::class, 'approveRequest'])->name('deans.approve-request');
@@ -96,6 +90,8 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
 
     Route::resource('students', DeanStudent::class);
     Route::resource('subjects', DeanSubject::class);
+    Route::post('/subjects/{subject}/approve', [DeanSubject::class, 'approve'])->name('subjects.approve');
+    Route::post('/subjects/{subject}/reject', [DeanSubject::class, 'reject'])->name('subjects.reject');
 
     Route::get('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'index'])->name('assignments.index');
     Route::post('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'store'])->name('assignments.store');
@@ -105,6 +101,10 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
     Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
     Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
+
+    Route::get('/program-heads', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'index'])->name('program-heads.index');
+    Route::post('/program-heads/{programHead}/assign', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'assign'])->name('program-heads.assign');
+    Route::delete('/program-heads/{programHead}/remove', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'remove'])->name('program-heads.remove');
 });
 
 /*
@@ -162,6 +162,31 @@ Route::middleware(['auth', 'status', 'role:program_head'])->prefix('program-head
     Route::post('/verify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'verify'])->name('verify');
     Route::post('/reject/{sectionTerm}/{subject}', [ProgramHeadController::class, 'reject'])->name('reject');
     Route::delete('/unverify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'unverify'])->name('unverify');
+
+    Route::get('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'index'])->name('students.index');
+    Route::get('/students/create', [App\Http\Controllers\ProgramHead\StudentController::class, 'create'])->name('students.create');
+    Route::post('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'store'])->name('students.store');
+    Route::get('/students/{student}/edit', [App\Http\Controllers\ProgramHead\StudentController::class, 'edit'])->name('students.edit');
+    Route::put('/students/{student}', [App\Http\Controllers\ProgramHead\StudentController::class, 'update'])->name('students.update');
+    Route::delete('/students/{student}', [App\Http\Controllers\ProgramHead\StudentController::class, 'destroy'])->name('students.destroy');
+
+    Route::get('/subjects', [App\Http\Controllers\ProgramHead\SubjectController::class, 'index'])->name('subjects.index');
+    Route::get('/subjects/create', [App\Http\Controllers\ProgramHead\SubjectController::class, 'create'])->name('subjects.create');
+    Route::post('/subjects', [App\Http\Controllers\ProgramHead\SubjectController::class, 'store'])->name('subjects.store');
+    Route::get('/subjects/{subject}/edit', [App\Http\Controllers\ProgramHead\SubjectController::class, 'edit'])->name('subjects.edit');
+    Route::put('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'update'])->name('subjects.update');
+    Route::delete('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'destroy'])->name('subjects.destroy');
+
+    Route::get('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'index'])->name('sections.index');
+    Route::get('/sections/create', [App\Http\Controllers\ProgramHead\SectionController::class, 'create'])->name('sections.create');
+    Route::post('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'store'])->name('sections.store');
+    Route::get('/sections/{section}', [App\Http\Controllers\ProgramHead\SectionController::class, 'show'])->name('sections.show');
+    Route::get('/sections/{section}/edit', [App\Http\Controllers\ProgramHead\SectionController::class, 'edit'])->name('sections.edit');
+    Route::put('/sections/{section}', [App\Http\Controllers\ProgramHead\SectionController::class, 'update'])->name('sections.update');
+    Route::delete('/sections/{section}', [App\Http\Controllers\ProgramHead\SectionController::class, 'destroy'])->name('sections.destroy');
+    Route::post('/sections/{section}/attach-subject', [App\Http\Controllers\ProgramHead\SectionController::class, 'attachSubject'])->name('sections.attach-subject');
+    Route::post('/sections/{section}/change-subject-teacher', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
+    Route::post('/sections/{section}/change-adviser', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeAdviser'])->name('sections.change-adviser');
 });
 
 /*

@@ -14,6 +14,8 @@ A comprehensive Faculty Class Record Management System built with Laravel 10, de
 This system streamlines grade management and class record keeping with a DepEd-style spreadsheet interface, automated Philippine grade scale calculations, and role-based access control for Super Admins, Deans, and Teachers.
 
 ### Key Features
+- ✅ Department/Program Data Isolation — Deans scoped to their department, Program Heads scoped to a single program assigned by their Dean; enforced across every relevant query with verified cross-department/program blocking
+- ✅ Sortable & Filterable Student Lists — click-to-toggle ascending/descending sort on Dean and Program Head student pages, plus department/program/year/section filters
 - ✅ Three-tier Role System (Super Admin → Dean → Teacher)
 - ✅ Centralized Student Management (Dean owns master list, no duplicates)
 - ✅ Flexible Grading System (unlimited items per component)
@@ -124,6 +126,8 @@ Visit: `http://localhost:8000`
 | Dean | dean@classrecord.test | password |
 | Teacher (Active) | teacher@classrecord.test | password |
 | Teacher (Pending) | pending@classrecord.test | password |
+| Dean (CBA, isolation testing) | dean.cba@classrecord.test | password |
+| Program Head (BSBA, isolation testing) | programhead.cba@classrecord.test | password |
 
 > ⚠️ Change these passwords before any production deployment.
 
@@ -161,16 +165,16 @@ Visit: `http://localhost:8000`
 
 ---
 
-## 👩‍🏫 Teacher Registration Flow
+## 👩‍🏫 Account Creation Flow
 
-1. Teacher goes to `/register` and fills in name, email, password
-2. Account created with `role = teacher`, `status = pending`
-3. Teacher is redirected to login with a "pending approval" message — **cannot log in yet**
-4. Dean goes to `dean/teachers/pending` and approves or rejects
-5. On approval — `status` becomes `active`, teacher can now log in
-6. Teacher logs in and sees sections where they are assigned as adviser in an active term
+Self-registration is disabled. All Teacher and Program Head accounts are created by the Super Admin via a single unified account-creation form, which also assigns their department. A Program Head's specific program (e.g. BSCS vs BSIT) is then assigned by their department's Dean from a dedicated Program Heads screen — accounts without a program assigned yet cannot access their dashboard.
 
-> Dean and Super Admin accounts are **not** created via self-registration. Deans are created directly by the Super Admin via the admin panel.
+1. Super Admin creates the account (name, email, password, role, department)
+2. If role is Program Head — account is active but has no program yet
+3. Dean visits `dean/program-heads`, assigns (or later reassigns/removes) a program from their own department's program list
+4. Program Head logs in and sees only data scoped to their assigned program
+
+> Dean accounts are also created directly by the Super Admin. No role is created via self-registration.
 
 ---
 

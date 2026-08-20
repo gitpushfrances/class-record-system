@@ -96,12 +96,6 @@
 
     </form>
 
-    
-    <div class="card-foot" style="margin-bottom: 0.5rem;">
-        <i class="fas fa-user-plus"></i>
-        Don't have an account? <a href="/register" style="color: #c8a97e; text-decoration: underline;">Register here</a>
-    </div>
-
 <div class="card-foot">
         <i class="fas fa-shield-halved"></i>
         Authorized faculty and staff only

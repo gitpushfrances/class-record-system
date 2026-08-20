@@ -13,7 +13,10 @@ class EnrollmentController extends Controller
 {
     public function index()
     {
+        $departmentId = auth()->user()->department_id;
+
         $sectionTerms = SectionTerm::with(['section.program.department', 'adviser', 'enrollments'])
+            ->whereHas('section.program', fn($q) => $q->where('department_id', $departmentId))
             ->orderBy('academic_year', 'desc')
             ->orderBy('semester', 'desc')
             ->paginate(20);
@@ -23,6 +26,12 @@ class EnrollmentController extends Controller
 
     public function show(SectionTerm $sectionTerm)
     {
+        abort_if(
+            $sectionTerm->section->program->department_id !== auth()->user()->department_id,
+            403,
+            'This section does not belong to your department.'
+        );
+
         $sectionTerm->load(['section.program', 'enrollments.student']);
         $enrolledStudentIds = $sectionTerm->enrollments->pluck('student_id');
         $availableStudents = Student::whereNotIn('id', $enrolledStudentIds)
@@ -38,6 +47,12 @@ class EnrollmentController extends Controller
 
     public function store(Request $request, SectionTerm $sectionTerm)
     {
+        abort_if(
+            $sectionTerm->section->program->department_id !== auth()->user()->department_id,
+            403,
+            'This section does not belong to your department.'
+        );
+
         $request->validate([
             'student_id' => 'required|exists:students,id',
         ]);
@@ -62,6 +77,13 @@ class EnrollmentController extends Controller
 
     public function destroy(SectionTerm $sectionTerm, Enrollment $enrollment)
     {
+        abort_if(
+            $sectionTerm->section->program->department_id !== auth()->user()->department_id,
+            403,
+            'This section does not belong to your department.'
+        );
+        abort_if($enrollment->section_term_id !== $sectionTerm->id, 404);
+
         $enrollment->delete();
         return back()->with('success', 'Student removed from enrollment.');
     }

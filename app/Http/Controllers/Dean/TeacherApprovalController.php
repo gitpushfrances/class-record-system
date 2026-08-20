@@ -12,6 +12,7 @@ class TeacherApprovalController extends Controller
     {
         $pendingTeachers = User::where('role', 'teacher')
             ->where('status', 'pending')
+            ->where('department_id', auth()->user()->department_id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -20,6 +21,9 @@ class TeacherApprovalController extends Controller
 
     public function approve(User $user)
     {
+        abort_if($user->role !== 'teacher', 404);
+        abort_if($user->department_id !== auth()->user()->department_id, 403, 'This teacher does not belong to your department.');
+
         $user->update([
             'status' => 'active',
             'approved_by' => auth()->id(),
@@ -31,6 +35,9 @@ class TeacherApprovalController extends Controller
 
     public function reject(User $user)
     {
+        abort_if($user->role !== 'teacher', 404);
+        abort_if($user->department_id !== auth()->user()->department_id, 403, 'This teacher does not belong to your department.');
+
         $user->update(['status' => 'rejected']);
         return redirect()->back()->with('success', 'Teacher registration rejected.');
     }

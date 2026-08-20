@@ -17,7 +17,7 @@
         <div class="space-y-4">
             <div>
                 <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Role</label>
-                <select name="role"
+                <select name="role" id="roleSelect"
                         class="w-full px-3 py-2 text-sm rounded-lg"
                         style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
                     @foreach($managedRoles as $role)
@@ -26,6 +26,18 @@
                         </option>
                     @endforeach
                 </select>
+            </div>
+            <div id="departmentField" style="display:none;">
+                <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Department</label>
+                <select name="department_id"
+                        class="w-full px-3 py-2 text-sm rounded-lg"
+                        style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
+                    <option value="">Select department</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->id }}" {{ old('department_id') == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs" style="color:rgba(200,169,126,0.5);">Required for Teacher and Program Head. A Program Head's specific program is assigned later by the Dean.</p>
             </div>
             <div>
                 <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Full Name</label>
@@ -58,5 +70,15 @@
         </div>
     </form>
 </div>
+
+<script>
+    function toggleDepartmentField() {
+        const role = document.getElementById('roleSelect').value;
+        const field = document.getElementById('departmentField');
+        field.style.display = (role === 'teacher' || role === 'program_head') ? 'block' : 'none';
+    }
+    document.getElementById('roleSelect').addEventListener('change', toggleDepartmentField);
+    document.addEventListener('DOMContentLoaded', toggleDepartmentField);
+</script>
 
 </x-sidebar-layout>

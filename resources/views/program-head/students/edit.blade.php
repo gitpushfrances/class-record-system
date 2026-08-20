@@ -4,7 +4,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form action="{{ route('dean.students.update', $student) }}" method="POST">
+                    <form action="{{ route('program-head.students.update', $student) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -32,7 +32,7 @@
                             <input type="text" value="{{ $student->student_number }}" class="w-full px-3 py-2 font-mono text-gray-500 bg-gray-100 border rounded" readonly>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2">
                             <div>
                                 <label class="block mb-2 text-sm font-bold text-gray-700">Year Level</label>
                                 <select name="year_level" class="w-full px-3 py-2 border rounded" required>
@@ -52,17 +52,6 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Program</label>
-                            <select name="program_id" class="w-full px-3 py-2 border rounded" required>
-                                <option value="">Select program</option>
-                                @foreach($programs as $program)
-                                    <option value="{{ $program->id }}" {{ old('program_id', $student->program_id) == $program->id ? 'selected' : '' }}>{{ $program->code }} — {{ $program->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('program_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                        </div>
-
                         <div class="mb-6">
                             <label class="block mb-2 text-sm font-bold text-gray-700">Email <span class="font-normal text-gray-400">(optional)</span></label>
                             <input type="email" name="email" value="{{ old('email', $student->email) }}" class="w-full px-3 py-2 border rounded">
@@ -71,7 +60,7 @@
 
                         <div class="flex gap-2">
                             <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">Update Student</button>
-                            <a href="{{ route('dean.students.index') }}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
+                            <a href="{{ route('program-head.students.index') }}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
                         </div>
                     </form>
                 </div>

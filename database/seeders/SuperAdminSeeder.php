@@ -62,6 +62,7 @@ class SuperAdminSeeder extends Seeder
             'password'          => Hash::make('password'),
             'role'              => 'program_head',
             'status'            => 'active',
+            'department_id'     => $ccs->id,
             'approved_by'       => $superAdmin->id,
             'approved_at'       => now(),
             'email_verified_at' => now(),
@@ -75,9 +76,55 @@ class SuperAdminSeeder extends Seeder
             'password'          => Hash::make('password'),
             'role'              => 'teacher',
             'status'            => 'pending',
+            'department_id'     => $ccs->id,
             'email_verified_at' => now(),
         ]);
         $pendingTeacher->assignRole('teacher');
         echo "Pending Teacher created successfully!\nEmail: pending@classrecord.test\nPassword: password\n";
+
+        // CBA — second department for negative-testing department isolation
+        $cba = Department::where('code', 'CBA')->first();
+
+        $deanCba = User::create([
+            'name'              => 'Dean CBA Sample',
+            'email'             => 'dean.cba@classrecord.test',
+            'password'          => Hash::make('password'),
+            'role'              => 'dean',
+            'status'            => 'active',
+            'department_id'     => $cba->id,
+            'approved_by'       => $superAdmin->id,
+            'approved_at'       => now(),
+            'email_verified_at' => now(),
+        ]);
+        $deanCba->assignRole('dean');
+        echo "Sample CBA Dean created!\nEmail: dean.cba@classrecord.test\nPassword: password\n";
+
+        $teacherCba = User::create([
+            'name'              => 'Teacher CBA Sample',
+            'email'             => 'teacher.cba@classrecord.test',
+            'password'          => Hash::make('password'),
+            'role'              => 'teacher',
+            'status'            => 'active',
+            'department_id'     => $cba->id,
+            'approved_by'       => $deanCba->id,
+            'approved_at'       => now(),
+            'email_verified_at' => now(),
+        ]);
+        $teacherCba->assignRole('teacher');
+        echo "Sample CBA Teacher created!\nEmail: teacher.cba@classrecord.test\nPassword: password\n";
+
+        $programHeadCba = User::create([
+            'name'              => 'Program Head CBA Sample',
+            'email'             => 'programhead.cba@classrecord.test',
+            'password'          => Hash::make('password'),
+            'role'              => 'program_head',
+            'status'            => 'active',
+            'department_id'     => $cba->id,
+            'approved_by'       => $superAdmin->id,
+            'approved_at'       => now(),
+            'email_verified_at' => now(),
+        ]);
+        $programHeadCba->assignRole('program_head');
+        echo "Sample CBA Program Head created!\nEmail: programhead.cba@classrecord.test\nPassword: password\n";
     }
 }

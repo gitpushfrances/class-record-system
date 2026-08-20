@@ -17,12 +17,17 @@ class Student extends Model
         'last_name',
         'email',
         'year_level',
-        'program',
+        'program_id',
         'student_type',
         'status',
     ];
 
     // Relationships
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class);

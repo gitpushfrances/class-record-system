@@ -14,6 +14,8 @@ class AssignmentController extends Controller
 {
     public function index()
     {
+        $departmentId = auth()->user()->department_id;
+
         $assignments = DB::table('section_subject_teachers')
             ->join('section_terms', 'section_terms.id', '=', 'section_subject_teachers.section_term_id')
             ->join('sections', 'sections.id', '=', 'section_terms.section_id')
@@ -35,6 +37,7 @@ class AssignmentController extends Controller
                 'section_subject_teachers.teacher_id'
             )
             ->where('section_terms.status', 'active')
+            ->where('programs.department_id', $departmentId)
             ->orderBy('programs.code')
             ->orderBy('sections.year_number')
             ->orderBy('sections.section_letter')
@@ -43,12 +46,17 @@ class AssignmentController extends Controller
         // Only sections with an active term can receive assignments
         $sections = Section::with(['program', 'terms' => fn($q) => $q->where('status', 'active')])
             ->where('status', 'active')
+            ->whereHas('program', fn($q) => $q->where('department_id', $departmentId))
             ->whereHas('terms', fn($q) => $q->where('status', 'active'))
             ->orderBy('year_level')
             ->get();
 
         $subjects = Subject::where('status', 'approved')->orderBy('code')->get();
-        $teachers = User::where('role', 'teacher')->where('status', 'active')->orderBy('name')->get();
+        $teachers = User::where('role', 'teacher')
+            ->where('status', 'active')
+            ->where('department_id', $departmentId)
+            ->orderBy('name')
+            ->get();
 
         return view('dean.assignments.index', compact('assignments', 'sections', 'subjects', 'teachers'));
     }
@@ -60,6 +68,13 @@ class AssignmentController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
         ]);
+
+        $section = Section::with('program')->findOrFail($validated['section_id']);
+        abort_if(
+            $section->program->department_id !== auth()->user()->department_id,
+            403,
+            'This section does not belong to your department.'
+        );
 
         $currentTerm = SectionTerm::where('section_id', $validated['section_id'])
             ->where('status', 'active')
@@ -94,6 +109,21 @@ class AssignmentController extends Controller
 
     public function destroy($id)
     {
+        $assignment = DB::table('section_subject_teachers')
+            ->join('section_terms', 'section_terms.id', '=', 'section_subject_teachers.section_term_id')
+            ->join('sections', 'sections.id', '=', 'section_terms.section_id')
+            ->join('programs', 'programs.id', '=', 'sections.program_id')
+            ->where('section_subject_teachers.id', $id)
+            ->select('programs.department_id')
+            ->first();
+
+        abort_if(!$assignment, 404);
+        abort_if(
+            $assignment->department_id !== auth()->user()->department_id,
+            403,
+            'This assignment does not belong to your department.'
+        );
+
         DB::table('section_subject_teachers')->where('id', $id)->delete();
         return redirect()->route('dean.assignments.index')
             ->with('success', 'Assignment removed.');

@@ -170,14 +170,41 @@
                 'icon'   => 'fa-clipboard-list',
                 'label'  => 'Enrollments',
             ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.program-heads.index'),
+                'active' => request()->routeIs('dean.program-heads.*'),
+                'icon'   => 'fa-user-shield',
+                'label'  => 'Program Heads',
+            ])
         @endif
 
         @if(auth()->user()->role === 'program_head')
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('program-head.dashboard'),
-                'active' => request()->routeIs('program-head.*'),
+                'active' => request()->routeIs('program-head.dashboard')
+                           || request()->routeIs('program-head.verify')
+                           || request()->routeIs('program-head.reject')
+                           || request()->routeIs('program-head.unverify'),
                 'icon'   => 'fa-shield-halved',
                 'label'  => 'Grade Verification',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('program-head.sections.index'),
+                'active' => request()->routeIs('program-head.sections.*'),
+                'icon'   => 'fa-layer-group',
+                'label'  => 'Sections',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('program-head.students.index'),
+                'active' => request()->routeIs('program-head.students.*'),
+                'icon'   => 'fa-users',
+                'label'  => 'Students',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('program-head.subjects.index'),
+                'active' => request()->routeIs('program-head.subjects.*'),
+                'icon'   => 'fa-book',
+                'label'  => 'Subjects',
             ])
         @endif
 
@@ -211,6 +238,7 @@
                 'active' => request()->routeIs('teacher.teaching')
                            || request()->routeIs('teacher.grades.*')
                            || request()->routeIs('teacher.classes.record*')
+                           || request()->routeIs('teacher.attendance.*')
                            || ($onSectionRoute && !$isAdviserHere),
                 'icon'   => 'fa-chalkboard-teacher',
                 'label'  => 'My Subjects',

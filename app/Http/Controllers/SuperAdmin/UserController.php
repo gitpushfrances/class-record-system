@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -100,27 +101,33 @@ class UserController extends Controller
      */
     public function createAccount()
     {
-        return view('admin.users.create', ['managedRoles' => $this->managedRoles]);
+        $departments = Department::where('status', 'active')->orderBy('name')->get();
+        return view('admin.users.create', ['managedRoles' => $this->managedRoles, 'departments' => $departments]);
     }
 
     /**
      * Unified store for any managed role.
+     * department_id is required for teacher and program_head (both scope to a department;
+     * a program_head's program_id is assigned later by their Dean). Deans don't take a
+     * department_id here — department ownership is managed separately.
      */
     public function storeAccount(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'role'     => 'required|in:' . implode(',', $this->managedRoles),
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email',
+            'password'      => 'required|string|min:8|confirmed',
+            'role'          => 'required|in:' . implode(',', $this->managedRoles),
+            'department_id' => 'required_if:role,teacher,program_head|exists:departments,id',
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => $validated['role'],
-            'status'   => 'active',
+            'name'          => $validated['name'],
+            'email'         => $validated['email'],
+            'password'      => Hash::make($validated['password']),
+            'role'          => $validated['role'],
+            'status'        => 'active',
+            'department_id' => $validated['department_id'] ?? null,
         ]);
 
         if ($validated['role'] === 'program_head' && method_exists($user, 'assignRole')) {
@@ -128,8 +135,11 @@ class UserController extends Controller
         }
 
         $label = ucwords(str_replace('_', ' ', $validated['role']));
+        $note  = $validated['role'] === 'program_head'
+            ? ' A Dean must assign their program before they can access their dashboard.'
+            : '';
 
-        return redirect()->route('admin.deans.index')->with('success', "{$label} account created successfully.");
+        return redirect()->route('admin.deans.index')->with('success', "{$label} account created successfully.{$note}");
     }
 
     public function edit(User $dean)
@@ -175,53 +185,4 @@ class UserController extends Controller
         return redirect()->route('admin.deans.index')->with('success', 'Account activated.');
     }
 
-    public function createTeacher()
-    {
-        return view('admin.users.create-teacher');
-    }
-
-    public function storeTeacher(Request $request)
-    {
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => 'teacher',
-            'status'   => 'active',
-        ]);
-
-        return redirect()->route('admin.deans.index')->with('success', 'Teacher account created successfully.');
-    }
-
-    public function createProgramHead()
-    {
-        return view('admin.users.create-program-head');
-    }
-
-    public function storeProgramHead(Request $request)
-    {
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => 'program_head',
-            'status'   => 'active',
-        ]);
-        $user->assignRole('program_head');
-
-        return redirect()->route('admin.deans.index')
-            ->with('success', 'Program Head account created successfully.');
-    }
 }

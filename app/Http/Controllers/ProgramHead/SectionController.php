@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Dean;
+namespace App\Http\Controllers\ProgramHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\Section;
 use App\Models\SectionTerm;
-use App\Models\Program;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -13,13 +13,14 @@ class SectionController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $programId = auth()->user()->program_id;
+        abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $sections = Section::with([
-                'program.department',
+                'program',
                 'terms' => fn($q) => $q->where('status', 'active')->with(['adviser', 'enrollments', 'subjects']),
             ])
-            ->whereHas('program', fn($q) => $q->where('department_id', $departmentId))
+            ->where('program_id', $programId)
             ->where('status', 'active')
             ->orderBy('year_level')
             ->orderBy('section_letter')
@@ -28,66 +29,65 @@ class SectionController extends Controller
 
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
-            ->where('department_id', $departmentId)
+            ->where('department_id', auth()->user()->department_id)
             ->orderBy('name')
             ->get();
-        $allSubjects = \App\Models\Subject::where('status', 'approved')->orderBy('name')->get();
 
-        return view('dean.sections.index', compact('sections', 'teachers', 'allSubjects'));
+        $allSubjects = Subject::where('status', 'approved')
+            ->where('program_id', $programId)
+            ->orderBy('name')
+            ->get();
+
+        return view('program-head.sections.index', compact('sections', 'teachers', 'allSubjects'));
     }
 
     public function create()
     {
-        $programs = Program::where('status', 'approved')
-            ->where('department_id', auth()->user()->department_id)
-            ->orderBy('code')
-            ->get();
+        abort_if(!auth()->user()->program_id, 403, 'No program assigned to your account.');
 
-        return view('dean.sections.create', compact('programs'));
+        return view('program-head.sections.create');
     }
 
     public function store(Request $request)
     {
+        $programId = auth()->user()->program_id;
+        abort_if(!$programId, 403, 'No program assigned to your account.');
+
         $validated = $request->validate([
-            'program_id'     => 'required|exists:programs,id',
             'year_number'    => 'required|in:1,2,3,4,5',
             'section_letter' => 'required|string|max:50',
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
         ]);
 
-        $program = Program::findOrFail($validated['program_id']);
-        abort_if(
-            $program->department_id !== auth()->user()->department_id,
-            403,
-            'This program does not belong to your department.'
-        );
+        $validated['program_id'] = $programId;
 
-        $exists = Section::where('program_id', $validated['program_id'])
+        $exists = Section::where('program_id', $programId)
             ->where('year_number', $validated['year_number'])
             ->where('section_letter', $validated['section_letter'])
             ->exists();
 
         if ($exists) {
-            return back()->withErrors(['section_letter' => 'This section already exists for this program and year.'])->withInput();
+            return back()->withErrors(['section_letter' => 'This section already exists for your program and year.'])->withInput();
         }
 
         Section::create($validated);
 
-        return redirect()->route('dean.sections.index')->with('success', 'Section created successfully.');
+        return redirect()->route('program-head.sections.index')->with('success', 'Section created successfully.');
     }
 
     public function show(Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
-        $section->load(['program.department', 'terms.adviser', 'terms.enrollments.student', 'terms.subjects.teachers']);
+        $section->load(['program', 'terms.adviser', 'terms.enrollments.student', 'terms.subjects.teachers']);
         $currentTerm = $section->terms->where('status', 'active')->first();
 
-        $availableSubjects = \App\Models\Subject::where('status', 'approved')
+        $availableSubjects = Subject::where('status', 'approved')
+            ->where('program_id', $section->program_id)
             ->when($currentTerm, fn($q) => $q->whereNotIn('id', $currentTerm->subjects->pluck('id')))
             ->orderBy('name')
             ->get();
@@ -98,69 +98,56 @@ class SectionController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('dean.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers'));
+        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers'));
     }
 
     public function edit(Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
-        $programs = Program::where('status', 'approved')
-            ->where('department_id', auth()->user()->department_id)
-            ->orderBy('code')
-            ->get();
-
-        return view('dean.sections.edit', compact('section', 'programs'));
+        return view('program-head.sections.edit', compact('section'));
     }
 
     public function update(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
         $validated = $request->validate([
-            'program_id'     => 'required|exists:programs,id',
             'year_number'    => 'required|in:1,2,3,4,5',
             'section_letter' => 'required|string|max:50',
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'status'         => 'required|in:active,inactive',
         ]);
 
-        $program = Program::findOrFail($validated['program_id']);
-        abort_if(
-            $program->department_id !== auth()->user()->department_id,
-            403,
-            'This program does not belong to your department.'
-        );
-
-        $exists = Section::where('program_id', $validated['program_id'])
+        $exists = Section::where('program_id', $section->program_id)
             ->where('year_number', $validated['year_number'])
             ->where('section_letter', $validated['section_letter'])
             ->where('id', '!=', $section->id)
             ->exists();
 
         if ($exists) {
-            return back()->withErrors(['section_letter' => 'This section already exists for this program and year.'])->withInput();
+            return back()->withErrors(['section_letter' => 'This section already exists for your program and year.'])->withInput();
         }
 
         $section->update($validated);
 
-        return redirect()->route('dean.sections.index')->with('success', 'Section updated successfully.');
+        return redirect()->route('program-head.sections.index')->with('success', 'Section updated successfully.');
     }
 
     public function destroy(Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
         $activeEnrollments = $section->terms()
@@ -170,20 +157,20 @@ class SectionController extends Controller
             ->sum('enrollments_count');
 
         if ($activeEnrollments > 0) {
-            return redirect()->route('dean.sections.index')
+            return redirect()->route('program-head.sections.index')
                 ->with('error', 'Cannot delete section with active enrolled students.');
         }
 
         $section->delete();
-        return redirect()->route('dean.sections.index')->with('success', 'Section deleted.');
+        return redirect()->route('program-head.sections.index')->with('success', 'Section deleted.');
     }
 
     public function attachSubject(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
@@ -194,19 +181,26 @@ class SectionController extends Controller
             'teacher_id' => 'required|exists:users,id',
         ]);
 
+        $subject = Subject::findOrFail($request->subject_id);
+        abort_if(
+            $subject->program_id !== $section->program_id,
+            403,
+            'This subject does not belong to your program.'
+        );
+
         $currentTerm->subjects()->syncWithoutDetaching([
             $request->subject_id => ['teacher_id' => $request->teacher_id],
         ]);
 
-        return redirect()->route('dean.sections.show', $section)->with('success', 'Subject added and teacher assigned.');
+        return redirect()->route('program-head.sections.show', $section)->with('success', 'Subject added and teacher assigned.');
     }
 
     public function changeSubjectTeacher(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
@@ -221,15 +215,15 @@ class SectionController extends Controller
             'teacher_id' => $request->teacher_id,
         ]);
 
-        return redirect()->route('dean.sections.show', $section)->with('success', 'Teacher updated.');
+        return redirect()->route('program-head.sections.show', $section)->with('success', 'Teacher updated.');
     }
 
     public function changeAdviser(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program_id !== auth()->user()->program_id,
             403,
-            'This section does not belong to your department.'
+            'This section does not belong to your program.'
         );
 
         $request->validate([
@@ -240,9 +234,6 @@ class SectionController extends Controller
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
 
-        // A teacher may only advise one section at a time. Exclude this
-        // section's own current term from the check, so re-saving the same
-        // adviser (or changing other fields on the same term) isn't blocked.
         $alreadyAdvising = SectionTerm::where('adviser_id', $request->adviser_id)
             ->where('status', 'active')
             ->when($currentTerm, fn($q) => $q->where('id', '!=', $currentTerm->id))
@@ -273,6 +264,6 @@ class SectionController extends Controller
             ]);
         }
 
-        return redirect()->route('dean.sections.index')->with('success', 'Term saved successfully.');
+        return redirect()->route('program-head.sections.index')->with('success', 'Term saved successfully.');
     }
 }

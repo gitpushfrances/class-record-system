@@ -4,7 +4,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form id="addStudentForm" action="{{ route('dean.students.store') }}" method="POST">
+                    <form id="addStudentForm" action="{{ route('program-head.students.store') }}" method="POST">
                         @csrf
 
                         <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
@@ -43,28 +43,17 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Program</label>
-                            <select name="program_id" class="w-full px-3 py-2 border rounded" required>
-                                <option value="">Select program</option>
-                                @foreach($programs as $program)
-                                    <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>{{ $program->code }} — {{ $program->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('program_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                        </div>
-
                         <div class="mb-6">
                             <label class="block mb-2 text-sm font-bold text-gray-700">Email <span class="font-normal text-gray-400">(optional)</span></label>
                             <input type="email" name="email" value="{{ old('email') }}" class="w-full px-3 py-2 border rounded">
                             @error('email')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
-                        <p class="mb-4 text-xs text-gray-400">Student number will be generated automatically based on the selected program.</p>
+                        <p class="mb-4 text-xs text-gray-400">Student number will be generated automatically for your program.</p>
 
                         <div class="flex gap-2">
                             <button type="button" onclick="confirmSubmit()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Add Student</button>
-                            <a href="{{ route('dean.students.index') }}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
+                            <a href="{{ route('program-head.students.index') }}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
                         </div>
                     </form>
                 </div>
@@ -78,6 +67,12 @@
             const form = document.getElementById('addStudentForm');
             if (!form.checkValidity()) {
                 form.reportValidity();
+                return;
+            }
+            if (typeof Swal === 'undefined') {
+                if (confirm('Are you sure you want to add this student to the master list?')) {
+                    form.submit();
+                }
                 return;
             }
             Swal.fire({
