@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Dean;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Program;
+use App\Services\StudentNumberGenerator;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
+    public function __construct(protected StudentNumberGenerator $studentNumberGenerator)
+    {
+    }
     public function index(Request $request)
     {
         $departmentId = auth()->user()->department_id;
@@ -46,7 +50,6 @@ class StudentController extends Controller
         $departmentId = auth()->user()->department_id;
 
         $validated = $request->validate([
-            'student_number' => 'required|unique:students,student_number',
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
             'middle_name'    => 'nullable|string|max:255',
@@ -63,7 +66,22 @@ class StudentController extends Controller
             'This program does not belong to your department.'
         );
 
+        // Soft duplicate check — same first + last name, case-insensitive.
+        // Not blocking: surfaces possible matches for the Dean to confirm, since
+        // two real students can legitimately share a name.
+        if (!$request->boolean('confirmed_duplicate')) {
+            $possibleMatches = Student::whereRaw('LOWER(first_name) = ?', [strtolower($validated['first_name'])])
+                ->whereRaw('LOWER(last_name) = ?', [strtolower($validated['last_name'])])
+                ->with('program')
+                ->get();
+
+            if ($possibleMatches->isNotEmpty()) {
+                return back()->withInput()->with('possibleDuplicates', $possibleMatches);
+            }
+        }
+
         $validated['status'] = 'active'; // explicit — don't rely on DB default
+        $validated['student_number'] = $this->studentNumberGenerator->generate($validated['program_id']);
 
         Student::create($validated);
 
@@ -99,7 +117,6 @@ class StudentController extends Controller
         );
 
         $validated = $request->validate([
-            'student_number' => 'required|unique:students,student_number,' . $student->id,
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
             'middle_name'    => 'nullable|string|max:255',
@@ -115,6 +132,12 @@ class StudentController extends Controller
             403,
             'This program does not belong to your department.'
         );
+
+        // Program (and therefore department) changed - regenerate the student number
+        // to stay consistent with the new department/program code prefix.
+        if ((int) $student->program_id !== (int) $validated['program_id']) {
+            $validated['student_number'] = $this->studentNumberGenerator->generate($validated['program_id']);
+        }
 
         $student->update($validated);
 

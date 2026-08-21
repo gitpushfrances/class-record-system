@@ -39,6 +39,7 @@
                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Name</th>
                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Email</th>
                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Role</th>
+                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Department</th>
                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Created</th>
                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Actions</th>
@@ -57,6 +58,9 @@
                             @else
                                 <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded">Unassigned</span>
                             @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">
+                            {{ $dean->department->name ?? 'Unassigned' }}
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs rounded {{ $dean->status === 'active' ? 'bg-green-100 text-green-800' : ($dean->status === 'pending_review' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') }}">
@@ -101,7 +105,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No accounts found.</td>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No accounts found.</td>
                     </tr>
                 @endforelse
             </tbody>

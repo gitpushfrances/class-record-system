@@ -39,6 +39,16 @@ class ProgramAssignmentController extends Controller
         $program = Program::findOrFail($validated['program_id']);
         abort_if($program->department_id !== auth()->user()->department_id, 403, 'That program does not belong to your department.');
 
+        // Only one Program Head per program - reject if already taken by someone else.
+        $alreadyTaken = User::where('role', 'program_head')
+            ->where('program_id', $program->id)
+            ->where('id', '!=', $programHead->id)
+            ->exists();
+
+        if ($alreadyTaken) {
+            return redirect()->route('dean.program-heads.index')->with('error', "{$program->code} is already assigned to another Program Head.");
+        }
+
         $programHead->update(['program_id' => $program->id]);
 
         return redirect()->route('dean.program-heads.index')->with('success', "{$programHead->name} assigned to {$program->code}.");

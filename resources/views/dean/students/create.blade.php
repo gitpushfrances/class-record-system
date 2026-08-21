@@ -4,8 +4,22 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6">
+                    @if(session('possibleDuplicates'))
+                        @php
+                            $duplicateMatches = [];
+                            foreach (session('possibleDuplicates') as $m) {
+                                $duplicateMatches[] = [
+                                    'name'    => trim($m->first_name . ' ' . $m->middle_name . ' ' . $m->last_name),
+                                    'number'  => $m->student_number,
+                                    'program' => $m->program->code ?? 'N/A',
+                                ];
+                            }
+                        @endphp
+                    @endif
                     <form id="addStudentForm" action="{{ route('dean.students.store') }}" method="POST">
                         @csrf
+                        <input type="hidden" name="confirmed_duplicate" id="confirmedDuplicateInput" value="0">
+
 
                         <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
                             <div>
@@ -74,6 +88,34 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        @if(session('possibleDuplicates'))
+            document.addEventListener('DOMContentLoaded', function () {
+                const matches = @json($duplicateMatches);
+
+                const listHtml = matches.map(function (m) {
+                    return '<li>' + m.name + ' — ' + m.number + ' (' + m.program + ')</li>';
+                }).join('');
+
+                Swal.fire({
+                    title: 'Possible Duplicate Student',
+                    html: '<p>A student with this name already exists:</p>' +
+                          '<ul style="text-align:left; margin-top:8px;">' + listHtml + '</ul>' +
+                          '<p style="margin-top:10px;">Is this a different person?</p>',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Add Anyway',
+                    cancelButtonText: 'Cancel, Let Me Check',
+                    confirmButtonColor: '#d97706',
+                    cancelButtonColor: '#6b7280'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        document.getElementById('confirmedDuplicateInput').value = '1';
+                        document.getElementById('addStudentForm').submit();
+                    }
+                });
+            });
+        @endif
+
         function confirmSubmit() {
             const form = document.getElementById('addStudentForm');
             if (!form.checkValidity()) {

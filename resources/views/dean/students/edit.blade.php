@@ -28,8 +28,14 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Student Number</label>
-                            <input type="text" value="{{ $student->student_number }}" class="w-full px-3 py-2 font-mono text-gray-500 bg-gray-100 border rounded" readonly>
+                            <label class="block mb-2 text-sm font-bold text-gray-700">
+                                Student Number
+                                <span class="ml-1 text-xs font-normal text-gray-400">(auto-generated — updates automatically if Program is changed)</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" value="{{ $student->student_number }}" class="w-full px-3 py-2 font-mono text-gray-500 bg-gray-100 border border-gray-300 rounded cursor-not-allowed" readonly disabled tabindex="-1">
+                                <i class="text-gray-400 fas fa-lock" title="Cannot be edited directly"></i>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">

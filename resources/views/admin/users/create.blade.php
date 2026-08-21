@@ -27,17 +27,26 @@
                     @endforeach
                 </select>
             </div>
-            <div id="departmentField" style="display:none;">
+            <div>
                 <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Department</label>
-                <select name="department_id"
+                <select name="department_id" id="departmentSelect"
                         class="w-full px-3 py-2 text-sm rounded-lg"
                         style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
-                    <option value="">Select department</option>
+                    <option value="">Unassigned</option>
                     @foreach($departments as $department)
                         <option value="{{ $department->id }}" {{ old('department_id') == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
                     @endforeach
                 </select>
-                <p class="mt-1 text-xs" style="color:rgba(200,169,126,0.5);">Required for Teacher and Program Head. A Program Head's specific program is assigned later by the Dean.</p>
+                <p class="mt-1 text-xs" style="color:rgba(200,169,126,0.5);">Optional. Only one Dean can be assigned per department.</p>
+            </div>
+            <div id="programField" style="display:none;">
+                <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Program</label>
+                <select name="program_id" id="programSelect"
+                        class="w-full px-3 py-2 text-sm rounded-lg"
+                        style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
+                    <option value="">Select department first</option>
+                </select>
+                <p class="mt-1 text-xs" style="color:rgba(200,169,126,0.5);">Only one Program Head can be assigned per program.</p>
             </div>
             <div>
                 <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Full Name</label>
@@ -72,12 +81,45 @@
 </div>
 
 <script>
+    const programsData = @json($programs);
+
     function toggleDepartmentField() {
         const role = document.getElementById('roleSelect').value;
-        const field = document.getElementById('departmentField');
-        field.style.display = (role === 'teacher' || role === 'program_head') ? 'block' : 'none';
+        document.getElementById('programField').style.display = (role === 'program_head') ? 'block' : 'none';
+        if (role === 'program_head') populateProgramOptions();
     }
+
+    function populateProgramOptions() {
+        const deptId = document.getElementById('departmentSelect').value;
+        const progSelect = document.getElementById('programSelect');
+        const oldSelected = "{{ old('program_id') }}";
+
+        progSelect.innerHTML = '';
+
+        if (!deptId) {
+            progSelect.innerHTML = '<option value="">Select department first</option>';
+            return;
+        }
+
+        const matches = programsData.filter(p => String(p.department_id) === String(deptId));
+
+        if (matches.length === 0) {
+            progSelect.innerHTML = '<option value="">No programs in this department</option>';
+            return;
+        }
+
+        progSelect.innerHTML = '<option value="">Unassigned</option>';
+        matches.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.code} - ${p.name}`;
+            if (oldSelected && String(oldSelected) === String(p.id)) opt.selected = true;
+            progSelect.appendChild(opt);
+        });
+    }
+
     document.getElementById('roleSelect').addEventListener('change', toggleDepartmentField);
+    document.getElementById('departmentSelect').addEventListener('change', populateProgramOptions);
     document.addEventListener('DOMContentLoaded', toggleDepartmentField);
 </script>
 

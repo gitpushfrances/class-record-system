@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Department;
+use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,6 +27,7 @@ class UserController extends Controller
                 ->withQueryString();
         } else {
             $query = User::whereIn('role', $this->managedRoles)
+                ->with('department')
                 ->orderBy('created_at', 'desc');
 
             if ($filter && in_array($filter, $this->managedRoles, true)) {
@@ -102,14 +104,20 @@ class UserController extends Controller
     public function createAccount()
     {
         $departments = Department::where('status', 'active')->orderBy('name')->get();
-        return view('admin.users.create', ['managedRoles' => $this->managedRoles, 'departments' => $departments]);
+        $programs = Program::where('status', 'approved')->orderBy('code')->get(['id', 'code', 'name', 'department_id']);
+
+        return view('admin.users.create', [
+            'managedRoles' => $this->managedRoles,
+            'departments'  => $departments,
+            'programs'     => $programs,
+        ]);
     }
 
     /**
      * Unified store for any managed role.
-     * department_id is required for teacher and program_head (both scope to a department;
-     * a program_head's program_id is assigned later by their Dean). Deans don't take a
-     * department_id here — department ownership is managed separately.
+     * department_id is optional for every role — accounts can be created Unassigned and
+     * given a department later via Edit. Only one Dean may hold a given department; assigning
+     * a department to a Dean here automatically unassigns any Dean currently holding it.
      */
     public function storeAccount(Request $request)
     {
@@ -118,8 +126,44 @@ class UserController extends Controller
             'email'         => 'required|email|unique:users,email',
             'password'      => 'required|string|min:8|confirmed',
             'role'          => 'required|in:' . implode(',', $this->managedRoles),
-            'department_id' => 'required_if:role,teacher,program_head|exists:departments,id',
+            'department_id' => 'nullable|exists:departments,id',
+            'program_id'    => 'nullable|exists:programs,id',
         ]);
+
+        // Only one Dean per department - reject if already taken.
+        if ($validated['role'] === 'dean' && !empty($validated['department_id'])) {
+            $alreadyTaken = User::where('role', 'dean')
+                ->where('department_id', $validated['department_id'])
+                ->exists();
+
+            if ($alreadyTaken) {
+                return back()->withInput()->withErrors([
+                    'department_id' => 'This department is already assigned to another Dean.',
+                ]);
+            }
+        }
+
+        // Program Head: program must belong to the selected department, and only one
+        // Program Head may hold a given program.
+        if ($validated['role'] === 'program_head' && !empty($validated['program_id'])) {
+            $program = Program::find($validated['program_id']);
+
+            if ($program && (int) $program->department_id !== (int) $validated['department_id']) {
+                return back()->withInput()->withErrors([
+                    'program_id' => 'Selected program does not belong to the selected department.',
+                ]);
+            }
+
+            $alreadyTaken = User::where('role', 'program_head')
+                ->where('program_id', $validated['program_id'])
+                ->exists();
+
+            if ($alreadyTaken) {
+                return back()->withInput()->withErrors([
+                    'program_id' => 'This program is already assigned to another Program Head.',
+                ]);
+            }
+        }
 
         $user = User::create([
             'name'          => $validated['name'],
@@ -128,6 +172,7 @@ class UserController extends Controller
             'role'          => $validated['role'],
             'status'        => 'active',
             'department_id' => $validated['department_id'] ?? null,
+            'program_id'    => $validated['program_id'] ?? null,
         ]);
 
         if ($validated['role'] === 'program_head' && method_exists($user, 'assignRole')) {
@@ -145,7 +190,11 @@ class UserController extends Controller
     public function edit(User $dean)
     {
         abort_if(!in_array($dean->role, $this->managedRoles, true), 403);
-        return view('admin.deans.edit', ['user' => $dean]);
+
+        $departments = Department::where('status', 'active')->orderBy('name')->get();
+        $programs = Program::where('status', 'approved')->orderBy('code')->get(['id', 'code', 'name', 'department_id']);
+
+        return view('admin.deans.edit', ['user' => $dean, 'departments' => $departments, 'programs' => $programs]);
     }
 
     public function update(Request $request, User $dean)
@@ -153,14 +202,55 @@ class UserController extends Controller
         abort_if(!in_array($dean->role, $this->managedRoles, true), 403);
 
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email,' . $dean->id,
-            'password' => 'nullable|string|min:8|confirmed',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email,' . $dean->id,
+            'password'      => 'nullable|string|min:8|confirmed',
+            'department_id' => 'nullable|exists:departments,id',
+            'program_id'    => 'nullable|exists:programs,id',
         ]);
 
+        // Only one Dean per department - reject if already taken by someone else.
+        if ($dean->role === 'dean' && !empty($validated['department_id'])) {
+            $alreadyTaken = User::where('role', 'dean')
+                ->where('department_id', $validated['department_id'])
+                ->where('id', '!=', $dean->id)
+                ->exists();
+
+            if ($alreadyTaken) {
+                return back()->withInput()->withErrors([
+                    'department_id' => 'This department is already assigned to another Dean.',
+                ]);
+            }
+        }
+
+        // Program Head: program must belong to the selected department, and only one
+        // Program Head may hold a given program.
+        if ($dean->role === 'program_head' && !empty($validated['program_id'])) {
+            $program = Program::find($validated['program_id']);
+
+            if ($program && (int) $program->department_id !== (int) $validated['department_id']) {
+                return back()->withInput()->withErrors([
+                    'program_id' => 'Selected program does not belong to the selected department.',
+                ]);
+            }
+
+            $alreadyTaken = User::where('role', 'program_head')
+                ->where('program_id', $validated['program_id'])
+                ->where('id', '!=', $dean->id)
+                ->exists();
+
+            if ($alreadyTaken) {
+                return back()->withInput()->withErrors([
+                    'program_id' => 'This program is already assigned to another Program Head.',
+                ]);
+            }
+        }
+
         $dean->update([
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
+            'name'          => $validated['name'],
+            'email'         => $validated['email'],
+            'department_id' => $validated['department_id'] ?? null,
+            'program_id'    => $dean->role === 'program_head' ? ($validated['program_id'] ?? null) : $dean->program_id,
             ...(isset($validated['password']) ? ['password' => Hash::make($validated['password'])] : []),
         ]);
 

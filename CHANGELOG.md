@@ -818,6 +818,13 @@ f
 ### Known Gap Identified (not fixed — carried over for next QA pass)
 - Broader QA sweep of Phases 1–8 for the two confirmed bug shapes (`nullable` silently defeating `required_if` on other validation rules; `$fillable` arrays missing columns their own controllers submit) — recommended in the prior session, not yet started systematically beyond the Student controller gap found and fixed above
 
+## FEATURE REQUEST — Admin Assignments Drill-Down View (Planned)
+
+- Client requested a new Super Admin tab, separate from the existing Accounts and Departments pages, showing a 3-level visual drill-down: Departments (with assigned Dean) → click in → Programs within that department (with assigned Program Head) → click in → Sections within that program (with Teachers and Subjects assigned per class)
+- Data relationships confirmed available for this: `Department hasMany Program`, `Department->dean()`, `Program belongsTo Department`, `Program hasMany Section`, Program Head assignment via `users.program_id`, Section → SectionTerm → `section_subject_teachers` pivot (teacher-subject-per-term)
+- Not yet started — pending confirmation of exact `SectionTerm`/`AssignmentController`/`Subject` model structure (`section_subject_teachers` pivot shape, active-term scoping) before controller/view work begins
+- Planned files: new `SuperAdmin\AssignmentsController` (or similar), 3 new routes/views for each drill-down level, no changes anticipated to existing Accounts or Departments features
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
