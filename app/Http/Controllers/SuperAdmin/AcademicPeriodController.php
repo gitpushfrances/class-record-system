@@ -20,8 +20,10 @@ class AcademicPeriodController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'school_year' => 'required|string|max:20',
-            'semester'    => 'required|in:1st Semester,2nd Semester,Summer',
+            'school_year'         => 'required|string|max:20',
+            'semester'            => 'required|in:1st Semester,2nd Semester,Summer',
+            'midterm_cutoff_date' => 'required|date',
+            'finals_cutoff_date'  => 'required|date|after:midterm_cutoff_date',
         ]);
 
         // FIX 1 - Prevent duplicate school_year + semester
@@ -56,9 +58,11 @@ class AcademicPeriodController extends Controller
         }
 
         AcademicPeriod::create([
-            'school_year' => $request->school_year,
-            'semester'    => $request->semester,
-            'is_active'   => false,
+            'school_year'         => $request->school_year,
+            'semester'            => $request->semester,
+            'midterm_cutoff_date' => $request->midterm_cutoff_date,
+            'finals_cutoff_date'  => $request->finals_cutoff_date,
+            'is_active'           => false,
         ]);
 
         return redirect()->route('admin.academic.index')->with('success', 'Academic period added.');

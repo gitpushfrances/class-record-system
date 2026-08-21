@@ -769,6 +769,55 @@ f
 
 ---
 
+## QA FIXES & PATCHES — August 20, 2026
+
+### Department/Program Data Isolation (MAJOR, client-flagged: "my dean and programhead is global not specific to any department or course")
+- Root cause: `department_id` existed on `users` but was never enforced in any Dean or Program Head query — any Dean saw every section/teacher/student/subject system-wide, and Program Head had no scoping mechanism (`program_id` column didn't exist) at all
+- Migrations added: `users.program_id` (nullable FK → programs, used only by program_head role), `subjects.program_id`, `students.program_id` (replacing the old free-text `students.program` string column entirely)
+- New account-creation model: Admin creates Teacher/Program Head accounts and assigns a `department_id`; a Program Head's specific `program_id` is assigned separately by their Dean (new `dean.program-heads.*` routes/controller/view — assign, reassign, or remove with confirmation, scoped to programs within the Dean's own department)
+- Real scoping filters + `abort_if` ownership guards added across every Dean controller (`SectionController`, `AssignmentController`, `DashboardController`, `EnrollmentController`, `StudentController`, `TeacherApprovalController`, `SubjectController`) and every Program Head controller (`ProgramHeadController`, plus new `SectionController`, `StudentController`, `SubjectController` mirroring Dean's, scoped to `program_id` instead of `department_id`)
+- Self-registration (re-enabled August 5) closed again — `/register` routes disabled in `routes/auth.php`, link removed from login page. A self-registered account had no department/program tie by design, reopening the same isolation hole this whole fix addresses; `RegisteredUserController` left on disk, unused, for easy re-enable if needed. **Note:** the Admin "Pending Requests" review queue built August 5 is now dead UI with no way to receive new submissions — flagged for cleanup, not yet removed.
+- Two silent pre-existing bugs surfaced and fixed during this work: `department_id` validation combined `nullable` with `required_if`, silently letting empty department submissions through (Laravel's `nullable` skips all other rules on an empty value, `required_if` included); `User::$fillable` was missing `department_id`/`program_id`, so Eloquent mass-assignment silently dropped both on every account creation regardless of what the form submitted
+- Seeder gap fixed: `SuperAdminSeeder` created two accounts (`Program Head Sample`, `Pending Teacher`) with no `department_id` on every `migrate:fresh` run, making them permanently invisible to Dean-scoped screens — both now seeded with a real department
+- Second department (CBA — Dean, Teacher, Program Head, Program, Section) added to seed data specifically to enable negative isolation testing, previously impossible with only one department seeded
+- Verified via real HTTP requests (not just query review) in both directions and both roles: CCS Dean blocked from CBA section (403), CBA Dean blocked from CCS section (403), CBA Program Head blocked from a CCS section (403)
+
+### Student Master List — Sort & Filter (Dean and Program Head)
+- Both Dean's and Program Head's student list pages gained click-to-toggle sortable columns (Student No., Name, Date Added — ascending/descending, matching the Windows Explorer column-header pattern) via URL query params, preserved across pagination
+- Dean's list gained a Program filter dropdown (scoped to their department's programs); Program Head's list gained Year Level and Section filters, including an "Unassigned" option for students not currently enrolled in any section term
+
+---
+
+## QA FIXES & PATCHES — August 21, 2026
+
+### Academic Period Centralization — Final 3 Files Closed Out
+- Completed the academic-period centralization effort flagged as open in the previous session: `resources/views/program-head/sections/index.blade.php`, `resources/views/teacher/classes/record.blade.php`, `resources/views/teacher/grades/final.blade.php`
+- Program Head's "Change Adviser" modal — removed the free-typed Academic Year input and Semester dropdown (and their JS parameters); modal now reads `AcademicPeriod::getActive()` server-side and displays the active period read-only, mirroring the Dean's already-patched version, with the Adviser select and Save button disabled when no period is active
+- Both Teacher views — removed the dead midterm-cutoff-setting UI (date input, Save button, "Not set" warning) that referenced the now-dropped `section_terms.midterm_cutoff_date` column and the removed `updateCutoff()` route; cutoff is now sourced exclusively from `AcademicPeriod::getActive()` per the prior session's controller changes
+- Confirmed via `php artisan tinker`: zero Dean/Program Head/Teacher accounts with `department_id = null` — the "orphaned accounts" item flagged as an open risk in the previous session is not an active issue
+
+### Academic Period Activation — Two-Step Flow Clarified (client-reported: newly created period not taking effect)
+- Not a bug — `SuperAdmin\AcademicPeriodController@store` intentionally creates every new period with `is_active = false`; activation is a deliberate separate step via the existing "Set Active" button on the Academic Periods page, which correctly deactivates all other periods and activates the selected one
+- No code change; confirmed the button and route (`admin.academic.setActive`) were already wired correctly end-to-end
+
+### Dean Student Management — Cross-Department Data Isolation Gap (CRITICAL, client-reported: students visible/editable across departments)
+- Root cause: `Dean\StudentController@create()` and `@edit()` queried `Program::where('status', 'approved')` with no department scoping, so both the Add and Edit forms' program dropdowns listed every department's programs, not just the Dean's own — a student could be saved into another department's program and would then silently disappear from the Dean's own (correctly-scoped) student list
+- Compounding the same gap: `store()` and `update()` never validated that the submitted `program_id` actually belonged to the Dean's department, and `edit()`, `update()`, `destroy()` had no `abort_if` ownership guard at all — unlike every other Dean controller in the app, which follows this guard pattern consistently
+- Fixed: `create()`/`edit()` program lists now scoped to `auth()->user()->department_id`; `store()`/`update()` verify the submitted `program_id`'s department against the Dean's own before saving; `edit()`, `update()`, `destroy()` now guard with the same `abort_if(... department_id !== ..., 403, ...)` pattern used elsewhere in the app
+- Confirmed clean, no change needed: `Dean\DashboardController`'s `total_students` stat (already correctly scoped via `whereHas('program', ...department_id...)`) and the subject request/approval flow (`Dean\SubjectController`, `ProgramHead\SubjectController`, `dean/subjects/index.blade.php`) — already Program Head requests → Dean approves, not Dean → Admin as originally suspected
+
+### Dean Students Route — Dead `show` Route (Same Pattern as March 4's SectionController Fix)
+- `Route::resource('students', DeanStudent::class)` in `routes/web.php` auto-generated a `show` route with no corresponding controller method — confirmed via grep that no view links to `dean.students.show` — any direct hit would have thrown a fatal `BadMethodCallException` instead of a graceful 404
+- Fixed: `->except(['show'])` added to the resource route declaration
+
+### Dean Sections — Subjects & Teachers Panel Made View-Only (Design Decision)
+- The inline "Subjects & Teachers" add/reassign form inside the Dean's section details modal (built August 5) and the standalone `Dean\AssignmentController` (built the same session) were both writing to the same `section_subject_teachers` pivot via two independent code paths with inconsistent duplicate-handling behavior — flagged as redundant
+- Resolved per client decision: Dean's section modal is now read-only for subject/teacher pairings (plain list, no Add form, no per-row reassign), with a text link pointing to the Assignments tab for all actual add/reassign/remove actions; Program Head's equivalent section modal is unchanged and keeps its inline form, since Program Head has no separate Assignments tab
+- `Dean\SectionController@attachSubject` and `@changeSubjectTeacher` (plus their routes) are now unreferenced by any view — left in place pending a decision on removal
+
+### Known Gap Identified (not fixed — carried over for next QA pass)
+- Broader QA sweep of Phases 1–8 for the two confirmed bug shapes (`nullable` silently defeating `required_if` on other validation rules; `$fillable` arrays missing columns their own controllers submit) — recommended in the prior session, not yet started systematically beyond the Student controller gap found and fixed above
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -795,6 +844,6 @@ f
 
 ---
 
-**Last Updated:** August 17, 2026 (evening session)  
+**Last Updated:** August 21, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

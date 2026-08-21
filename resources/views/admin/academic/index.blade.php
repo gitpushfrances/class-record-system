@@ -28,7 +28,7 @@
                         <label class="block mb-1 text-sm font-medium text-gray-700">School Year</label>
                         <input type="text" name="school_year" placeholder="e.g. 2024-2025"
                                value="{{ old('school_year') }}"
-                               class="px-3 py-2 border rounded focus:outline-none focus:ring-1 w-40" required>
+                               class="w-40 px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
                         @error('school_year')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                     </div>
                     <div>
@@ -40,6 +40,18 @@
                             <option value="Summer" {{ old('semester') == 'Summer' ? 'selected' : '' }}>Summer</option>
                         </select>
                         @error('semester')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Midterm Cutoff</label>
+                        <input type="date" name="midterm_cutoff_date" value="{{ old('midterm_cutoff_date') }}"
+                               class="px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
+                        @error('midterm_cutoff_date')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Finals Cutoff</label>
+                        <input type="date" name="finals_cutoff_date" value="{{ old('finals_cutoff_date') }}"
+                               class="px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
+                        @error('finals_cutoff_date')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                     </div>
                     <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">
                         Add Period
@@ -58,6 +70,8 @@
                     <tr>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">School Year</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester</th>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Midterm Cutoff</th>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Finals Cutoff</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Actions</th>
                     </tr>
@@ -67,6 +81,8 @@
                         <tr>
                             <td class="px-6 py-4 font-medium text-gray-800">{{ $period->school_year }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $period->semester }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->midterm_cutoff_date?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->finals_cutoff_date?->format('M d, Y') ?? '—' }}</td>
                             <td class="px-6 py-4">
                                 @if($period->is_active)
                                     <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">Active</span>
@@ -74,7 +90,7 @@
                                     <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded">Inactive</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 flex items-center gap-3">
+                            <td class="flex items-center gap-3 px-6 py-4">
                                 @if(!$period->is_active)
                                     <form action="{{ route('admin.academic.setActive', $period) }}" method="POST" class="inline">
                                         @csrf
@@ -95,7 +111,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No periods found.</td>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No periods found.</td>
                         </tr>
                     @endforelse
                 </tbody>

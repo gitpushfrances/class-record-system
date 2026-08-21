@@ -45,33 +45,7 @@
     <span class="ml-auto text-gray-400">{{ $enrollments->count() }} students</span>
 </div>
 
-{{-- Midterm Cutoff Date — required for attendance-based grading to compute --}}
-<div class="flex flex-wrap items-center gap-3 px-5 py-3 mb-6 text-sm bg-white border border-gray-200 rounded-xl">
-    <span class="font-medium text-gray-600">Midterm Cutoff Date:</span>
-    @if($currentTerm?->midterm_cutoff_date)
-        <span id="cutoff-display-record" class="font-semibold text-gray-800">{{ $currentTerm->midterm_cutoff_date->format('M d, Y') }}</span>
-        <button type="button" onclick="toggleCutoffForm('record')" class="ml-1 text-xs font-medium text-indigo-600 hover:underline">Edit</button>
-    @else
-        <span class="text-yellow-700">Not set — attendance scores will not compute until this is set.</span>
-    @endif
-    <form id="cutoff-form-record" method="POST" action="{{ route('teacher.grades.final.cutoff', [$section, $subject]) }}"
-          class="items-center gap-2 ml-auto {{ $currentTerm?->midterm_cutoff_date ? 'hidden' : 'flex' }}">
-        @csrf
-        <input type="date" name="midterm_cutoff_date"
-               value="{{ $currentTerm?->midterm_cutoff_date?->format('Y-m-d') }}"
-               class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg">
-        <button type="submit"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-            Save
-        </button>
-    </form>
-</div>
 
-<script>
-function toggleCutoffForm(key) {
-    document.getElementById('cutoff-form-' + key).classList.toggle('hidden');
-}
-</script>
 
 {{-- Spreadsheet --}}
 <div class="overflow-x-auto bg-white border border-gray-200 shadow-sm rounded-xl">

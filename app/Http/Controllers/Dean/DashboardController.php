@@ -17,8 +17,7 @@ class DashboardController extends Controller
                 ->where('department_id', $departmentId)
                 ->count(),
             'total_sections' => Section::whereHas('program', fn($q) => $q->where('department_id', $departmentId))->count(),
-            // total_students left unscoped — see open question on student scoping.
-            'total_students' => Student::count(),
+            'total_students' => Student::whereHas('program', fn($q) => $q->where('department_id', $departmentId))->count(),
         ];
         return view('dean.dashboard', compact('stats'));
     }

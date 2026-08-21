@@ -88,8 +88,8 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
     Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
 
-    Route::resource('students', DeanStudent::class);
-    Route::resource('subjects', DeanSubject::class);
+    Route::resource('students', DeanStudent::class)->except(['show']);
+    Route::get('/subjects', [DeanSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [DeanSubject::class, 'approve'])->name('subjects.approve');
     Route::post('/subjects/{subject}/reject', [DeanSubject::class, 'reject'])->name('subjects.reject');
 
@@ -139,7 +139,7 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     // Final grades
     Route::get('/classes/{section}/subjects/{subject}/final-grades', [GradeController::class, 'finalGrades'])->name('grades.final');
     Route::post('/classes/{section}/subjects/{subject}/final-grades/submit', [GradeController::class, 'submitForVerification'])->name('grades.submit');
-    Route::post('/classes/{section}/subjects/{subject}/final-grades/cutoff', [GradeController::class, 'updateCutoff'])->name('grades.final.cutoff');
+
 
     // Attendance
     Route::get('/classes/{section}/subjects/{subject}/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

@@ -81,7 +81,7 @@
                                             <div class="flex items-center justify-between mb-2">
                                                 <h4 class="text-sm font-semibold text-gray-700">{{ $currentTerm->semester }}, {{ $currentTerm->academic_year }}</h4>
                                                 <button
-                                                    onclick="closeSectionModal({{ $section->id }}); openAdviserModal({{ $section->id }}, '{{ addslashes($section->program->code . ' ' . $section->year_number . '-' . $section->section_letter) }}', {{ $currentTerm?->adviser_id ?? 'null' }}, '{{ $currentTerm?->academic_year ?? '' }}', '{{ $currentTerm?->semester ?? '' }}')"
+                                                    onclick="closeSectionModal({{ $section->id }}); openAdviserModal({{ $section->id }}, '{{ addslashes($section->program->code . ' ' . $section->year_number . '-' . $section->section_letter) }}', {{ $currentTerm?->adviser_id ?? 'null' }})"
                                                     class="text-xs text-blue-600 hover:text-blue-800">
                                                     Change Adviser
                                                 </button>
@@ -148,7 +148,7 @@
                                         <div class="pt-4 text-center border-t">
                                             <div class="py-2 text-sm text-gray-400">No active term this semester.</div>
                                             <button
-                                                onclick="closeSectionModal({{ $section->id }}); openAdviserModal({{ $section->id }}, '{{ addslashes($section->program->code . ' ' . $section->year_number . '-' . $section->section_letter) }}', null, '', '')"
+                                                onclick="closeSectionModal({{ $section->id }}); openAdviserModal({{ $section->id }}, '{{ addslashes($section->program->code . ' ' . $section->year_number . '-' . $section->section_letter) }}', null)"
                                                 class="text-xs text-blue-600 hover:text-blue-800">
                                                 Set Term
                                             </button>
@@ -192,21 +192,21 @@
                     @csrf
                     <div class="px-6 py-4 space-y-4">
                         <p class="text-sm text-gray-600">Section: <span id="modalSectionName" class="font-medium text-gray-800"></span></p>
-                        <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Academic Year</label>
-                            <input type="text" name="academic_year" id="modalAcademicYear" placeholder="e.g. 2024-2025" class="w-full px-3 py-2 border rounded" required>
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Semester</label>
-                            <select name="semester" id="modalSemester" class="w-full px-3 py-2 border rounded" required>
-                                <option value="1st Semester">1st Semester</option>
-                                <option value="2nd Semester">2nd Semester</option>
-                                <option value="Summer">Summer</option>
-                            </select>
-                        </div>
+
+                        @if($activePeriod)
+                            <div class="px-3 py-2 text-sm rounded bg-gray-50" style="border:1px solid #e5e7eb;">
+                                <span class="text-gray-500">Setting term for:</span>
+                                <span class="font-medium text-gray-800">{{ $activePeriod->semester }}, {{ $activePeriod->school_year }}</span>
+                            </div>
+                        @else
+                            <div class="px-3 py-2 text-sm text-red-700 rounded bg-red-50" style="border:1px solid #fecaca;">
+                                No active academic period set. Contact your Administrator before assigning advisers.
+                            </div>
+                        @endif
+
                         <div>
                             <label class="block mb-1 text-sm font-medium text-gray-700">Adviser</label>
-                            <select name="adviser_id" id="modalAdviser" class="w-full px-3 py-2 border rounded" required>
+                            <select name="adviser_id" id="modalAdviser" class="w-full px-3 py-2 border rounded" required {{ $activePeriod ? '' : 'disabled' }}>
                                 <option value="">Select Adviser</option>
                                 @foreach($teachers as $teacher)
                                     <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
@@ -216,7 +216,7 @@
                     </div>
                     <div class="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50">
                         <button type="button" onclick="closeAdviserModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Save</button>
+                        <button type="submit" class="px-4 py-2 text-sm text-white rounded hover:opacity-90" style="background-color: #c8a97e;" {{ $activePeriod ? '' : 'disabled' }}>Save</button>
                     </div>
                 </form>
             </div>
@@ -226,11 +226,9 @@
     <script>
         function openSectionModal(id) { document.getElementById('sectionModal-' + id).classList.remove('hidden'); }
         function closeSectionModal(id) { document.getElementById('sectionModal-' + id).classList.add('hidden'); }
-        function openAdviserModal(sectionId, sectionName, adviserId, academicYear, semester) {
+        function openAdviserModal(sectionId, sectionName, adviserId) {
             document.getElementById('modalSectionName').textContent = sectionName;
             document.getElementById('adviserForm').action = '/program-head/sections/' + sectionId + '/change-adviser';
-            document.getElementById('modalAcademicYear').value = academicYear || '';
-            document.getElementById('modalSemester').value = semester || '1st Semester';
             if (adviserId) document.getElementById('modalAdviser').value = adviserId;
             document.getElementById('adviserModal').classList.remove('hidden');
         }

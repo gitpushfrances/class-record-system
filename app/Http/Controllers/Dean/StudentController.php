@@ -33,12 +33,18 @@ class StudentController extends Controller
 
     public function create()
     {
-        $programs = Program::where('status', 'approved')->orderBy('code')->get();
+        $programs = Program::where('department_id', auth()->user()->department_id)
+            ->where('status', 'approved')
+            ->orderBy('code')
+            ->get();
+
         return view('dean.students.create', compact('programs'));
     }
 
     public function store(Request $request)
     {
+        $departmentId = auth()->user()->department_id;
+
         $validated = $request->validate([
             'student_number' => 'required|unique:students,student_number',
             'first_name'     => 'required|string|max:255',
@@ -50,6 +56,13 @@ class StudentController extends Controller
             'email'          => 'nullable|email|unique:students,email',
         ]);
 
+        $program = Program::find($validated['program_id']);
+        abort_if(
+            !$program || $program->department_id !== $departmentId,
+            403,
+            'This program does not belong to your department.'
+        );
+
         $validated['status'] = 'active'; // explicit — don't rely on DB default
 
         Student::create($validated);
@@ -59,12 +72,32 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
-        $programs = Program::where('status', 'approved')->orderBy('code')->get();
+        $departmentId = auth()->user()->department_id;
+
+        abort_if(
+            !$student->program || $student->program->department_id !== $departmentId,
+            403,
+            'This student does not belong to your department.'
+        );
+
+        $programs = Program::where('department_id', $departmentId)
+            ->where('status', 'approved')
+            ->orderBy('code')
+            ->get();
+
         return view('dean.students.edit', compact('student', 'programs'));
     }
 
     public function update(Request $request, Student $student)
     {
+        $departmentId = auth()->user()->department_id;
+
+        abort_if(
+            !$student->program || $student->program->department_id !== $departmentId,
+            403,
+            'This student does not belong to your department.'
+        );
+
         $validated = $request->validate([
             'student_number' => 'required|unique:students,student_number,' . $student->id,
             'first_name'     => 'required|string|max:255',
@@ -76,6 +109,13 @@ class StudentController extends Controller
             'email'          => 'nullable|email|unique:students,email,' . $student->id,
         ]);
 
+        $program = Program::find($validated['program_id']);
+        abort_if(
+            !$program || $program->department_id !== $departmentId,
+            403,
+            'This program does not belong to your department.'
+        );
+
         $student->update($validated);
 
         return redirect()->route('dean.students.index')->with('success', 'Student updated successfully.');
@@ -83,6 +123,12 @@ class StudentController extends Controller
 
     public function destroy(Student $student)
     {
+        abort_if(
+            !$student->program || $student->program->department_id !== auth()->user()->department_id,
+            403,
+            'This student does not belong to your department.'
+        );
+
         // Remove all enrollments for this student first
         \App\Models\Enrollment::where('student_id', $student->id)->delete();
         $student->delete();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
 use App\Models\FinalGrade;
 use App\Models\GradeConfiguration;
 use App\Models\GradeItem;
@@ -204,7 +205,7 @@ class GradeController extends Controller
             $enrollments = $currentTerm->enrollments;
         }
 
-        $cutoffDate  = $currentTerm?->midterm_cutoff_date;
+        $cutoffDate  = AcademicPeriod::getActive()?->midterm_cutoff_date;
         $liveGrades  = [];
 
         foreach ($enrollments as $enrollment) {
@@ -232,21 +233,7 @@ class GradeController extends Controller
         return view('teacher.grades.final', compact('section', 'subject', 'enrollments', 'liveGrades', 'currentTerm'));
     }
 
-    public function updateCutoff(Request $request, Section $section, Subject $subject)
-    {
-        $this->authorizeSectionSubject($section, $subject);
 
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-        abort_if(!$currentTerm, 422, 'No active term found.');
-
-        $request->validate([
-            'midterm_cutoff_date' => 'required|date',
-        ]);
-
-        $currentTerm->update(['midterm_cutoff_date' => $request->midterm_cutoff_date]);
-
-        return back()->with('success', 'Midterm cutoff date saved. Attendance grades will now reflect the split.');
-    }
 
     public function computeGrades(Section $section, Subject $subject)
     {
@@ -268,7 +255,7 @@ class GradeController extends Controller
             $enrollments = $currentTerm->enrollments;
         }
 
-        $cutoffDate = $currentTerm?->midterm_cutoff_date;
+        $cutoffDate = AcademicPeriod::getActive()?->midterm_cutoff_date;
         $errors = [];
 
         foreach ($enrollments as $enrollment) {
@@ -327,7 +314,7 @@ class GradeController extends Controller
             'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
         ]);
 
-        $cutoffDate = $currentTerm->midterm_cutoff_date;
+        $cutoffDate = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         foreach ($currentTerm->enrollments as $enrollment) {
             $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm', $cutoffDate);

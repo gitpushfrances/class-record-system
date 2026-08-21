@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Exports\ClassRecordExport;
+use App\Models\AcademicPeriod;
 use App\Models\Enrollment;
 use App\Models\FinalGrade;
 use App\Models\Section;
@@ -84,7 +85,7 @@ class ClassController extends Controller
         $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
         $matrix           = $config->buildComponentMatrix($gradeItemsByType);
         $enrollments      = $currentTerm ? $currentTerm->enrollments : collect();
-        $cutoffDate       = $currentTerm?->midterm_cutoff_date;
+        $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         $liveGrades        = [];
         $attendanceDisplay = [];
@@ -147,7 +148,7 @@ class ClassController extends Controller
         $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
         $matrix           = $config->buildComponentMatrix($gradeItemsByType);
         $enrollments      = $currentTerm ? $currentTerm->enrollments : collect();
-        $cutoffDate       = $currentTerm?->midterm_cutoff_date;
+        $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         $liveGrades = [];
         foreach ($enrollments as $enrollment) {

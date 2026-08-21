@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ProgramHead;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
 use App\Models\Section;
 use App\Models\SectionTerm;
 use App\Models\Subject;
@@ -37,8 +38,9 @@ class SectionController extends Controller
             ->where('program_id', $programId)
             ->orderBy('name')
             ->get();
+        $activePeriod = AcademicPeriod::getActive();
 
-        return view('program-head.sections.index', compact('sections', 'teachers', 'allSubjects'));
+        return view('program-head.sections.index', compact('sections', 'teachers', 'allSubjects', 'activePeriod'));
     }
 
     public function create()
@@ -226,10 +228,11 @@ class SectionController extends Controller
             'This section does not belong to your program.'
         );
 
+        $activePeriod = AcademicPeriod::getActive();
+        abort_if(!$activePeriod, 422, 'No active academic period set. Contact your Administrator.');
+
         $request->validate([
-            'adviser_id'    => 'required|exists:users,id',
-            'academic_year' => 'required|string|max:20',
-            'semester'      => 'required|in:1st Semester,2nd Semester,Summer',
+            'adviser_id' => 'required|exists:users,id',
         ]);
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
@@ -250,15 +253,15 @@ class SectionController extends Controller
 
         if ($currentTerm) {
             $currentTerm->update([
-                'academic_year' => $request->academic_year,
-                'semester'      => $request->semester,
+                'academic_year' => $activePeriod->school_year,
+                'semester'      => $activePeriod->semester,
                 'adviser_id'    => $request->adviser_id,
             ]);
         } else {
             SectionTerm::create([
                 'section_id'    => $section->id,
-                'academic_year' => $request->academic_year,
-                'semester'      => $request->semester,
+                'academic_year' => $activePeriod->school_year,
+                'semester'      => $activePeriod->semester,
                 'adviser_id'    => $request->adviser_id,
                 'status'        => 'active',
             ]);

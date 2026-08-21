@@ -35,45 +35,7 @@
     @endif
 </div>
 
-<div class="px-4 py-3 mb-4 bg-white border border-gray-200 rounded-lg">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-sm text-gray-700">
-            <i class="fa-solid fa-calendar-check" style="color:#c8a97e;"></i>
-            <span>
-                Midterm cutoff date:
-                <strong class="text-gray-900">
-                    {{ $currentTerm?->midterm_cutoff_date ? $currentTerm->midterm_cutoff_date->format('M d, Y') : 'Not set' }}
-                </strong>
-            </span>
-            @if($currentTerm?->midterm_cutoff_date)
-                <button type="button" onclick="toggleCutoffForm('final')" class="text-xs font-medium text-indigo-600 hover:underline">Edit</button>
-            @endif
-        </div>
-        <form id="cutoff-form-final" method="POST" action="{{ route('teacher.grades.final.cutoff', [$section, $subject]) }}"
-              class="items-center gap-2 {{ $currentTerm?->midterm_cutoff_date ? 'hidden' : 'flex' }}">
-            @csrf
-            <input type="date" name="midterm_cutoff_date"
-                   value="{{ $currentTerm?->midterm_cutoff_date?->format('Y-m-d') }}"
-                   required
-                   class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700">
-            <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-lg" style="background:rgba(200,169,126,0.15); color:#8a6a3d; border:1px solid rgba(200,169,126,0.4);">
-                Save
-            </button>
-        </form>
-    </div>
-    @if(!$currentTerm?->midterm_cutoff_date)
-        <p class="mt-2 text-xs text-red-500">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            Attendance won't count toward grades until this is set — attendance components will be treated as not-yet-active.
-        </p>
-    @endif
-</div>
 
-<script>
-function toggleCutoffForm(key) {
-    document.getElementById('cutoff-form-' + key).classList.toggle('hidden');
-}
-</script>
 
 <div class="flex gap-3 mb-4">
     @if(in_array($status, ['pending', 'verified']))
