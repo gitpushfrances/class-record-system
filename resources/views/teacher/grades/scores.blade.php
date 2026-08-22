@@ -34,7 +34,7 @@
                     <th class="px-6 py-3 text-left">Student No.</th>
                     <th class="px-6 py-3 text-left">Name</th>
                     <th class="w-40 px-6 py-3 text-center">Score / {{ $gradeItem->max_score }}</th>
-                    <th class="px-6 py-3 text-center w-28">Percentage</th>
+                    <th class="px-6 py-3 text-center w-28">Grade</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -52,19 +52,19 @@
                             @if(! $gradeItem->is_locked)
                                 <input type="number"
                                        name="scores[{{ $i }}][score]"
-                                       value="{{ old("scores.{$i}.score", $score) }}"
+                                       value="{{ old("scores.{$i}.score", $score !== '' ? rtrim(rtrim(number_format($score, 2, '.', ''), '0'), '.') : '') }}"
                                        min="0" max="{{ $gradeItem->max_score }}" step="0.01"
                                        class="w-24 border border-gray-300 rounded-lg px-3 py-1.5 text-center text-sm focus:ring-2 focus:ring-indigo-500 score-input"
                                        data-max="{{ $gradeItem->max_score }}"
                                        data-row="{{ $i }}">
                             @else
-                                <span class="font-semibold text-gray-700">{{ $score !== '' ? $score : '—' }}</span>
+                                <span class="font-semibold text-gray-700">{{ $score !== '' ? rtrim(rtrim(number_format($score, 2, '.', ''), '0'), '.') : '—' }}</span>
                                 <input type="hidden" name="scores[{{ $i }}][score]" value="{{ $score }}">
                             @endif
                         </td>
                         <td class="px-6 py-3 text-xs text-center text-gray-500" id="pct-{{ $i }}">
                             @if($score !== '')
-                                {{ number_format(($score / $gradeItem->max_score) * 100, 1) }}%
+                                {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(($score / $gradeItem->max_score) * 100), 1) }}
                             @else
                                 —
                             @endif
@@ -86,6 +86,35 @@
 </div>
 
 <script>
+function convertToNumericalGrade(percentage) {
+    if (percentage >= 75 && percentage < 77) return 3.00;
+    if (percentage >= 70 && percentage < 75) return 4.00;
+    if (percentage < 70) return 5.00;
+
+    const bands = [
+        { pctMin: 96.00, pctMax: 100.00, gradeMin: 1.00, gradeMax: 1.24 },
+        { pctMin: 94.00, pctMax: 95.99,  gradeMin: 1.25, gradeMax: 1.49 },
+        { pctMin: 91.00, pctMax: 93.99,  gradeMin: 1.50, gradeMax: 1.74 },
+        { pctMin: 89.00, pctMax: 90.99,  gradeMin: 1.75, gradeMax: 1.99 },
+        { pctMin: 86.00, pctMax: 88.99,  gradeMin: 2.00, gradeMax: 2.24 },
+        { pctMin: 83.00, pctMax: 85.99,  gradeMin: 2.25, gradeMax: 2.49 },
+        { pctMin: 80.00, pctMax: 82.99,  gradeMin: 2.50, gradeMax: 2.74 },
+        { pctMin: 77.00, pctMax: 79.99,  gradeMin: 2.75, gradeMax: 2.99 },
+    ];
+
+    for (const band of bands) {
+        if (percentage >= band.pctMin && percentage <= band.pctMax) {
+            const span = band.pctMax - band.pctMin;
+            const grade = span > 0
+                ? band.gradeMax - (band.gradeMax - band.gradeMin) * ((percentage - band.pctMin) / span)
+                : band.gradeMin;
+            return Math.round(grade * 10) / 10;
+        }
+    }
+
+    return 1.00; // safety net, mirrors PHP fallback
+}
+
 document.querySelectorAll('.score-input').forEach(input => {
     input.addEventListener('input', function () {
         const row  = this.dataset.row;
@@ -94,7 +123,8 @@ document.querySelectorAll('.score-input').forEach(input => {
         const cell = document.getElementById('pct-' + row);
 
         if (!isNaN(val) && max > 0) {
-            cell.textContent = ((val / max) * 100).toFixed(1) + '%';
+            const pct = (val / max) * 100;
+            cell.textContent = convertToNumericalGrade(pct).toFixed(1);
             this.classList.toggle('border-red-400', val > max);
         } else {
             cell.textContent = '—';

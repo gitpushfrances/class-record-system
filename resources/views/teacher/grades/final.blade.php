@@ -105,10 +105,10 @@ function confirmSubmitVerification() {
                             <div class="font-mono text-xs text-gray-400">{{ $enrollment->student?->student_number }}</div>
                         </td>
                         <td class="px-5 py-3 text-center text-gray-700">{{ number_format($midPct, 2) }}%</td>
-                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($midNum, 2) }}</td>
+                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($midNum, 1) }}</td>
                         <td class="px-5 py-3 text-center text-gray-700">{{ number_format($finPct, 2) }}%</td>
-                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($finNum, 2) }}</td>
-                        <td class="px-5 py-3 text-lg font-bold text-center text-gray-900">{{ number_format($avgNum, 2) }}</td>
+                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($finNum, 1) }}</td>
+                        <td class="px-5 py-3 text-lg font-bold text-center text-gray-900">{{ number_format($avgNum, 1) }}</td>
                         <td class="px-5 py-3 text-center">
                             @if($fg && $fg->is_locked)
                                 <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>

@@ -42,7 +42,7 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
 
     Route::get('/subjects', [AdminSubject::class, 'index'])->name('subjects.index');
@@ -76,7 +76,7 @@ Route::middleware(['auth', 'status', 'role:super_admin'])->prefix('admin')->name
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.')->group(function () {
+Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->name('dean.')->group(function () {
     Route::get('/dashboard', [DeanDashboard::class, 'index'])->name('dashboard');
 
     Route::get('/teachers/pending', [DeanTeacherApproval::class, 'index'])->name('teachers.pending');
@@ -113,7 +113,7 @@ Route::middleware(['auth', 'status', 'role:dean'])->prefix('dean')->name('dean.'
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'status', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+Route::middleware(['auth', 'status', 'role:teacher', 'no.cache'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherDashboard::class, 'index'])->name('dashboard');
     Route::get('/advisory', [TeacherDashboard::class, 'advisory'])->name('advisory');
     Route::get('/teaching', [TeacherDashboard::class, 'teaching'])->name('teaching');
@@ -157,7 +157,7 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'status', 'role:program_head'])->prefix('program-head')->name('program-head.')->group(function () {
+Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('program-head')->name('program-head.')->group(function () {
     Route::get('/dashboard', [ProgramHeadController::class, 'dashboard'])->name('dashboard');
     Route::post('/verify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'verify'])->name('verify');
     Route::post('/reject/{sectionTerm}/{subject}', [ProgramHeadController::class, 'reject'])->name('reject');

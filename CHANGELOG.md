@@ -818,6 +818,35 @@ f
 ### Known Gap Identified (not fixed — carried over for next QA pass)
 - Broader QA sweep of Phases 1–8 for the two confirmed bug shapes (`nullable` silently defeating `required_if` on other validation rules; `$fillable` arrays missing columns their own controllers submit) — recommended in the prior session, not yet started systematically beyond the Student controller gap found and fixed above
 
+---
+
+## QA FIXES & PATCHES — August 23, 2026
+
+### Grade Display — Decimal Precision Standardized to 1 Place (Philippine 1.00–5.00 Scale)
+- Client decision: numerical grades on the 1.00–5.00 scale should display as `X.X` (e.g. `2.2`), not `X.XX` (e.g. `2.20`) — trailing zero was visual noise, not a data or calculation issue
+- `letter_grade` was being pre-formatted to 2 decimals at write-time inside the controller, not at display-time in Blade — required patching both layers, not just views
+- Fixed at write-time: `Teacher\ClassController` (`show()` live-grade array) and `Teacher\GradeController` (`finalGrades()`, `computeGrades()`, `submitForVerification()`) — `letter_grade` now stored as `number_format($numerical, 1)`
+- Fixed at display-time: `teacher/classes/record.blade.php` (class-average cell, per-criterion `$cg` cells, class-average row), `teacher/grades/final.blade.php` (Midterm/Final/Average columns), `program-head/dashboard.blade.php` (Midterm/Final columns) — all changed from `number_format(..., 2)` to `number_format(..., 1)`
+- **Known gap, not fixed:** pre-existing `FinalGrade` rows saved before this patch still hold the old 2-decimal string in `letter_grade`/`average_numerical` — inconsistent formatting will appear between old and newly-computed grades until those rows are recomputed or the table is reset. Percentage fields (`%`) were intentionally left untouched — only the 1.00–5.00 numerical scale was in scope.
+
+### Score Entry Page — Percentage Column Replaced with Converted Grade
+- `teacher/grades/scores.blade.php` previously showed a raw score percentage (`score / max_score × 100`) next to each student's input — client wanted the actual converted 1.00–5.00 grade shown instead, consistent with the rest of the system
+- Server-side (Blade) column now calls `FinalGrade::convertToNumericalGrade()` instead of computing percentage inline; column header changed from "Percentage" to "Grade"
+- Live JS preview (updates as a teacher types a score, before saving) previously used a separate raw percentage formula — `FinalGrade::convertToNumericalGrade()`'s full band table (flat zones + 8 interpolated bands + rounding) ported 1:1 into a JS function so the live preview matches the saved server-side value with no drift
+- **Flagged for later:** this conversion table now lives in three places (PHP model + two JS ports across different views) — a shared JSON config or API endpoint would prevent future drift if the grading table changes
+
+### Score Input Display — Trailing `.00` Removed from Whole-Number Scores
+- Score fields (`decimal(8,2)` column, unchanged) were displaying whole-number scores as `32.00` instead of `32` — client noted scores are never entered with decimals in practice
+- Fixed as display-only: `rtrim()` strips trailing zeros and the decimal point after `number_format($score, 2, '.', '')` in both the editable input's `value` and the locked/read-only `<span>` fallback — genuine decimal scores (e.g. `45.5`) still display correctly if ever entered; schema, `step="0.01"`, and validation were left untouched so partial-credit entry remains possible
+
+### Logout — Stale Authenticated Pages via Browser Back Button
+- Client-reported "page expired" sensation after logout traced to two separate causes investigated in the same session:
+  - False alarm: an observed 419-looking error was actually a `PDOException` (MySQL not running locally at the time) — not a session/CSRF bug, no code change needed
+  - Real issue: Breeze's default `AuthenticatedSessionController@destroy()` was already correctly invalidating the session and regenerating the CSRF token server-side, but the browser could still render a cached copy of a protected page via the Back button after logout
+- New `App\Http\Middleware\PreventBackHistory` created — sets `Cache-Control: no-cache, no-store, max-age=0, must-revalidate`, `Pragma: no-cache`, and `Expires` headers on responses
+- Registered as `no.cache` alias in `Kernel.php`, applied to all four role-based route groups (`admin`, `dean`, `teacher`, `program-head`) alongside existing `auth`/`status`/`role` middleware; profile routes left unchanged
+- Verified via `route:list -v` that the middleware is correctly attached; browser back-button and direct-URL-after-logout behavior confirmed via manual test
+
 ## FEATURE REQUEST — Admin Assignments Drill-Down View (Planned)
 
 - Client requested a new Super Admin tab, separate from the existing Accounts and Departments pages, showing a 3-level visual drill-down: Departments (with assigned Dean) → click in → Programs within that department (with assigned Program Head) → click in → Sections within that program (with Teachers and Subjects assigned per class)

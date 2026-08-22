@@ -82,8 +82,7 @@
                             </th>
                         @endforeach
                         <th class="px-3 py-3 text-center {{ $comp['color']['bg100'] }} border {{ $comp['color']['bg200'] }} min-w-[80px]">
-                            <div class="font-semibold {{ $comp['color']['text'] }}">Wtd.</div>
-                            <div class="font-normal {{ $comp['color']['text400'] }} normal-case">Score</div>
+                            <div class="font-semibold {{ $comp['color']['text'] }}">Grade</div>
                         </th>
                     @else
                         <th class="px-3 py-3 text-center {{ $comp['color']['bg50'] }} border {{ $comp['color']['bg200'] }} min-w-[70px]">
@@ -91,8 +90,7 @@
                             <div class="font-normal {{ $comp['color']['text400'] }} normal-case">Present</div>
                         </th>
                         <th class="px-3 py-3 text-center {{ $comp['color']['bg100'] }} border {{ $comp['color']['bg200'] }} min-w-[80px]">
-                            <div class="font-semibold {{ $comp['color']['text'] }}">Wtd.</div>
-                            <div class="font-normal {{ $comp['color']['text400'] }} normal-case">Score</div>
+                            <div class="font-semibold {{ $comp['color']['text'] }}">Grade</div>
                         </th>
                     @endif
                 @endforeach
@@ -136,7 +134,8 @@
                                 </td>
                             @endforeach
                             <td class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
-                                {{ number_format($lg['scores'][$comp['key']] ?? 0, 2) }}
+                                @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
+                                {{ $cg !== null ? number_format($cg, 1) : '—' }}
                             </td>
                         @else
                             @php $ad = $attendanceDisplay[$enrollment->id][$comp['key']] ?? ['present' => 0, 'total' => 0]; @endphp
@@ -149,7 +148,8 @@
                                 @endif
                             </td>
                             <td class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
-                                {{ number_format($lg['scores'][$comp['key']] ?? 0, 2) }}
+                                @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
+                                {{ $cg !== null ? number_format($cg, 1) : '—' }}
                             </td>
                         @endif
                     @endforeach
@@ -188,12 +188,14 @@
                             </td>
                         @endforeach
                         <td class="px-3 py-3 text-center {{ $comp['color']['text'] }} {{ $comp['color']['bg100'] }} border {{ $comp['color']['bg200'] }}">
-                            {{ number_format(collect($liveGrades)->avg(fn($g) => $g['scores'][$comp['key']] ?? 0), 2) }}
+                            @php $classAvg = collect($componentGrades)->pluck($comp['key'])->filter(fn($v) => $v !== null)->avg(); @endphp
+                            {{ $classAvg !== null ? number_format($classAvg, 1) : '—' }}
                         </td>
                     @else
                         <td class="px-3 py-3 text-center border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">—</td>
                         <td class="px-3 py-3 text-center {{ $comp['color']['text'] }} {{ $comp['color']['bg100'] }} border {{ $comp['color']['bg200'] }}">
-                            {{ number_format(collect($liveGrades)->avg(fn($g) => $g['scores'][$comp['key']] ?? 0), 2) }}
+                            @php $classAvg = collect($componentGrades)->pluck($comp['key'])->filter(fn($v) => $v !== null)->avg(); @endphp
+                            {{ $classAvg !== null ? number_format($classAvg, 1) : '—' }}
                         </td>
                     @endif
                 @endforeach
@@ -201,8 +203,8 @@
                 <td class="px-3 py-3 font-bold text-center text-gray-800 bg-gray-200 border border-gray-300">
                     {{ number_format(collect($liveGrades)->avg('final_grade'), 2) }}%
                 </td>
-                <td class="px-3 py-3 font-bold text-center text-indigo-600 bg-gray-200 border border-gray-300">
-                    {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(collect($liveGrades)->avg('final_grade')), 2) }}
+                <td class="px-3 py-3 font-bold text-center text-indigo-600 border border-gray-200 bg-gray-50">
+                    {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(collect($liveGrades)->avg('final_grade')), 1) }}
                 </td>
                 <td class="px-3 py-3 text-center bg-gray-200 border border-gray-300">
                     @php

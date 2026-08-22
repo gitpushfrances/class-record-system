@@ -94,10 +94,10 @@
                                         <div class="text-xs" style="color:rgba(200,169,126,0.4);">{{ $enrollment->student->student_number ?? '' }}</div>
                                     </td>
                                     <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade ? number_format($grade->midterm_percentage, 1).'%' : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? number_format($grade->midterm_numerical, 2) : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? number_format($grade->midterm_numerical, 1) : '—' }}</td>
                                     <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade ? number_format($grade->final_percentage, 1).'%' : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? number_format($grade->final_numerical, 2) : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-bold" style="color:#c8a97e;">{{ $grade ? number_format($grade->average_numerical, 2) : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? number_format($grade->final_numerical, 1) : '—' }}</td>
+                                     <td class="px-6 py-3 text-center text-sm font-bold" style="color:#c8a97e;">{{ $grade ? number_format($grade->average_numerical, 2) : '—' }}</td>
                                     <td class="px-6 py-3 text-center">
                                         @if($grade)
                                             <span class="text-xs px-2 py-1 rounded-full" style="{{ $grade->average_numerical <= 3.00 ? 'background:rgba(34,197,94,0.1);color:#86efac;' : 'background:rgba(239,68,68,0.1);color:#fca5a5;' }}">

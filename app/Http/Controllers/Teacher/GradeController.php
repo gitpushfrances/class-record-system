@@ -225,7 +225,7 @@ class GradeController extends Controller
                 'average_numerical'  => $avgNum,
                 'final_grade'        => $midPct,
                 'numerical_grade'    => $avgNum,
-                'letter_grade'       => number_format($avgNum, 2),
+                'letter_grade'       => number_format($avgNum, 1),
                 'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
             ];
         }
@@ -280,7 +280,7 @@ class GradeController extends Controller
                         'average_numerical'  => $avgNum,
                         'final_grade'        => $finalPct,
                         'numerical_grade'    => $avgNum,
-                        'letter_grade'       => number_format($avgNum, 2),
+                        'letter_grade'       => number_format($avgNum, 1),
                         'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
                         'computed_by'        => auth()->id(),
                     ]
@@ -337,7 +337,7 @@ class GradeController extends Controller
                     'average_numerical'  => $avgNum,
                     'final_grade'        => $finalPct,
                     'numerical_grade'    => $avgNum,
-                    'letter_grade'       => number_format($avgNum, 2),
+                    'letter_grade'       => number_format($avgNum, 1),
                     'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
                     'computed_by'        => auth()->id(),
                     'is_locked'          => true,

@@ -89,6 +89,7 @@ class ClassController extends Controller
 
         $liveGrades        = [];
         $attendanceDisplay = [];
+        $componentGrades   = [];
 
         foreach ($enrollments as $enrollment) {
             $scores          = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
@@ -99,9 +100,11 @@ class ClassController extends Controller
                 'scores'          => $scores,
                 'final_grade'     => $finalPercentage,
                 'numerical_grade' => $numerical,
-                'letter_grade'    => number_format($numerical, 2),
+                'letter_grade'    => number_format($numerical, 1),
                 'remarks'         => $numerical <= 3.00 ? 'passed' : 'failed',
             ];
+
+            $componentGrades[$enrollment->id] = $this->calculateComponentGrades($enrollment, $config, $cutoffDate);
 
             foreach ($matrix as $comp) {
                 if ($comp['type'] !== 'attendance') continue;
@@ -120,7 +123,7 @@ class ClassController extends Controller
 
         return view('teacher.classes.record', compact(
             'section', 'subject', 'currentTerm', 'config', 'matrix',
-            'enrollments', 'liveGrades', 'attendanceDisplay'
+            'enrollments', 'liveGrades', 'attendanceDisplay', 'componentGrades'
         ));
     }
 
@@ -318,6 +321,48 @@ class ClassController extends Controller
         }
 
         return $scores;
+    }
+
+    /**
+     * Per-component grade equivalent (display only). Transmutes each
+     * component's own raw percentage independently — does NOT feed into
+     * the final composite calculation, which still runs on weighted
+     * percentages via calculateComponentScores(). Exists only so the
+     * "Grade" column can show 1.00–5.00 instead of weighted points.
+     */
+    private function calculateComponentGrades($enrollment, $config, $cutoffDate = null): array
+    {
+        $components = $config->getComponents();
+        $grades = [];
+
+        foreach ($components as $comp) {
+            $key = $comp['key'];
+            $grades[$key] = null;
+
+            if ($this->isAttendanceComponent($key)) {
+                $period = $comp['period'] ?? 'midterm';
+                $rate = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
+                if ($rate !== null) {
+                    $grades[$key] = FinalGrade::convertToNumericalGrade($rate);
+                }
+                continue;
+            }
+
+            $items = $enrollment->studentGrades->filter(
+                fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $key
+            );
+
+            if ($items->isNotEmpty()) {
+                $earned   = $items->sum(fn($g) => (float) $g->score);
+                $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
+                if ($possible > 0) {
+                    $pct = round(($earned / $possible) * 100, 2);
+                    $grades[$key] = FinalGrade::convertToNumericalGrade($pct);
+                }
+            }
+        }
+
+        return $grades;
     }
 
     private function calculatePeriodScores($enrollment, $config, string $period): array
