@@ -68,39 +68,51 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $dean->created_at->format('M d, Y') }}</td>
-                        <td class="px-6 py-4 space-x-2">
-                            @if($dean->status === 'pending_review')
-                                <form action="{{ route('admin.deans.approve-request', $dean) }}" method="POST" class="inline-flex items-center gap-1">
-                                    @csrf
-                                    <select name="role" required class="px-2 py-1 text-xs border border-gray-300 rounded">
-                                        <option value="">Assign role…</option>
-                                        @foreach($managedRoles as $role)
-                                            <option value="{{ $role }}">{{ ucwords(str_replace('_', ' ', $role)) }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="text-green-600 hover:text-green-900">Approve</button>
-                                </form>
-                                <form action="{{ route('admin.deans.reject-request', $dean) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Reject this registration request?')">Reject</button>
-                                </form>
-                            @else
-                                <a href="{{ route('admin.deans.edit', $dean) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
-
-                                @if($dean->status === 'active')
-                                    <form action="{{ route('admin.deans.deactivate', $dean) }}" method="POST" class="inline">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                @if($dean->status === 'pending_review')
+                                    <form action="{{ route('admin.deans.approve-request', $dean) }}" method="POST" class="inline-flex items-center gap-1">
                                         @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Deactivate this account?')">Deactivate</button>
+                                        <select name="role" required class="px-2 py-1 text-xs border border-gray-300 rounded">
+                                            <option value="">Assign role…</option>
+                                            @foreach($managedRoles as $role)
+                                                <option value="{{ $role }}">{{ ucwords(str_replace('_', ' ', $role)) }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="submit" title="Approve" class="p-1.5 text-green-600 rounded hover:bg-green-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.deans.reject-request', $dean) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="button" title="Reject" class="p-1.5 text-red-600 rounded hover:bg-red-50" onclick="confirmAction(this.closest('form'), 'Reject this registration request?', 'This cannot be undone.', 'warning')">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                        </button>
                                     </form>
                                 @else
-                                    <form action="{{ route('admin.deans.activate', $dean) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="text-green-600 hover:text-green-900">Activate</button>
-                                    </form>
+                                    <a href="{{ route('admin.deans.edit', $dean) }}" title="Edit" class="p-1.5 text-blue-600 rounded hover:bg-blue-50 inline-flex">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </a>
+
+                                    @if($dean->status === 'active')
+                                        <form action="{{ route('admin.deans.deactivate', $dean) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="button" title="Deactivate" class="p-1.5 text-red-600 rounded hover:bg-red-50" onclick="confirmAction(this.closest('form'), 'Deactivate this account?', 'This account will lose access until reactivated.', 'warning')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form action="{{ route('admin.deans.activate', $dean) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" title="Activate" class="p-1.5 text-green-600 rounded hover:bg-green-50">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
-                            @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -116,5 +128,23 @@
         </div>
     </div>
 </div>
+
+<script>
+    function confirmAction(form, title, text, icon = 'warning') {
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: icon,
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, continue',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+</script>
 
 </x-sidebar-layout>

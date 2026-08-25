@@ -847,6 +847,23 @@ f
 - Registered as `no.cache` alias in `Kernel.php`, applied to all four role-based route groups (`admin`, `dean`, `teacher`, `program-head`) alongside existing `auth`/`status`/`role` middleware; profile routes left unchanged
 - Verified via `route:list -v` that the middleware is correctly attached; browser back-button and direct-URL-after-logout behavior confirmed via manual test
 
+## QA FIXES & PATCHES — August 26, 2026
+
+### Session 419 (Page Expired) — Root Cause Identified, Not a Code Bug
+- Investigated client-reported "Page Expired" on Logout — traced to normal Laravel behavior: a browser tab left open past the session's 120-minute lifetime carries a stale CSRF token baked into the already-loaded page, so any form submit (Logout included) fails the token check and shows 419
+- Fixed: `App\Exceptions\Handler@register()` gained a `renderable()` handler for `TokenMismatchException` that redirects to `login` with a flash message, instead of showing the raw 419 error page — applies app-wide to any future stale-tab submission, not just Logout
+
+### Super Admin Accounts — Role-Switching from Edit Form (NEW FEATURE)
+- Root cause: `admin.deans.edit`/`update()` allowed changing department/program but never role itself — an account created as one role could not be reassigned to another without manual DB edits
+- Added a `role` dropdown to `admin/deans/edit.blade.php`, with Department/Program fields shown or hidden client-side based on the selected role (Program field now also shows for Teacher, not just Program Head, since Teachers can be scoped to a program)
+- `UserController@update()` now validates and applies the submitted `role`, with existing one-Dean-per-department and one-Program-Head-per-program checks re-run against the *new* role, not the account's prior one
+- Real bug caught and fixed during this work: the app's route-protection middleware (`role:dean`, `role:teacher`, etc.) is Spatie-backed, but `update()` was only writing the plain `role` column — a switched account's actual route access wouldn't have matched what the edit form showed. Fixed by adding `$dean->syncRoles([$validated['role']])` alongside the column update, keeping both in sync. Confirmed via tinker that all four Spatie roles (`dean`, `program_head`, `super_admin`, `teacher`) already exist as seeded rows, so `syncRoles()` is safe to call without a `RoleDoesNotExist` risk
+- Fixed a self-inflicted regression from mid-session patch drift: a duplicate `<script>` block (redeclaring `programsData`/`currentProgramId`, causing a JS crash) and a literal duplicate `</x-sidebar-layout>` closing tag (causing a PHP `ParseError: unexpected token "endif"`) were both introduced by an incremental find/replace against a stale copy of the file — resolved by reviewing the full file directly rather than continuing to patch blind
+
+### Admin Accounts Table — Actions Column UI/UX Overhaul
+- Text links (Edit / Deactivate / Activate / Approve / Reject) converted to icon buttons (inline SVG, no new package dependency), then iterated per feedback into colored icon+label pills (blue/red/green tint matching action type) for clearer at-a-glance scanning without needing hover tooltips
+- Native browser `confirm()` on Deactivate and Reject replaced with a SweetAlert2 modal (`confirmAction()` helper), matching the confirmation pattern already used elsewhere in the app (Students, Enrollments, Assignments)
+
 ## FEATURE REQUEST — Admin Assignments Drill-Down View (Planned)
 
 - Client requested a new Super Admin tab, separate from the existing Accounts and Departments pages, showing a 3-level visual drill-down: Departments (with assigned Dean) → click in → Programs within that department (with assigned Program Head) → click in → Sections within that program (with Teachers and Subjects assigned per class)
@@ -880,6 +897,6 @@ f
 
 ---
 
-**Last Updated:** August 21, 2026  
+**Last Updated:** August 26, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

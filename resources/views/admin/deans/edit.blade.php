@@ -20,6 +20,16 @@
                             <x-input-error :messages="$errors->get('email')" class="mt-2" />
                         </div>
                         <div class="mb-4">
+                            <x-input-label for="role" :value="__('Role')" />
+                            <select id="role" name="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
+                                @foreach($managedRoles as $role)
+                                    <option value="{{ $role }}" {{ old('role', $user->role) === $role ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $role)) }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('role')" class="mt-2" />
+                        </div>
+
+                        <div class="mb-4">
                             <x-input-label for="department_id" :value="__('Department')" />
                             <select id="department_id" name="department_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
                                 <option value="">Unassigned</option>
@@ -27,21 +37,17 @@
                                     <option value="{{ $department->id }}" {{ old('department_id', $user->department_id) == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
                                 @endforeach
                             </select>
-                            @if($user->role === 'dean')
-                                <p class="mt-1 text-xs text-gray-500">Only one Dean can be assigned per department — assigning here will unassign any existing Dean from that department.</p>
-                            @endif
+                            <p id="dean-department-note" class="mt-1 text-xs text-gray-500" style="display:none;">Only one Dean can be assigned per department — assigning here will unassign any existing Dean from that department.</p>
                             <x-input-error :messages="$errors->get('department_id')" class="mt-2" />
                         </div>
-                        @if($user->role === 'program_head')
-                            <div class="mb-4">
-                                <x-input-label for="program_id" :value="__('Program')" />
-                                <select id="program_id" name="program_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
-                                    <option value="">Select department first</option>
-                                </select>
-                                <p class="mt-1 text-xs text-gray-500">Only one Program Head can be assigned per program.</p>
-                                <x-input-error :messages="$errors->get('program_id')" class="mt-2" />
-                            </div>
-                        @endif
+                        <div class="mb-4" id="program-field" style="display:none;">
+                            <x-input-label for="program_id" :value="__('Program')" />
+                            <select id="program_id" name="program_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
+                                <option value="">Select department first</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Only one Program Head can be assigned per program.</p>
+                            <x-input-error :messages="$errors->get('program_id')" class="mt-2" />
+                        </div>
 
                         <div class="mb-4">
                             <x-input-label for="password" :value="__('New Password (leave blank to keep current)')" />
@@ -60,7 +66,6 @@
                         </div>
                     </form>
 
-@if($user->role === 'program_head')
 <script>
     const programsData = @json($programs);
     const currentProgramId = "{{ old('program_id', $user->program_id) }}";
@@ -94,9 +99,25 @@
         });
     }
 
+    function updateFieldsForRole() {
+        const role = document.getElementById('role').value;
+        const programField = document.getElementById('program-field');
+        const deanNote = document.getElementById('dean-department-note');
+
+        if (role === 'program_head' || role === 'teacher') {
+            programField.style.display = '';
+            populateProgramOptions();
+        } else {
+            programField.style.display = 'none';
+            document.getElementById('program_id').value = '';
+        }
+
+        deanNote.style.display = (role === 'dean') ? '' : 'none';
+    }
+
+    document.getElementById('role').addEventListener('change', updateFieldsForRole);
     document.getElementById('department_id').addEventListener('change', populateProgramOptions);
-    document.addEventListener('DOMContentLoaded', populateProgramOptions);
+    document.addEventListener('DOMContentLoaded', updateFieldsForRole);
 </script>
-@endif
 
 </x-sidebar-layout>

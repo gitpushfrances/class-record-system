@@ -51,9 +51,14 @@ class StudentController extends Controller
             'email'        => 'nullable|email|unique:students,email',
         ]);
 
-        $validated['program_id']     = $programId;
-        $validated['student_number'] = $generator->generate($programId);
-        $validated['status']         = 'active';
+        $validated['program_id'] = $programId;
+        $validated['status']     = 'active';
+
+        try {
+            $validated['student_number'] = $generator->generate();
+        } catch (\App\Exceptions\NoActiveAcademicPeriodException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         Student::create($validated);
 

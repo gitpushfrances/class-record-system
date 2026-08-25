@@ -15,7 +15,7 @@
 @else
 
     @if($advisoryTerms->isNotEmpty())
-        <h2 class="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">My Advisory</h2>
+        <h2 class="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">My Advisory</h2>  
         <div class="grid grid-cols-1 gap-5 mb-8 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($advisoryTerms as $term)
                 @continue(!$term->section)

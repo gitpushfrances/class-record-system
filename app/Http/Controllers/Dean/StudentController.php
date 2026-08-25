@@ -81,7 +81,12 @@ class StudentController extends Controller
         }
 
         $validated['status'] = 'active'; // explicit — don't rely on DB default
-        $validated['student_number'] = $this->studentNumberGenerator->generate($validated['program_id']);
+
+        try {
+            $validated['student_number'] = $this->studentNumberGenerator->generate();
+        } catch (\App\Exceptions\NoActiveAcademicPeriodException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         Student::create($validated);
 
@@ -132,12 +137,6 @@ class StudentController extends Controller
             403,
             'This program does not belong to your department.'
         );
-
-        // Program (and therefore department) changed - regenerate the student number
-        // to stay consistent with the new department/program code prefix.
-        if ((int) $student->program_id !== (int) $validated['program_id']) {
-            $validated['student_number'] = $this->studentNumberGenerator->generate($validated['program_id']);
-        }
 
         $student->update($validated);
 

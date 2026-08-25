@@ -10,13 +10,9 @@ return new class extends Migration
     {
         Schema::create('student_number_counters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('department_id')->constrained()->onDelete('cascade');
-            $table->foreignId('program_id')->constrained()->onDelete('cascade');
-            $table->unsignedSmallInteger('year');
+            $table->unsignedSmallInteger('year')->unique();
             $table->unsignedInteger('last_number')->default(0);
             $table->timestamps();
-
-            $table->unique(['department_id', 'program_id', 'year']);
         });
     }
 

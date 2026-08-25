@@ -194,7 +194,12 @@ class UserController extends Controller
         $departments = Department::where('status', 'active')->orderBy('name')->get();
         $programs = Program::where('status', 'approved')->orderBy('code')->get(['id', 'code', 'name', 'department_id']);
 
-        return view('admin.deans.edit', ['user' => $dean, 'departments' => $departments, 'programs' => $programs]);
+        return view('admin.deans.edit', [
+            'user' => $dean,
+            'departments' => $departments,
+            'programs' => $programs,
+            'managedRoles' => $this->managedRoles,
+        ]);
     }
 
     public function update(Request $request, User $dean)
@@ -205,12 +210,13 @@ class UserController extends Controller
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:users,email,' . $dean->id,
             'password'      => 'nullable|string|min:8|confirmed',
+            'role'          => 'required|in:' . implode(',', $this->managedRoles),
             'department_id' => 'nullable|exists:departments,id',
             'program_id'    => 'nullable|exists:programs,id',
         ]);
 
         // Only one Dean per department - reject if already taken by someone else.
-        if ($dean->role === 'dean' && !empty($validated['department_id'])) {
+        if ($validated['role'] === 'dean' && !empty($validated['department_id'])) {
             $alreadyTaken = User::where('role', 'dean')
                 ->where('department_id', $validated['department_id'])
                 ->where('id', '!=', $dean->id)
@@ -225,7 +231,7 @@ class UserController extends Controller
 
         // Program Head: program must belong to the selected department, and only one
         // Program Head may hold a given program.
-        if ($dean->role === 'program_head' && !empty($validated['program_id'])) {
+        if ($validated['role'] === 'program_head' && !empty($validated['program_id'])) {
             $program = Program::find($validated['program_id']);
 
             if ($program && (int) $program->department_id !== (int) $validated['department_id']) {
@@ -249,10 +255,15 @@ class UserController extends Controller
         $dean->update([
             'name'          => $validated['name'],
             'email'         => $validated['email'],
+            'role'          => $validated['role'],
             'department_id' => $validated['department_id'] ?? null,
-            'program_id'    => $dean->role === 'program_head' ? ($validated['program_id'] ?? null) : $dean->program_id,
+            'program_id'    => $validated['role'] === 'program_head' ? ($validated['program_id'] ?? null) : null,
             ...(isset($validated['password']) ? ['password' => Hash::make($validated['password'])] : []),
         ]);
+
+        if (method_exists($dean, 'syncRoles')) {
+            $dean->syncRoles([$validated['role']]);
+        }
 
         return redirect()->route('admin.deans.index')->with('success', 'Account updated successfully.');
     }

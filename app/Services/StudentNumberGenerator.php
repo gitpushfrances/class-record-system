@@ -2,42 +2,38 @@
 
 namespace App\Services;
 
-use App\Models\Program;
+use App\Models\AcademicPeriod;
 use App\Models\StudentNumberCounter;
 use Illuminate\Support\Facades\DB;
 
 class StudentNumberGenerator
 {
-    public function generate(int $programId): string
+    public function generate(): string
     {
-        $program = Program::with('department')->findOrFail($programId);
-        $year = now()->year;
+        $period = AcademicPeriod::getActive();
 
-        return DB::transaction(function () use ($program, $year) {
-            $counter = StudentNumberCounter::where('department_id', $program->department_id)
-                ->where('program_id', $program->id)
-                ->where('year', $year)
+        if (!$period) {
+            throw new \App\Exceptions\NoActiveAcademicPeriodException();
+        }
+
+        $startYear = (int) explode('-', $period->school_year)[0];
+        $yy = substr((string) $startYear, -2);
+
+        return DB::transaction(function () use ($startYear, $yy) {
+            $counter = StudentNumberCounter::where('year', $startYear)
                 ->lockForUpdate()
                 ->first();
 
             if (!$counter) {
                 $counter = StudentNumberCounter::create([
-                    'department_id' => $program->department_id,
-                    'program_id'    => $program->id,
-                    'year'          => $year,
-                    'last_number'   => 0,
+                    'year'        => $startYear,
+                    'last_number' => 0,
                 ]);
             }
 
             $counter->increment('last_number');
 
-            return sprintf(
-                '%s-%s-%d-%06d',
-                $program->department->code,
-                $program->code,
-                $year,
-                $counter->last_number
-            );
+            return sprintf('%s-%04d', $yy, $counter->last_number);
         });
     }
 }
