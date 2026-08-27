@@ -864,7 +864,17 @@ f
 - Text links (Edit / Deactivate / Activate / Approve / Reject) converted to icon buttons (inline SVG, no new package dependency), then iterated per feedback into colored icon+label pills (blue/red/green tint matching action type) for clearer at-a-glance scanning without needing hover tooltips
 - Native browser `confirm()` on Deactivate and Reject replaced with a SweetAlert2 modal (`confirmAction()` helper), matching the confirmation pattern already used elsewhere in the app (Students, Enrollments, Assignments)
 
-## FEATURE REQUEST — Admin Assignments Drill-Down View (Planned)
+## QA FIXES & PATCHES — August 28, 2026
+
+### Adviser Assignment — One-Teacher-One-Section Rule Relaxed to a Warn-and-Confirm Flow (Dean and Program Head)
+- Client decision: the August 17 hard block preventing a teacher from advising more than one active section at a time was reversed in favor of a soft warning — a faculty member can legitimately advise multiple sections; the system should flag it, not forbid it
+- `Dean\SectionController@changeAdviser()` and `ProgramHead\SectionController@changeAdviser()` — both rewritten so the existing-active-advisory check (`SectionTerm::where('adviser_id', ...)->where('status', 'active')`, excluding the section's own current term) no longer returns a validation error; instead it flashes an `adviser_conflict` payload (teacher name, section id, adviser id, list of conflicting sections with term labels) back to the same page and re-renders without saving
+- Save now only proceeds once a `confirmed` flag is present on the request — first submission always runs the check; a second, explicit confirmation submission skips it and saves directly
+- `dean/sections/index.blade.php` and `program-head/sections/index.blade.php` — both gained a `session('adviser_conflict')` listener that fires a SweetAlert2 modal listing every section the teacher already advises (with a native `confirm()` fallback if the CDN fails, consistent with the existing app-wide fallback pattern), plus a hidden `confirmAdviserForm` that resubmits with `confirmed=1` when the Dean/Program Head clicks Continue
+- Conflict list UI iterated per feedback from a plain bulleted `<ul>` into individual row cards (section name bold left, term muted-gray right, scrollable past ~4 entries) with buttons recolored to match the app palette (`#c8a97e` Continue, gray Cancel) instead of SweetAlert2 defaults
+- Re-saving the same adviser on their own section still does not trigger the modal (self-exclusion via `where('id', '!=', $currentTerm->id)` preserved from the original August 17 logic)
+- No schema or route changes — same `POST .../change-adviser` endpoint in both role groups, same `SectionTerm` columns; verified via `route:list --name=change-adviser` that both routes remained correctly bound after the controller edit
+- **Not addressed this
 
 - Client requested a new Super Admin tab, separate from the existing Accounts and Departments pages, showing a 3-level visual drill-down: Departments (with assigned Dean) → click in → Programs within that department (with assigned Program Head) → click in → Sections within that program (with Teachers and Subjects assigned per class)
 - Data relationships confirmed available for this: `Department hasMany Program`, `Department->dean()`, `Program belongsTo Department`, `Program hasMany Section`, Program Head assignment via `users.program_id`, Section → SectionTerm → `section_subject_teachers` pivot (teacher-subject-per-term)
@@ -897,6 +907,6 @@ f
 
 ---
 
-**Last Updated:** August 26, 2026  
+**Last Updated:** August 28, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop

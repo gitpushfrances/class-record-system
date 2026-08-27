@@ -6,6 +6,61 @@
         </div>
     @endif
 
+    @if(session('adviser_conflict'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const conflict = @json(session('adviser_conflict'));
+
+        function proceed() {
+            document.getElementById('confirmAdviserAdviserId').value = conflict.adviser_id;
+            document.getElementById('confirmAdviserForm').action = '/program-head/sections/' + conflict.section_id + '/change-adviser';
+            document.getElementById('confirmAdviserForm').submit();
+        }
+
+        if (typeof Swal === 'undefined') {
+            const list = conflict.sections.join('\n - ');
+            if (confirm(conflict.teacher_name + ' is already the adviser for:\n - ' + list + '\n\nAssign them here as well?')) {
+                proceed();
+            }
+        } else {
+            const rows = conflict.sections.map(s => {
+                const parts = s.match(/^(.*)\s\((.*)\)$/);
+                const name = parts ? parts[1] : s;
+                const term = parts ? parts[2] : '';
+                return '<div style="display:flex;justify-content:space-between;align-items:center;' +
+                       'padding:10px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;">' +
+                       '<span style="font-weight:600;color:#1c1814;">' + name + '</span>' +
+                       '<span style="font-size:12px;color:#6b7280;">' + term + '</span>' +
+                       '</div>';
+            }).join('');
+
+            Swal.fire({
+                title: 'Already an Adviser',
+                html: '<p style="margin-bottom:14px;color:#374151;">' +
+                      '<strong>' + conflict.teacher_name + '</strong> is already advising:</p>' +
+                      '<div style="text-align:left;max-height:180px;overflow-y:auto;">' + rows + '</div>' +
+                      '<p style="margin-top:14px;color:#374151;">Assign them to this section as well?</p>',
+                icon: 'warning',
+                confirmButtonColor: '#c8a97e',
+                cancelButtonColor: '#6b7280',
+                showCancelButton: true,
+                confirmButtonText: 'Continue',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) proceed();
+            });
+        }
+    });
+    </script>
+    @endif
+
+    <form id="confirmAdviserForm" method="POST" class="hidden">
+        @csrf
+        <input type="hidden" name="confirmed" value="1">
+        <input type="hidden" name="adviser_id" id="confirmAdviserAdviserId">
+    </form>
+
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800">Sections</h2>
         <a href="{{ route('program-head.sections.create') }}" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">+ Create Section</a>

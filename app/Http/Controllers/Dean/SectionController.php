@@ -243,21 +243,28 @@ class SectionController extends Controller
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
 
-        // A teacher may only advise one section at a time. Exclude this
-        // section's own current term from the check, so re-saving the same
-        // adviser isn't blocked.
-        $alreadyAdvising = SectionTerm::where('adviser_id', $request->adviser_id)
-            ->where('status', 'active')
-            ->when($currentTerm, fn($q) => $q->where('id', '!=', $currentTerm->id))
-            ->first();
+        // A teacher can advise multiple sections. Warn first so it's a
+        // deliberate choice — skip the warning once the Dean has confirmed.
+        if (!$request->boolean('confirmed')) {
+            $existingAdvisories = SectionTerm::where('adviser_id', $request->adviser_id)
+                ->where('status', 'active')
+                ->when($currentTerm, fn($q) => $q->where('id', '!=', $currentTerm->id))
+                ->with('section')
+                ->get();
 
-        if ($alreadyAdvising) {
-            $conflictingSection = Section::find($alreadyAdvising->section_id);
-            $conflictingLabel   = $conflictingSection?->full_name ?? 'another section';
+            if ($existingAdvisories->isNotEmpty()) {
+                $teacher = User::find($request->adviser_id);
 
-            return back()
-                ->withErrors(['adviser_id' => "This teacher already advises {$conflictingLabel}. A teacher can only advise one section at a time."])
-                ->withInput();
+                return back()->with('adviser_conflict', [
+                    'section_id'   => $section->id,
+                    'adviser_id'   => $request->adviser_id,
+                    'teacher_name' => $teacher->name,
+                    'sections'     => $existingAdvisories->map(function ($term) {
+                        $label = $term->section?->full_name ?? 'Unknown section';
+                        return "{$label} ({$term->semester}, {$term->academic_year})";
+                    })->values()->all(),
+                ]);
+            }
         }
 
         if ($currentTerm) {
