@@ -42,23 +42,25 @@ class StudentController extends Controller
         $programId = auth()->user()->program_id;
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
-        $validated = $request->validate([
-            'first_name'   => 'required|string|max:255',
-            'last_name'    => 'required|string|max:255',
-            'middle_name'  => 'nullable|string|max:255',
-            'year_level'   => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
-            'student_type' => 'required|in:regular,irregular',
-            'email'        => 'nullable|email|unique:students,email',
+                $validated = $request->validate([
+            'first_name'     => 'required|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'middle_name'    => 'nullable|string|max:255',
+            'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
+            'student_type'   => 'required|in:regular,irregular',
+            'student_number' => 'required|string|max:50|regex:/^[0-9]+$/|unique:students,student_number',
+            'email'          => 'nullable|email|unique:students,email',
+        ], [
+            'student_number.regex'  => 'Student ID must contain numbers only.',
+            'student_number.unique' => 'This student ID is already used.',
         ]);
 
         $validated['program_id'] = $programId;
         $validated['status']     = 'active';
 
-        try {
-            $validated['student_number'] = $generator->generate();
-        } catch (\App\Exceptions\NoActiveAcademicPeriodException $e) {
-            return back()->withInput()->with('error', $e->getMessage());
-        }
+        // Manual student ID entry — reverted from StudentNumberGenerator per client
+        // request (Aug 29, 2026). $generator param left in the method signature
+        // unused intentionally, so this is a one-line revert to restore auto-gen.
 
         Student::create($validated);
 
@@ -85,12 +87,16 @@ class StudentController extends Controller
         );
 
         $validated = $request->validate([
-            'first_name'   => 'required|string|max:255',
-            'last_name'    => 'required|string|max:255',
-            'middle_name'  => 'nullable|string|max:255',
-            'year_level'   => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
-            'student_type' => 'required|in:regular,irregular',
-            'email'        => 'nullable|email|unique:students,email,' . $student->id,
+            'first_name'     => 'required|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'middle_name'    => 'nullable|string|max:255',
+            'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
+            'student_type'   => 'required|in:regular,irregular',
+            'student_number' => 'required|string|max:50|regex:/^[0-9]+$/|unique:students,student_number,' . $student->id,
+            'email'          => 'nullable|email|unique:students,email,' . $student->id,
+        ], [
+            'student_number.regex'  => 'Student ID must contain numbers only.',
+            'student_number.unique' => 'This student ID is already used.',
         ]);
 
         $student->update($validated);

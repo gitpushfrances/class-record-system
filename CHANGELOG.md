@@ -881,6 +881,20 @@ f
 - Not yet started — pending confirmation of exact `SectionTerm`/`AssignmentController`/`Subject` model structure (`section_subject_teachers` pivot shape, active-term scoping) before controller/view work begins
 - Planned files: new `SuperAdmin\AssignmentsController` (or similar), 3 new routes/views for each drill-down level, no changes anticipated to existing Accounts or Departments features
 
+
+## QA FIXES & PATCHES — August 30, 2026
+
+### Super Admin — Departments → Programs → Sections Drill-Down (NEW FEATURE)
+- New Admin tab: Departments index (card UI: program count, Dean, faculty count, student count) → drill into a Department for its Programs (Program Head, section count, faculty count, student count) → drill into a Program for its Sections (adviser, student count) → drill into a Section for Subjects & Teachers and a read-only Student roster (student no., name, year, section)
+- Read-only reporting layer only — no reassignment actions added here; Dean/Program Head edit flows already own Program Head/Adviser assignment elsewhere, deliberately not duplicated
+- New: `SuperAdmin\DepartmentController`, `SuperAdmin\ProgramController`; filled in previously-empty `SuperAdmin\SectionController` stub
+- New model methods: `Program::programHead()`, `Program::activeFacultyIds()`, `Program::activeStudentCount()`, `Department::activeFacultyIds()`, `Department::activeStudentCount()`, `SectionTerm::scopeActive()`
+- Routes added under existing `admin.` group: `departments.index`, `departments.show`, `programs.show`, `sections.show`, `sections.students`
+- "Students enrolled" defined consistently as active `Enrollment` (`status = enrolled`) under the section's currently `active` `SectionTerm` — not master-list program assignment
+- Bug caught during build, fixed same session: initial faculty-count queries used two different definitions per level — Department counted the raw `department_id` account field, Program counted only the subject-teacher pivot and missed advisers entirely. A teacher who was only a section adviser showed 0 faculty at Program level while counting toward Department level. Fixed by centralizing faculty counting into one shared method per model (`activeFacultyIds()`, covers both advisers and subject-teachers), called identically by both controllers — no more drift between levels
+- No new migrations — built entirely on existing schema
+
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -910,3 +924,4 @@ f
 **Last Updated:** August 28, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop
+

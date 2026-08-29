@@ -81,6 +81,20 @@ class SampleDataSeeder extends Seeder
         ]);
         echo "Sample CBA section created!\n";
 
+        // COE — third department, so Dean Sample's own department isn't left empty
+        $coe = Department::where('code', 'COE')->first();
+
+        $bsce = Program::create([
+            'department_id' => $coe->id,
+            'code'          => 'BSCE',
+            'name'          => 'BS Civil Engineering',
+            'status'        => 'approved',
+            'requested_by'  => $dean?->id,
+            'approved_by'   => $admin?->id,
+            'approved_at'   => now(),
+        ]);
+        echo "Sample COE program created!\n";
+
         // Students
 
         $students = [

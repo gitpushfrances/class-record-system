@@ -18,6 +18,9 @@ use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\ProgramHead\ProgramHeadController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuperAdmin\BackupController;
+use App\Http\Controllers\SuperAdmin\DepartmentController as AdminDepartment;
+use App\Http\Controllers\SuperAdmin\ProgramController as AdminProgram;
+use App\Http\Controllers\SuperAdmin\SectionController as AdminSection;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +71,12 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
 
     Route::patch('/deans/{dean}/deactivate', [AdminUser::class, 'deactivate'])->name('deans.deactivate');
     Route::patch('/deans/{dean}/activate', [AdminUser::class, 'activate'])->name('deans.activate');
+
+    Route::get('/departments', [AdminDepartment::class, 'index'])->name('departments.index');
+    Route::get('/departments/{department}', [AdminDepartment::class, 'show'])->name('departments.show');
+    Route::get('/departments/{department}/programs/{program}', [AdminProgram::class, 'show'])->name('programs.show');
+    Route::get('/departments/{department}/programs/{program}/sections/{section}', [AdminSection::class, 'show'])->name('sections.show');
+    Route::get('/departments/{department}/programs/{program}/sections/{section}/students', [AdminSection::class, 'students'])->name('sections.students');
 });
 
 /*

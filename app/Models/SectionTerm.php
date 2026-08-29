@@ -23,6 +23,11 @@ class SectionTerm extends Model
         'midterm_cutoff_date' => 'date',
     ];
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
     public function section()
     {
         return $this->belongsTo(Section::class);

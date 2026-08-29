@@ -56,7 +56,11 @@ class StudentController extends Controller
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'student_type'   => 'required|in:regular,irregular',
             'program_id'     => 'required|exists:programs,id',
+            'student_number' => 'required|string|max:50|regex:/^[0-9]+$/|unique:students,student_number',
             'email'          => 'nullable|email|unique:students,email',
+        ], [
+            'student_number.regex'  => 'Student ID must contain numbers only.',
+            'student_number.unique' => 'This student ID is already used.',
         ]);
 
         $program = Program::find($validated['program_id']);
@@ -82,11 +86,10 @@ class StudentController extends Controller
 
         $validated['status'] = 'active'; // explicit — don't rely on DB default
 
-        try {
-            $validated['student_number'] = $this->studentNumberGenerator->generate();
-        } catch (\App\Exceptions\NoActiveAcademicPeriodException $e) {
-            return back()->withInput()->with('error', $e->getMessage());
-        }
+        // Manual student ID entry — reverted from StudentNumberGenerator per client
+        // request (Aug 29, 2026). Generator + constructor injection left intact.
+        // To re-enable: remove the 'student_number' validation rule above and restore
+        // the try/catch block that called $this->studentNumberGenerator->generate().
 
         Student::create($validated);
 
@@ -128,7 +131,11 @@ class StudentController extends Controller
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'student_type'   => 'required|in:regular,irregular',
             'program_id'     => 'required|exists:programs,id',
+            'student_number' => 'required|string|max:50|regex:/^[0-9]+$/|unique:students,student_number,' . $student->id,
             'email'          => 'nullable|email|unique:students,email,' . $student->id,
+        ], [
+            'student_number.regex'  => 'Student ID must contain numbers only.',
+            'student_number.unique' => 'This student ID is already used.',
         ]);
 
         $program = Program::find($validated['program_id']);

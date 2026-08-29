@@ -20,14 +20,7 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-bold text-gray-700">Middle Name <span class="font-normal text-gray-400">(optional)</span></label>
-                            <input type="text" name="middle_name" value="{{ old('middle_name') }}" class="w-full px-3 py-2 border rounded">
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
-                            <div>
-                                <label class="block mb-2 text-sm font-bold text-gray-700">Year Level</label>
+                        <div class="flex gap-2">
                                 <select name="year_level" class="w-full px-3 py-2 border rounded" required>
                                     @foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $level)
                                         <option value="{{ $level }}" {{ old('year_level') == $level ? 'selected' : '' }}>{{ $level }}</option>

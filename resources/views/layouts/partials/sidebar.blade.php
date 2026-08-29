@@ -119,6 +119,12 @@
                 'label'  => 'Subjects',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('admin.departments.index'),
+                'active' => request()->routeIs('admin.departments.*') || request()->routeIs('admin.programs.*') || request()->routeIs('admin.sections.*'),
+                'icon'   => 'fa-sitemap',
+                'label'  => 'Departments',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('admin.academic.index'),
                 'active' => request()->routeIs('admin.academic.*'),
                 'icon'   => 'fa-calendar-days',
