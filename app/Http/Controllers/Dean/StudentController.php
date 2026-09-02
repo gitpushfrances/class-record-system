@@ -5,14 +5,10 @@ namespace App\Http\Controllers\Dean;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\Program;
-use App\Services\StudentNumberGenerator;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    public function __construct(protected StudentNumberGenerator $studentNumberGenerator)
-    {
-    }
     public function index(Request $request)
     {
         $departmentId = auth()->user()->department_id;
@@ -85,11 +81,6 @@ class StudentController extends Controller
         }
 
         $validated['status'] = 'active'; // explicit — don't rely on DB default
-
-        // Manual student ID entry — reverted from StudentNumberGenerator per client
-        // request (Aug 29, 2026). Generator + constructor injection left intact.
-        // To re-enable: remove the 'student_number' validation rule above and restore
-        // the try/catch block that called $this->studentNumberGenerator->generate().
 
         Student::create($validated);
 

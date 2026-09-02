@@ -4,7 +4,6 @@ namespace App\Http\Controllers\ProgramHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
-use App\Services\StudentNumberGenerator;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -37,12 +36,12 @@ class StudentController extends Controller
         return view('program-head.students.create');
     }
 
-    public function store(Request $request, StudentNumberGenerator $generator)
+    public function store(Request $request)
     {
         $programId = auth()->user()->program_id;
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
-                $validated = $request->validate([
+        $validated = $request->validate([
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
             'middle_name'    => 'nullable|string|max:255',
@@ -57,10 +56,6 @@ class StudentController extends Controller
 
         $validated['program_id'] = $programId;
         $validated['status']     = 'active';
-
-        // Manual student ID entry — reverted from StudentNumberGenerator per client
-        // request (Aug 29, 2026). $generator param left in the method signature
-        // unused intentionally, so this is a one-line revert to restore auto-gen.
 
         Student::create($validated);
 

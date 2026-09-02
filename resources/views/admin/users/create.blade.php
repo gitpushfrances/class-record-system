@@ -85,8 +85,9 @@
 
     function toggleDepartmentField() {
         const role = document.getElementById('roleSelect').value;
-        document.getElementById('programField').style.display = (role === 'program_head') ? 'block' : 'none';
-        if (role === 'program_head') populateProgramOptions();
+        const showProgram = (role === 'program_head' || role === 'teacher');
+        document.getElementById('programField').style.display = showProgram ? 'block' : 'none';
+        if (showProgram) populateProgramOptions();
     }
 
     function populateProgramOptions() {

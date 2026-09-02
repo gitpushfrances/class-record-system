@@ -41,7 +41,7 @@
 
                         <div class="mb-4">
                             <label class="block mb-2 text-sm font-bold text-gray-700">Student Number</label>
-                            <input type="text" name="student_number" value="{{ old('student_number') }}" inputmode="numeric" pattern="[0-9]*" class="w-full px-3 py-2 font-mono border rounded" required>
+                            <input type="text" name="student_number" value="{{ old('student_number') }}" inputmode="numeric" pattern="[0-9]*" placeholder="22-1251" class="w-full px-3 py-2 font-mono border rounded" required>
                             @error('student_number')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 

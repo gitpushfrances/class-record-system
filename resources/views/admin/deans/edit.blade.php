@@ -61,7 +61,7 @@
                         </div>
 
                         <div class="flex items-center gap-4">
-                            <x-primary-button>Update Dean</x-primary-button>
+                            <x-primary-button>Update {{ ucwords(str_replace('_', ' ', $user->role)) }}</x-primary-button>
                             <a href="{{ route('admin.deans.index') }}" class="text-gray-600 hover:text-gray-900">Cancel</a>
                         </div>
                     </form>

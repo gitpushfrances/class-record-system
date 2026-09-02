@@ -54,6 +54,7 @@ class ClassController extends Controller
             : [];
 
         $availableStudents = Student::where('status', 'active')
+            ->where('program_id', $section->program_id)
             ->whereNotIn('id', $enrolledIds)
             ->orderBy('last_name')
             ->get();
@@ -187,6 +188,14 @@ class ClassController extends Controller
         $request->validate([
             'student_id' => 'required|exists:students,id',
         ]);
+
+        $student = Student::findOrFail($request->student_id);
+
+        abort_if(
+            $student->program_id !== $section->program_id,
+            403,
+            'This student does not belong to this section\'s program.'
+        );
 
         $alreadyEnrolled = Enrollment::where('section_term_id', $currentTerm->id)
             ->where('student_id', $request->student_id)

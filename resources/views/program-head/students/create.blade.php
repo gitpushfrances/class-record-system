@@ -20,7 +20,15 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-2">
+                        <div class="mb-4">
+                            <label class="block mb-2 text-sm font-bold text-gray-700">Student Number</label>
+                            <input type="text" name="student_number" value="{{ old('student_number') }}" inputmode="numeric" pattern="[0-9]*" placeholder="22-1251" class="w-full px-3 py-2 font-mono border rounded" required>
+                            @error('student_number')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
+                            <div>
+                                <label class="block mb-2 text-sm font-bold text-gray-700">Year Level</label>
                                 <select name="year_level" class="w-full px-3 py-2 border rounded" required>
                                     @foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $level)
                                         <option value="{{ $level }}" {{ old('year_level') == $level ? 'selected' : '' }}>{{ $level }}</option>
@@ -42,7 +50,7 @@
                             @error('email')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
-                        <p class="mb-4 text-xs text-gray-400">Student number will be generated automatically for your program.</p>
+
 
                         <div class="flex gap-2">
                             <button type="button" onclick="confirmSubmit()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Add Student</button>
