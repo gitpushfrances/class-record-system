@@ -895,6 +895,18 @@ f
 - No new migrations — built entirely on existing schema
 
 
+## QA FIXES & PATCHES — September 9, 2026
+
+### Student Number Format — HTML Pattern/Placeholder Mismatch (CRITICAL, client-reported: "student number di la gihap nakakaenter hin ungod nga student number hit student")
+- Root cause traced through git history: `cc87b39` (Aug 22) introduced auto-generated student numbers in format `YY-####`; `30cede2` (Aug 26) re-tied generation to the active `AcademicPeriod`, reintroducing the school-year coupling the client had already rejected once. `dd6e1e2` (Sept 3, PHASE-13) correctly removed the generator and reverted to manual entry per client decision — but left the `pattern="[0-9]*"` HTML5 attribute untouched on all four student forms while the placeholder (`22-1251`) and the client's actual required format (`00-0000`) both use a dash. Browser-native validation silently blocked any manually-typed ID containing a dash before the form could submit.
+- Confirmed via browser: typing `23-0106` triggered the native "Please match the requested format" tooltip on Program Head's create form; same defect confirmed present on Dean's create/edit and Program Head's edit forms via grep across `resources/views/`.
+- Fixed: `pattern` changed to `[0-9]{2}-[0-9]{4}` with `maxlength="7"` on all four forms (`dean/students/create.blade.php`, `dean/students/edit.blade.php`, `program-head/students/create.blade.php`, `program-head/students/edit.blade.php`); backend regex in both `Dean\StudentController` and `ProgramHead\StudentController` (`store()` and `update()`) changed from `/^[0-9]+$/` to `/^[0-9]{2}-[0-9]{4}$/`; validation message updated from "Student ID must contain numbers only." to "Student ID must follow the format 00-0000."
+- Verified end-to-end via `php artisan tinker` — direct model save/fetch round-tripped `23-0106` intact, confirming schema and unique constraint impose no additional format restriction; browser-level form tests still pending client confirmation on all four forms plus a negative-case test (wrong format, duplicate number).
+
+### Known Gap Identified (not fixed — flagged for next session)
+- `app/Services/StudentNumberGenerator.php`, `app/Exceptions/NoActiveAcademicPeriodException.php`, `app/Models/StudentNumberCounter.php`, and migration `2026_08_19_145019_create_student_number_counters_table.php` are fully orphaned dead code — zero callers remain anywhere in the codebase (confirmed via `git grep`) following the PHASE-13 revert to manual entry. Recommend deleting the three files and adding a migration to drop the `student_number_counters` table before capstone defense.
+- `Dean\StudentController@store()`'s soft-duplicate name check (`whereRaw('LOWER(first_name)...')`) queries `Student` globally with no `department_id` scope, reopening a narrower version of the cross-department data leak addressed under the Aug 20 "Department/Program Data Isolation" fix. Not blocking, but inconsistent with every other query in this controller, which is correctly scoped.
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends

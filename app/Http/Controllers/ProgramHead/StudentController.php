@@ -47,10 +47,10 @@ class StudentController extends Controller
             'middle_name'    => 'nullable|string|max:255',
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'student_type'   => 'required|in:regular,irregular',
-            'student_number' => 'required|string|max:50|regex:/^[0-9]+$/|unique:students,student_number',
+            'student_number' => ['required', 'string', 'regex:/^[0-9]{2}-[0-9]{4}$/', 'unique:students,student_number'],
             'email'          => 'nullable|email|unique:students,email',
         ], [
-            'student_number.regex'  => 'Student ID must contain numbers only.',
+            'student_number.regex'  => 'Student ID must follow the format 00-0000.',
             'student_number.unique' => 'This student ID is already used.',
         ]);
 
@@ -87,10 +87,10 @@ class StudentController extends Controller
             'middle_name'    => 'nullable|string|max:255',
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'student_type'   => 'required|in:regular,irregular',
-            'student_number' => 'required|string|max:50|regex:/^[0-9]+$/|unique:students,student_number,' . $student->id,
+            'student_number' => ['required', 'string', 'regex:/^[0-9]{2}-[0-9]{4}$/', 'unique:students,student_number,' . $student->id],
             'email'          => 'nullable|email|unique:students,email,' . $student->id,
         ], [
-            'student_number.regex'  => 'Student ID must contain numbers only.',
+            'student_number.regex'  => 'Student ID must follow the format 00-0000.',
             'student_number.unique' => 'This student ID is already used.',
         ]);
 
