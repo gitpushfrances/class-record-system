@@ -12,6 +12,7 @@ use App\Models\Section;
 use App\Models\SectionTerm;
 use App\Models\StudentGrade;
 use App\Models\Subject;
+use App\Services\GradeCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -210,28 +211,10 @@ class GradeController extends Controller
         $liveGrades  = [];
 
         foreach ($enrollments as $enrollment) {
-            $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm', $cutoffDate);
-            $finScores = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
-            $midPct    = round(array_sum($midScores), 2);
-            $finPct    = round(array_sum($finScores), 2);
-            $midNum    = FinalGrade::convertToNumericalGrade($midPct, $config->computation_method ?? 'standard');
-            $finNum    = FinalGrade::convertToNumericalGrade($finPct, $config->computation_method ?? 'standard');
-            $avgNum    = FinalGrade::averageGrade($midNum, $finNum, $config->computation_method ?? 'standard');
-
-            $liveGrades[$enrollment->id] = [
-                'midterm_percentage' => $midPct,
-                'midterm_numerical'  => $midNum,
-                'final_percentage'   => $finPct,
-                'final_numerical'    => $finNum,
-                'average_numerical'  => $avgNum,
-                'final_grade'        => $midPct,
-                'numerical_grade'    => $avgNum,
-                'letter_grade'       => number_format($avgNum, 1),
-                'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
-            ];
+            $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
         }
 
-        return view('teacher.grades.final', compact('section', 'subject', 'enrollments', 'liveGrades', 'currentTerm'));
+        return view('teacher.grades.final', compact('section', 'subject', 'config', 'enrollments', 'liveGrades', 'currentTerm'));
     }
 
 
@@ -317,35 +300,48 @@ class GradeController extends Controller
 
         $cutoffDate = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
-        foreach ($currentTerm->enrollments as $enrollment) {
-            $midScores = $this->calculatePeriodScores($enrollment, $config, 'midterm', $cutoffDate);
-            $finScores = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
-            $midPct    = round(array_sum($midScores), 2);
-            $finPct    = round(array_sum($finScores), 2);
-            $midNum    = FinalGrade::convertToNumericalGrade($midPct, $config->computation_method ?? 'standard');
-            $finNum    = FinalGrade::convertToNumericalGrade($finPct, $config->computation_method ?? 'standard');
-            $avgNum    = FinalGrade::averageGrade($midNum, $finNum, $config->computation_method ?? 'standard');
-            $allScores = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
-            $finalPct  = round(array_sum($allScores), 2);
+        $results    = [];
+        $incomplete = [];
 
-            FinalGrade::updateOrCreate(
-                ['enrollment_id' => $enrollment->id, 'subject_id' => $subject->id],
-                [
-                    'midterm_percentage' => $midPct,
-                    'midterm_numerical'  => $midNum,
-                    'final_percentage'   => $finPct,
-                    'final_numerical'    => $finNum,
-                    'average_numerical'  => $avgNum,
-                    'final_grade'        => $finalPct,
-                    'numerical_grade'    => $avgNum,
-                    'letter_grade'       => number_format($avgNum, 1),
-                    'remarks'            => $avgNum <= 3.00 ? 'passed' : 'failed',
-                    'computed_by'        => auth()->id(),
-                    'is_locked'          => true,
-                    'locked_at'          => now(),
-                ]
+        foreach ($currentTerm->enrollments as $enrollment) {
+            $result = GradeCalculator::summary($enrollment, $config, $cutoffDate);
+
+            if ($result['midterm_percentage'] === null || $result['final_percentage'] === null) {
+                $incomplete[] = $enrollment->student?->full_name ?? "Enrollment {$enrollment->id}";
+                continue;
+            }
+
+            $results[$enrollment->id] = $result;
+        }
+
+        if (!empty($incomplete)) {
+            return back()->with('submit_blocked',
+                'Cannot submit. These students have no recorded scores for the midterm or final period: '
+                . implode(', ', $incomplete) . '. Enter their scores (a score of 0 counts) and submit again.'
             );
         }
+
+        DB::transaction(function () use ($results, $subject) {
+            foreach ($results as $enrollmentId => $r) {
+                FinalGrade::updateOrCreate(
+                    ['enrollment_id' => $enrollmentId, 'subject_id' => $subject->id],
+                    [
+                        'midterm_percentage' => $r['midterm_percentage'],
+                        'midterm_numerical'  => $r['midterm_numerical'],
+                        'final_percentage'   => $r['final_percentage'],
+                        'final_numerical'    => $r['final_numerical'],
+                        'average_numerical'  => $r['average_numerical'],
+                        'final_grade'        => $r['final_grade'],
+                        'numerical_grade'    => $r['numerical_grade'],
+                        'letter_grade'       => $r['letter_grade'],
+                        'remarks'            => $r['remarks'],
+                        'computed_by'        => auth()->id(),
+                        'is_locked'          => true,
+                        'locked_at'          => now(),
+                    ]
+                );
+            }
+        });
 
         $section->gradeItemsFor($subject->id)->update(['is_locked' => true]);
 

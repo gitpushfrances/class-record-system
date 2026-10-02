@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ProgramHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\FinalGrade;
+use App\Models\GradeConfiguration;
 use App\Models\GradeVerification;
 use App\Models\SectionTerm;
 use App\Models\Subject;
@@ -34,7 +35,11 @@ class ProgramHeadController extends Controller
             ->get()
             ->groupBy(fn($fg) => $fg->enrollment_id . '-' . $fg->subject_id);
 
-        return view('program-head.dashboard', compact('sectionTerms', 'finalGrades'));
+        $configs = GradeConfiguration::whereIn('section_id', $sectionTerms->pluck('section_id'))
+            ->get()
+            ->keyBy(fn($c) => $c->section_id . '-' . $c->subject_id);
+
+        return view('program-head.dashboard', compact('sectionTerms', 'finalGrades', 'configs'));
     }
 
     public function verify(Request $request, SectionTerm $sectionTerm, Subject $subject)

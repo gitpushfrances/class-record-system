@@ -37,6 +37,12 @@
 
 
 
+@if(session('submit_blocked'))
+    <div class="px-4 py-3 mb-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50">
+        <i class="fa-solid fa-circle-xmark"></i> {{ session('submit_blocked') }}
+    </div>
+@endif
+
 <div class="flex gap-3 mb-4">
     @if(in_array($status, ['pending', 'verified']))
         <span class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 border border-gray-200 text-gray-400">
@@ -91,12 +97,10 @@ function confirmSubmitVerification() {
                     @php
                         $lg = $liveGrades[$enrollment->id];
                         $fg = $enrollment->finalGrade;
-                        $midPct  = $lg['midterm_percentage'] ?? 0;
-                        $midNum  = $lg['midterm_numerical']  ?? 5.00;
-                        $finPct  = $lg['final_percentage']   ?? 0;
-                        $finNum  = $lg['final_numerical']    ?? 5.00;
-                        $avgNum  = $lg['average_numerical']  ?? 5.00;
-                        $remarks = $avgNum <= 3.00 ? 'passed' : 'failed';
+                        $m       = $config->computation_method ?? 'standard';
+                        $pct     = fn($v) => $v !== null ? number_format($v, 2) . '%' : "\u{2014}";
+                        $fmt     = fn($v) => $v !== null ? \App\Services\GradeCalculator::formatGrade($v, $m) : "\u{2014}";
+                        $remarks = $lg['remarks'];
                     @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-3 text-gray-400">{{ $i + 1 }}</td>
@@ -104,14 +108,16 @@ function confirmSubmitVerification() {
                             <div class="font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</div>
                             <div class="font-mono text-xs text-gray-400">{{ $enrollment->student?->student_number }}</div>
                         </td>
-                        <td class="px-5 py-3 text-center text-gray-700">{{ number_format($midPct, 2) }}%</td>
-                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($midNum, 1) }}</td>
-                        <td class="px-5 py-3 text-center text-gray-700">{{ number_format($finPct, 2) }}%</td>
-                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ number_format($finNum, 1) }}</td>
-                        <td class="px-5 py-3 text-lg font-bold text-center text-gray-900">{{ number_format($avgNum, 1) }}</td>
+                        <td class="px-5 py-3 text-center text-gray-700">{{ $pct($lg['midterm_percentage']) }}</td>
+                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ $fmt($lg['midterm_numerical']) }}</td>
+                        <td class="px-5 py-3 text-center text-gray-700">{{ $pct($lg['final_percentage']) }}</td>
+                        <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ $fmt($lg['final_numerical']) }}</td>
+                        <td class="px-5 py-3 text-lg font-bold text-center text-gray-900">{{ $fmt($lg['average_numerical']) }}</td>
                         <td class="px-5 py-3 text-center">
                             @if($fg && $fg->is_locked)
                                 <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
+                            @elseif($remarks === null)
+                                <span class="text-gray-300">&mdash;</span>
                             @elseif($remarks === 'passed')
                                 <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Passed</span>
                             @else

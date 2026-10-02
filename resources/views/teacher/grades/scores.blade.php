@@ -65,7 +65,7 @@
                         </td>
                         <td class="px-6 py-3 text-xs text-center text-gray-500" id="pct-{{ $i }}">
                             @if($score !== '')
-                                {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(($score / $gradeItem->max_score) * 100, $gradeMethod), 1) }}
+                                {{ \App\Services\GradeCalculator::formatGrade(\App\Models\FinalGrade::convertToNumericalGrade(($score / $gradeItem->max_score) * 100, $gradeMethod), $gradeMethod) }}
                             @else
                                 —
                             @endif
@@ -132,7 +132,7 @@ document.querySelectorAll('.score-input').forEach(input => {
 
         if (!isNaN(val) && max > 0) {
             const pct = (val / max) * 100;
-            cell.textContent = convertToNumericalGrade(pct).toFixed(1);
+            cell.textContent = convertToNumericalGrade(pct).toFixed(gradeMethod === 'standard' ? 1 : 2);
             this.classList.toggle('border-red-400', val > max);
         } else {
             cell.textContent = '—';

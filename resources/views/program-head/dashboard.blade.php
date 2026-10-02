@@ -29,6 +29,7 @@
             $verification = $term->verifications->firstWhere('subject_id', $subject->id);
             $status = $verification->status ?? 'not_submitted';
             $teacher = \App\Models\User::find($subject->pivot->teacher_id);
+            $method  = $configs->get($term->section_id . '-' . $subject->id)?->computation_method ?? 'standard';
         @endphp
         <div style="border-bottom:1px solid rgba(200,169,126,0.08);">
             <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none"
@@ -38,7 +39,7 @@
                         {{ $subject->code }} — {{ $subject->name }}
                     </div>
                     <div class="text-xs mt-0.5" style="color:rgba(200,169,126,0.5);">
-                        Teacher: {{ $teacher->name ?? '—' }}
+                        Grading: {{ \App\Models\FinalGrade::COMPUTATION_METHODS[$method] ?? 'Standard conversion table' }} &bull; Teacher: {{ $teacher->name ?? '—' }}
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -94,9 +95,9 @@
                                         <div class="text-xs" style="color:rgba(200,169,126,0.4);">{{ $enrollment->student->student_number ?? '' }}</div>
                                     </td>
                                     <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade ? number_format($grade->midterm_percentage, 1).'%' : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? number_format($grade->midterm_numerical, 1) : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? \App\Services\GradeCalculator::formatGrade($grade->midterm_numerical, $method) : '—' }}</td>
                                     <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade ? number_format($grade->final_percentage, 1).'%' : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? number_format($grade->final_numerical, 1) : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? \App\Services\GradeCalculator::formatGrade($grade->final_numerical, $method) : '—' }}</td>
                                      <td class="px-6 py-3 text-center text-sm font-bold" style="color:#c8a97e;">{{ $grade ? number_format($grade->average_numerical, 2) : '—' }}</td>
                                     <td class="px-6 py-3 text-center">
                                         @if($grade)
