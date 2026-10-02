@@ -65,6 +65,18 @@
 
     </div>
 
+    {{-- Grade computation --}}
+    <div class="p-5 mt-6 rounded-xl" style="background: #211a12; border: 1px solid rgba(200,169,126,0.15);">
+        <label for="computation_method" class="block mb-2 text-base font-semibold" style="color: #c8a97e;">Grade Computation</label>
+        <select name="computation_method" id="computation_method" data-saved="{{ $config?->computation_method ?? '' }}"
+                class="w-full px-3 py-2 text-sm rounded-lg sm:w-80" style="background:#1c1814; color:#f0dfc0; border:1px solid rgba(200,169,126,0.3);">
+            @foreach(\App\Models\FinalGrade::COMPUTATION_METHODS as $value => $label)
+                <option value="{{ $value }}" {{ ($config?->computation_method ?? 'standard') === $value ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+        <p class="mt-2 text-xs" style="color: rgba(200,169,126,0.7);">S = score obtained, TS = total score. Recorded scores are never changed; switching only changes how grades are calculated. You can change this until you submit for verification.</p>
+    </div>
+
     {{-- Validation error banner --}}
     <div id="configErrorBox" class="mt-4" style="display:none; padding:12px 16px; border-radius:10px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; font-size: 13px;">
         <i class="fas fa-triangle-exclamation" style="margin-right:6px;"></i>
@@ -274,6 +286,14 @@ document.getElementById('configForm').addEventListener('submit', function (e) {
     if (blank) {
         e.preventDefault();
         showConfigError('One or more components have a blank name. Please name every component before saving, or delete the unfinished one.');
+    } else {
+        const methodSelect = document.getElementById('computation_method');
+        const savedMethod  = methodSelect.dataset.saved;
+        if (savedMethod && savedMethod !== methodSelect.value) {
+            if (!confirm('Change grade computation?\n\nExisting grades will be recalculated using the new method. Your recorded scores will not be changed.')) {
+                e.preventDefault();
+            }
+        }
     }
 });
 

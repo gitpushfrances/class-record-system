@@ -11,6 +11,7 @@ use App\Models\Section;
 use App\Models\SectionTerm;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Services\GradeCalculator;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -93,17 +94,7 @@ class ClassController extends Controller
         $componentGrades   = [];
 
         foreach ($enrollments as $enrollment) {
-            $scores          = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
-            $finalPercentage = round(array_sum($scores), 2);
-            $numerical       = FinalGrade::convertToNumericalGrade($finalPercentage);
-
-            $liveGrades[$enrollment->id] = [
-                'scores'          => $scores,
-                'final_grade'     => $finalPercentage,
-                'numerical_grade' => $numerical,
-                'letter_grade'    => number_format($numerical, 1),
-                'remarks'         => $numerical <= 3.00 ? 'passed' : 'failed',
-            ];
+            $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
 
             $componentGrades[$enrollment->id] = $this->calculateComponentGrades($enrollment, $config, $cutoffDate);
 
@@ -156,16 +147,7 @@ class ClassController extends Controller
 
         $liveGrades = [];
         foreach ($enrollments as $enrollment) {
-            $scores    = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
-            $finalPct  = round(array_sum($scores), 2);
-            $numerical = FinalGrade::convertToNumericalGrade($finalPct);
-
-            $liveGrades[$enrollment->id] = [
-                'scores'          => $scores,
-                'final_grade'     => $finalPct,
-                'numerical_grade' => $numerical,
-                'remarks'         => $numerical <= 3.00 ? 'passed' : 'failed',
-            ];
+            $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
         }
 
         $sectionLabel = $section->program->code . '_' . $section->year_number . '-' . $section->section_letter;
@@ -352,7 +334,7 @@ class ClassController extends Controller
                 $period = $comp['period'] ?? 'midterm';
                 $rate = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
                 if ($rate !== null) {
-                    $grades[$key] = FinalGrade::convertToNumericalGrade($rate);
+                    $grades[$key] = FinalGrade::convertToNumericalGrade($rate, $config->computation_method ?? 'standard');
                 }
                 continue;
             }
@@ -366,7 +348,7 @@ class ClassController extends Controller
                 $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
                 if ($possible > 0) {
                     $pct = round(($earned / $possible) * 100, 2);
-                    $grades[$key] = FinalGrade::convertToNumericalGrade($pct);
+                    $grades[$key] = FinalGrade::convertToNumericalGrade($pct, $config->computation_method ?? 'standard');
                 }
             }
         }

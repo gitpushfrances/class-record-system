@@ -1,4 +1,5 @@
 <x-sidebar-layout>
+@php $gradeMethod = $section->gradeConfigurationFor($subject->id)?->computation_method ?? 'standard'; @endphp
 
 
 
@@ -64,7 +65,7 @@
                         </td>
                         <td class="px-6 py-3 text-xs text-center text-gray-500" id="pct-{{ $i }}">
                             @if($score !== '')
-                                {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(($score / $gradeItem->max_score) * 100), 1) }}
+                                {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(($score / $gradeItem->max_score) * 100, $gradeMethod), 1) }}
                             @else
                                 —
                             @endif
@@ -86,7 +87,14 @@
 </div>
 
 <script>
+const gradeMethod = @json($gradeMethod);
+
 function convertToNumericalGrade(percentage) {
+    if (gradeMethod === 'formula_a' || gradeMethod === 'formula_b') {
+        const ratio = Math.max(0, Math.min(1, percentage / 100));
+        const g = gradeMethod === 'formula_a' ? 5 - 4 * ratio : 4 - 3 * ratio;
+        return Math.round(g * 100) / 100;
+    }
     if (percentage >= 75 && percentage < 77) return 3.00;
     if (percentage >= 70 && percentage < 75) return 4.00;
     if (percentage < 70) return 5.00;

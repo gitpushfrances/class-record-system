@@ -14,6 +14,7 @@ class GradeConfiguration extends Model
         'section_id',
         'subject_id',
         'config_json',
+        'computation_method',
         'status',
         'approved_by',
         'approved_at',

@@ -61,10 +61,12 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         $rows[] = ['CLASS RECORD'];
         $rows[] = ['Subject: ' . $this->subject->code . ' — ' . $this->subject->name];
         $rows[] = ['Section: ' . $section->program->code . ' ' . $section->year_number . '-' . $section->section_letter . '   |   Year Level: ' . $section->year_level];
+        $method = $this->section->gradeConfigurationFor($this->subject->id)?->computation_method ?? 'standard';
         $rows[] = [
-            $this->currentTerm
+            ($this->currentTerm
                 ? $this->currentTerm->semester . '   |   A.Y. ' . $this->currentTerm->academic_year
-                : 'No active term'
+                : 'No active term')
+            . '   |   Grading: ' . (\App\Models\FinalGrade::COMPUTATION_METHODS[$method] ?? 'Standard conversion table')
         ];
         $rows[] = [];
 
@@ -108,7 +110,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         $counter      = 1;
         $columnSums   = [];
         $studentCount = 0;
-        $cutoffDate   = $this->currentTerm?->midterm_cutoff_date;
+        $cutoffDate   = \App\Models\AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         foreach ($this->enrollments as $enrollment) {
             $student  = $enrollment->student;
@@ -153,11 +155,9 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
                 }
             }
 
-            $row[] = $lg ? round($lg['final_grade'], 2) : '';
-            $row[] = $lg ? number_format($lg['numerical_grade'], 2) : '';
-            $row[] = $lg ? ucfirst($lg['remarks']) : '';
-
-            $columnSums[$colIndex] = ($columnSums[$colIndex] ?? 0) + (float) ($lg['final_grade'] ?? 0);
+            $row[] = ($lg && $lg['final_grade'] !== null) ? round($lg['final_grade'], 2) : '';
+            $row[] = ($lg && $lg['numerical_grade'] !== null) ? number_format($lg['numerical_grade'], 2) : '';
+            $row[] = ($lg && $lg['remarks'] !== null) ? ucfirst($lg['remarks']) : '';
 
             $rows[] = $row;
             $studentCount++;
@@ -181,7 +181,8 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
                 $colIndex++;
             }
         }
-        $avgRow[] = $studentCount > 0 ? round(($columnSums[$colIndex] ?? 0) / $studentCount, 2) : '';
+        $finalAvg = collect($this->liveGrades)->pluck('final_grade')->filter(fn($v) => $v !== null)->avg();
+        $avgRow[] = $finalAvg !== null ? round($finalAvg, 2) : '';
         $avgRow[] = '';
         $avgRow[] = '';
         $rows[] = $avgRow;

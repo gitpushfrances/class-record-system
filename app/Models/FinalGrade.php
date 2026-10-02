@@ -54,9 +54,30 @@ class FinalGrade extends Model
         return $this->belongsTo(User::class, 'computed_by');
     }
 
-    public static function convertToNumericalGrade($percentage)
+    public const COMPUTATION_METHODS = [
+        'standard'  => 'Standard conversion table',
+        'formula_a' => '5 − 4(S/TS)',
+        'formula_b' => '4 − 3(S/TS)',
+    ];
+
+    /** Average of the midterm and final grades. Standard keeps the 0.25 rounding; formulas keep 2 decimals. */
+    public static function averageGrade($mid, $fin, ?string $method = 'standard')
+    {
+        $avg = ((float) $mid + (float) $fin) / 2;
+        return in_array($method, ['formula_a', 'formula_b'], true) ? round($avg, 2) : round($avg * 4) / 4;
+    }
+
+    public static function convertToNumericalGrade($percentage, ?string $method = 'standard')
     {
         $percentage = (float) $percentage;
+
+        // Selectable formulas. S/TS = percentage / 100, kept between 0 and 1.
+        if ($method === 'formula_a' || $method === 'formula_b') {
+            $ratio = max(0.0, min(1.0, $percentage / 100));
+            return $method === 'formula_a'
+                ? round(5 - 4 * $ratio, 2)
+                : round(4 - 3 * $ratio, 2);
+        }
 
         // Flat zones — match Scholaro's Most Common Tertiary table exactly,
         // no interpolation (interpolating these produces a 3.99-vs-4.00

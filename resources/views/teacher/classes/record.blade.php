@@ -42,7 +42,8 @@
     @foreach($config->getComponents() as $comp)
         <span>{{ $comp['label'] }} <strong>{{ $comp['weight'] }}%</strong> <span class="text-xs text-indigo-400">({{ ucfirst($comp['period']) }})</span></span>
     @endforeach
-    <span class="ml-auto text-gray-400">{{ $enrollments->count() }} students</span>
+    <span class="ml-auto text-xs font-semibold">Grading: {{ \App\Models\FinalGrade::COMPUTATION_METHODS[$config->computation_method ?? 'standard'] ?? 'Standard conversion table' }}</span>
+    <span class="text-gray-400">{{ $enrollments->count() }} students</span>
 </div>
 
 
@@ -154,11 +155,13 @@
                         @endif
                     @endforeach
 
-                    <td class="px-3 py-3 font-bold text-center text-gray-800 border border-gray-200 bg-gray-50">{{ number_format($lg['final_grade'], 2) }}%</td>
+                    <td class="px-3 py-3 font-bold text-center text-gray-800 border border-gray-200 bg-gray-50">{{ $lg['final_grade'] !== null ? number_format($lg['final_grade'], 2) . '%' : '—' }}</td>
                     <td class="px-3 py-3 font-bold text-center text-indigo-600 border border-gray-200 bg-gray-50">{{ $lg['letter_grade'] }}</td>
                     <td class="px-3 py-3 text-center border border-gray-200 bg-gray-50">
                         @if($fg && $fg->is_locked)
                             <span class="px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
+                        @elseif($lg['remarks'] === null)
+                            <span class="text-gray-300">—</span>
                         @elseif($lg['remarks'] === 'passed')
                             <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">Passed</span>
                         @else
@@ -201,10 +204,10 @@
                 @endforeach
 
                 <td class="px-3 py-3 font-bold text-center text-gray-800 bg-gray-200 border border-gray-300">
-                    {{ number_format(collect($liveGrades)->avg('final_grade'), 2) }}%
+                    {{ collect($liveGrades)->avg('final_grade') !== null ? number_format(collect($liveGrades)->avg('final_grade'), 2) . '%' : '—' }}
                 </td>
                 <td class="px-3 py-3 font-bold text-center text-indigo-600 border border-gray-200 bg-gray-50">
-                    {{ number_format(\App\Models\FinalGrade::convertToNumericalGrade(collect($liveGrades)->avg('final_grade')), 1) }}
+                    {{ collect($liveGrades)->avg('numerical_grade') !== null ? \App\Services\GradeCalculator::formatGrade(collect($liveGrades)->avg('numerical_grade'), $config->computation_method ?? 'standard') : '—' }}
                 </td>
                 <td class="px-3 py-3 text-center bg-gray-200 border border-gray-300">
                     @php

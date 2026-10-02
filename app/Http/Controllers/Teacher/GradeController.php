@@ -35,6 +35,7 @@ class GradeController extends Controller
             'components.*.label'  => 'required|string|max:100',
             'components.*.weight' => 'required|numeric|min:0|max:100',
             'components.*.period' => 'required|in:midterm,final',
+            'computation_method'  => 'required|in:standard,formula_a,formula_b',
         ]);
 
         $components = array_values($request->input('components'));
@@ -59,7 +60,7 @@ class GradeController extends Controller
 
         GradeConfiguration::updateOrCreate(
             ['section_id' => $section->id, 'subject_id' => $subject->id],
-            ['config_json' => $components, 'status' => 'active']
+            ['config_json' => $components, 'computation_method' => $request->input('computation_method'), 'status' => 'active']
         );
 
         return redirect()->route('teacher.classes.record', [$section, $subject])
@@ -213,9 +214,9 @@ class GradeController extends Controller
             $finScores = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
             $midPct    = round(array_sum($midScores), 2);
             $finPct    = round(array_sum($finScores), 2);
-            $midNum    = FinalGrade::convertToNumericalGrade($midPct);
-            $finNum    = FinalGrade::convertToNumericalGrade($finPct);
-            $avgNum    = round(($midNum + $finNum) / 2 * 4) / 4;
+            $midNum    = FinalGrade::convertToNumericalGrade($midPct, $config->computation_method ?? 'standard');
+            $finNum    = FinalGrade::convertToNumericalGrade($finPct, $config->computation_method ?? 'standard');
+            $avgNum    = FinalGrade::averageGrade($midNum, $finNum, $config->computation_method ?? 'standard');
 
             $liveGrades[$enrollment->id] = [
                 'midterm_percentage' => $midPct,
@@ -264,9 +265,9 @@ class GradeController extends Controller
                 $finScores  = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
                 $midPct     = round(array_sum($midScores), 2);
                 $finPct     = round(array_sum($finScores), 2);
-                $midNum     = FinalGrade::convertToNumericalGrade($midPct);
-                $finNum     = FinalGrade::convertToNumericalGrade($finPct);
-                $avgNum     = round(($midNum + $finNum) / 2 * 4) / 4;
+                $midNum     = FinalGrade::convertToNumericalGrade($midPct, $config->computation_method ?? 'standard');
+                $finNum     = FinalGrade::convertToNumericalGrade($finPct, $config->computation_method ?? 'standard');
+                $avgNum     = FinalGrade::averageGrade($midNum, $finNum, $config->computation_method ?? 'standard');
                 $allScores  = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
                 $finalPct   = round(array_sum($allScores), 2);
 
@@ -321,9 +322,9 @@ class GradeController extends Controller
             $finScores = $this->calculatePeriodScores($enrollment, $config, 'final', $cutoffDate);
             $midPct    = round(array_sum($midScores), 2);
             $finPct    = round(array_sum($finScores), 2);
-            $midNum    = FinalGrade::convertToNumericalGrade($midPct);
-            $finNum    = FinalGrade::convertToNumericalGrade($finPct);
-            $avgNum    = round(($midNum + $finNum) / 2 * 4) / 4;
+            $midNum    = FinalGrade::convertToNumericalGrade($midPct, $config->computation_method ?? 'standard');
+            $finNum    = FinalGrade::convertToNumericalGrade($finPct, $config->computation_method ?? 'standard');
+            $avgNum    = FinalGrade::averageGrade($midNum, $finNum, $config->computation_method ?? 'standard');
             $allScores = $this->calculateComponentScores($enrollment, $config, $cutoffDate);
             $finalPct  = round(array_sum($allScores), 2);
 
