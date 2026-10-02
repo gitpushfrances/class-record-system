@@ -136,7 +136,7 @@
                             @endforeach
                             <td class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
                                 @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
-                                {{ $cg !== null ? number_format($cg, 1) : '—' }}
+                                {{ $cg !== null ? \App\Services\GradeCalculator::formatGrade($cg, $config->computation_method ?? 'standard') : '—' }}
                             </td>
                         @else
                             @php $ad = $attendanceDisplay[$enrollment->id][$comp['key']] ?? ['present' => 0, 'total' => 0]; @endphp
@@ -150,7 +150,7 @@
                             </td>
                             <td class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
                                 @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
-                                {{ $cg !== null ? number_format($cg, 1) : '—' }}
+                                {{ $cg !== null ? \App\Services\GradeCalculator::formatGrade($cg, $config->computation_method ?? 'standard') : '—' }}
                             </td>
                         @endif
                     @endforeach
@@ -192,13 +192,13 @@
                         @endforeach
                         <td class="px-3 py-3 text-center {{ $comp['color']['text'] }} {{ $comp['color']['bg100'] }} border {{ $comp['color']['bg200'] }}">
                             @php $classAvg = collect($componentGrades)->pluck($comp['key'])->filter(fn($v) => $v !== null)->avg(); @endphp
-                            {{ $classAvg !== null ? number_format($classAvg, 1) : '—' }}
+                            {{ $classAvg !== null ? \App\Services\GradeCalculator::formatGrade($classAvg, $config->computation_method ?? 'standard') : '—' }}
                         </td>
                     @else
                         <td class="px-3 py-3 text-center border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">—</td>
                         <td class="px-3 py-3 text-center {{ $comp['color']['text'] }} {{ $comp['color']['bg100'] }} border {{ $comp['color']['bg200'] }}">
                             @php $classAvg = collect($componentGrades)->pluck($comp['key'])->filter(fn($v) => $v !== null)->avg(); @endphp
-                            {{ $classAvg !== null ? number_format($classAvg, 1) : '—' }}
+                            {{ $classAvg !== null ? \App\Services\GradeCalculator::formatGrade($classAvg, $config->computation_method ?? 'standard') : '—' }}
                         </td>
                     @endif
                 @endforeach

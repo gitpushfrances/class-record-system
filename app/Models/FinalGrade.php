@@ -56,8 +56,8 @@ class FinalGrade extends Model
 
     public const COMPUTATION_METHODS = [
         'standard'  => 'Standard conversion table',
-        'formula_a' => '5 − 4(S/TS)',
-        'formula_b' => '4 − 3(S/TS)',
+        'formula_a' => 'Major subjects: 5 − 4(S/TS)',
+        'formula_b' => 'Minor subjects: 4 − 3(S/TS)',
     ];
 
     /** Average of the midterm and final grades. Standard keeps the 0.25 rounding; formulas keep 2 decimals. */

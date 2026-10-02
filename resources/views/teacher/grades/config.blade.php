@@ -1,10 +1,15 @@
 <x-sidebar-layout>
 
 <div class="mb-6">
-    <a href="{{ route('teacher.classes.record', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
-    <h1 class="mt-1 text-2xl font-bold" style="color: #f0dfc0;">Grade Configuration</h1>
-    <p class="mt-1 text-sm" style="color: rgba(200,169,126,0.6);">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
+    <h1 class="mt-1 text-2xl font-bold" style="color: #1c1814;">Grade Configuration</h1>
+    <p class="mt-1 text-sm" style="color: #6b5a43;">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
 </div>
+
+@if($locked)
+    <div class="px-4 py-3 mb-4 text-sm rounded-lg" style="background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.35); color: #854d0e;">
+        <i class="fa-solid fa-lock"></i> Grades for this subject are submitted for verification. The configuration is locked.
+    </div>
+@endif
 
 @if($errors->any())
     <div class="px-4 py-3 mb-4 text-sm rounded-lg" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5;">
@@ -32,6 +37,8 @@
 
 <form method="POST" action="{{ route('teacher.grades.config.store', [$section, $subject]) }}" id="configForm">
     @csrf
+
+    <fieldset @if($locked) disabled @endif style="border:0; margin:0; padding:0; min-width:0;">
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -68,12 +75,16 @@
     {{-- Grade computation --}}
     <div class="p-5 mt-6 rounded-xl" style="background: #211a12; border: 1px solid rgba(200,169,126,0.15);">
         <label for="computation_method" class="block mb-2 text-base font-semibold" style="color: #c8a97e;">Grade Computation</label>
+        <div style="position:relative; max-width:380px;">
         <select name="computation_method" id="computation_method" data-saved="{{ $config?->computation_method ?? '' }}"
-                class="w-full px-3 py-2 text-sm rounded-lg sm:w-80" style="background:#1c1814; color:#f0dfc0; border:1px solid rgba(200,169,126,0.3);">
+                class="w-full px-3 py-2 text-sm rounded-lg" style="background:#1c1814; color:#f0dfc0; border:1px solid rgba(200,169,126,0.3); appearance:none; -webkit-appearance:none; padding-right:36px; outline:none;" onfocus="this.style.boxShadow='0 0 0 2px rgba(200,169,126,0.4)'" onblur="this.style.boxShadow='none'">
             @foreach(\App\Models\FinalGrade::COMPUTATION_METHODS as $value => $label)
                 <option value="{{ $value }}" {{ ($config?->computation_method ?? 'standard') === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
+        <i class="fa-solid fa-chevron-down" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:12px; color:#c8a97e;"></i>
+        </div>
+        <p id="methodHint" class="mt-2 text-xs font-medium" style="color:#c8a97e;"></p>
         <p class="mt-2 text-xs" style="color: rgba(200,169,126,0.7);">S = score obtained, TS = total score. Recorded scores are never changed; switching only changes how grades are calculated. You can change this until you submit for verification.</p>
     </div>
 
@@ -86,7 +97,7 @@
     {{-- Submit --}}
     <div class="flex items-center justify-between mt-6">
         <div>
-            <span class="text-sm" style="color: rgba(200,169,126,0.7);">Both periods must each sum to <strong style="color: #f0dfc0;">100%</strong></span>
+            <span class="text-sm" style="color: #6b5a43;">Both periods must each sum to <strong style="color: #1c1814;">100%</strong></span>
         </div>
         <button type="submit" id="submitBtn" disabled
                 class="px-6 py-2 text-sm font-medium transition rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -95,6 +106,8 @@
         </button>
     </div>
 
+</fieldset>
+
 </form>
 
 <script>
@@ -102,7 +115,7 @@ const initialComponents = {!! json_encode($components) !!};
 initialComponents.forEach(c => { if (typeof c.editing === 'undefined') c.editing = false; });
 let rowCounter = initialComponents.length;
 
-const ROW_GRID = 'display:grid; grid-template-columns: 1fr 84px 22px 34px 34px; align-items:center; column-gap:8px;';
+const ROW_GRID = 'display:grid; grid-template-columns: 1fr 34px 84px 22px 34px; align-items:center; column-gap:8px;';
 
 function showConfigError(msg) {
     const box = document.getElementById('configErrorBox');
@@ -141,9 +154,9 @@ function makeRow(comp, idx) {
                 <input type="hidden" name="components[${idx}][period]" value="${comp.period}">
                 <input type="hidden" name="components[${idx}][label]" value="${comp.label}">
                 <span class="text-sm font-medium truncate" style="color: #f0dfc0;">${comp.label}</span>
+                <span></span>
                 ${weightInput(idx, comp.weight)}
                 <span class="text-center" style="font-size:11px; color: rgba(200,169,126,0.45);">%</span>
-                <span></span>
                 ${iconBtn('fa-trash', '#f87171', 'rgba(239,68,68,0.1)', 'removeRow(this)', 'Delete')}
             </div>
         `;
@@ -158,9 +171,9 @@ function makeRow(comp, idx) {
                        value="${comp.label}" placeholder="Component name"
                        class="w-full text-sm rounded-lg"
                        style="height:34px; padding:0 10px; background: rgba(200,169,126,0.07); border: 1px solid rgba(200,169,126,0.2); color: #f0dfc0;">
+                ${iconBtn('fa-check', '#86efac', 'rgba(34,197,94,0.14)', 'confirmRow(this)', 'Confirm')}
                 ${weightInput(idx, comp.weight)}
                 <span class="text-center" style="font-size:11px; color: rgba(200,169,126,0.45);">%</span>
-                ${iconBtn('fa-check', '#86efac', 'rgba(34,197,94,0.14)', 'confirmRow(this)', 'Confirm')}
                 ${iconBtn('fa-trash', '#f87171', 'rgba(239,68,68,0.1)', 'removeRow(this)', 'Delete')}
             </div>
         `;
@@ -173,9 +186,9 @@ function makeRow(comp, idx) {
             <input type="hidden" name="components[${idx}][label]" value="${comp.label}">
             <input type="hidden" name="components[${idx}][weight]" value="${comp.weight}">
             <span class="text-sm font-medium truncate" style="color: #f0dfc0;">${comp.label}</span>
+            ${iconBtn('fa-pen', '#c8a97e', 'rgba(200,169,126,0.12)', 'editRow(this)', 'Edit')}
             <span class="text-right" style="font-size:14px; color: #f0dfc0; padding-right:4px;">${comp.weight}</span>
             <span class="text-center" style="font-size:11px; color: rgba(200,169,126,0.45);">%</span>
-            ${iconBtn('fa-pen', '#c8a97e', 'rgba(200,169,126,0.12)', 'editRow(this)', 'Edit')}
             ${iconBtn('fa-trash', '#f87171', 'rgba(239,68,68,0.1)', 'removeRow(this)', 'Delete')}
         </div>
     `;
@@ -296,6 +309,20 @@ document.getElementById('configForm').addEventListener('submit', function (e) {
         }
     }
 });
+
+const METHOD_HINTS = {
+    standard:  'Uses the standard conversion table. Example: 60% = 5.00 and 100% = 1.00.',
+    formula_a: 'Major subject. Grade = 5 \u2212 4(S/TS). Example: 60% = 2.60 and 100% = 1.00.',
+    formula_b: 'Minor subject. Grade = 4 \u2212 3(S/TS). Example: 60% = 2.20 and 100% = 1.00.',
+};
+
+function updateMethodHint() {
+    const select = document.getElementById('computation_method');
+    document.getElementById('methodHint').textContent = METHOD_HINTS[select.value] || '';
+}
+
+document.getElementById('computation_method').addEventListener('change', updateMethodHint);
+updateMethodHint();
 
 renderRows();
 </script>

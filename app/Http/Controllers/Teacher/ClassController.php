@@ -200,6 +200,10 @@ class ClassController extends Controller
     public function unenrollStudent(Section $section, Enrollment $enrollment)
     {
         $this->authorizeSection($section);
+
+        $currentTerm = $section->terms()->where('status', 'active')->first();
+        abort_if(!$currentTerm || (int) $enrollment->section_term_id !== (int) $currentTerm->id, 404);
+
         $enrollment->delete();
         return back()->with('success', 'Student removed from class.');
     }
@@ -240,85 +244,11 @@ class ClassController extends Controller
         return $currentTerm;
     }
 
-    private function isAttendanceComponent(string $key): bool
-    {
-        return in_array($key, ['attendance', 'attendance_f'], true);
-    }
-
-    private function calculateAttendanceRate($enrollment, string $period, $cutoffDate): ?float
-    {
-        if (!$cutoffDate) {
-            return null;
-        }
-
-        $records = $enrollment->attendanceRecords->filter(
-            fn($r) => $period === 'midterm' ? $r->date->lte($cutoffDate) : $r->date->gt($cutoffDate)
-        );
-
-        if ($records->isEmpty()) {
-            return null;
-        }
-
-        $creditSum = $records->sum(function ($r) {
-            return match ($r->status) {
-                'present', 'excused' => 1.0,
-                'late'                => 0.5,
-                default               => 0.0,
-            };
-        });
-
-        return round(($creditSum / $records->count()) * 100, 2);
-    }
-
-    private function calculateComponentScores($enrollment, $config, $cutoffDate = null): array
-    {
-        $components   = $config->getComponents();
-        $scores       = [];
-        $activeWeight = 0;
-
-        foreach ($components as $comp) {
-            $key    = $comp['key'];
-            $weight = (float) $comp['weight'];
-            $scores[$key] = 0;
-            if ($weight === 0.0) continue;
-
-            if ($this->isAttendanceComponent($key)) {
-                $period = $comp['period'] ?? 'midterm';
-                $rate   = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
-                if ($rate !== null) {
-                    $scores[$key]  = round(($rate / 100) * $weight, 2);
-                    $activeWeight += $weight;
-                }
-                continue;
-            }
-
-            $items = $enrollment->studentGrades->filter(
-                fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $key
-            );
-
-            if ($items->isNotEmpty()) {
-                $earned   = $items->sum(fn($g) => (float) $g->score);
-                $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
-                $scores[$key]  = $possible > 0 ? round(($earned / $possible) * $weight, 2) : 0;
-                $activeWeight += $weight;
-            }
-        }
-
-        if ($activeWeight > 0 && $activeWeight < 100) {
-            $factor = 100 / $activeWeight;
-            foreach ($scores as $k => $v) {
-                $scores[$k] = round($v * $factor, 2);
-            }
-        }
-
-        return $scores;
-    }
-
     /**
      * Per-component grade equivalent (display only). Transmutes each
      * component's own raw percentage independently — does NOT feed into
      * the final composite calculation, which still runs on weighted
-     * percentages via calculateComponentScores(). Exists only so the
+     * percentages via GradeCalculator. Exists only so the
      * "Grade" column can show 1.00–5.00 instead of weighted points.
      */
     private function calculateComponentGrades($enrollment, $config, $cutoffDate = null): array
@@ -330,9 +260,9 @@ class ClassController extends Controller
             $key = $comp['key'];
             $grades[$key] = null;
 
-            if ($this->isAttendanceComponent($key)) {
+            if (GradeCalculator::isAttendance($key)) {
                 $period = $comp['period'] ?? 'midterm';
-                $rate = $this->calculateAttendanceRate($enrollment, $period, $cutoffDate);
+                $rate = GradeCalculator::attendanceRate($enrollment, $period, $cutoffDate);
                 if ($rate !== null) {
                     $grades[$key] = FinalGrade::convertToNumericalGrade($rate, $config->computation_method ?? 'standard');
                 }
@@ -356,39 +286,4 @@ class ClassController extends Controller
         return $grades;
     }
 
-    private function calculatePeriodScores($enrollment, $config, string $period): array
-    {
-        $components   = $config->getComponentsByPeriod($period);
-        $scores       = [];
-        $activeWeight = 0;
-
-        foreach ($components as $comp) {
-            $key    = $comp['key'];
-            $weight = (float) $comp['weight'];
-            $scores[$key] = 0;
-            if ($weight === 0.0) continue;
-
-            $items = $enrollment->studentGrades->filter(
-                fn($g) => $g->gradeItem !== null
-                    && $g->gradeItem->component_type === $key
-                    && $g->gradeItem->period === $period
-            );
-
-            if ($items->isNotEmpty()) {
-                $earned   = $items->sum(fn($g) => (float) $g->score);
-                $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
-                $scores[$key]  = $possible > 0 ? round(($earned / $possible) * $weight, 2) : 0;
-                $activeWeight += $weight;
-            }
-        }
-
-        if ($activeWeight > 0 && $activeWeight < 100) {
-            $factor = 100 / $activeWeight;
-            foreach ($scores as $k => $v) {
-                $scores[$k] = round($v * $factor, 2);
-            }
-        }
-
-        return $scores;
-    }
 }

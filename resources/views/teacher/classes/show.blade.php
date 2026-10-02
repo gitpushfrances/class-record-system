@@ -142,8 +142,6 @@
                     <th class="px-6 py-3 text-left">#</th>
                     <th class="px-6 py-3 text-left">Student No.</th>
                     <th class="px-6 py-3 text-left">Name</th>
-                    <th class="px-6 py-3 text-center">Final Grade</th>
-                    <th class="px-6 py-3 text-center">Status</th>
                     <th class="px-6 py-3 text-center">Action</th>
                 </tr>
             </thead>
@@ -153,14 +151,7 @@
                         <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
                         <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
-                        <td class="px-6 py-3 text-center">
-                            @if($enrollment->finalGrade)
-                                <span class="font-semibold text-gray-800">{{ $enrollment->finalGrade->final_grade }}%</span>
-                                <span class="ml-1 font-bold text-indigo-600">({{ $enrollment->finalGrade->letter_grade }})</span>
-                            @else
-                                <span class="text-gray-400">—</span>
-                            @endif
-                        </td>
+                        
                         <td class="px-6 py-3 text-center">
                             <form id="removeForm-{{ $enrollment->id }}"
                                 method="POST" action="{{ route('teacher.classes.unenroll', [$section, $enrollment]) }}">
@@ -173,19 +164,7 @@
                                 </button>
                             </form>
                         </td>
-                        <td class="px-6 py-3 text-center">
-                            @if($enrollment->finalGrade)
-                                @if($enrollment->finalGrade->is_locked)
-                                    <span class="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-full">Locked</span>
-                                @elseif($enrollment->finalGrade->remarks === 'passed')
-                                    <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">Passed</span>
-                                @else
-                                    <span class="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">Failed</span>
-                                @endif
-                            @else
-                                <span class="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">Pending</span>
-                            @endif
-                        </td>
+                        
                     </tr>
                 @endforeach
             </tbody>
