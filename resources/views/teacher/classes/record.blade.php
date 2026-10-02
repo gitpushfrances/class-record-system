@@ -1,13 +1,26 @@
 <x-sidebar-layout>
 
 {{-- Header --}}
+@php
+    $passedCount = collect($liveGrades)->where('remarks', 'passed')->count();
+    $failedCount = collect($liveGrades)->where('remarks', 'failed')->count();
+@endphp
 <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
     <div>
-        <a href="{{ route('teacher.dashboard') }}" class="text-sm text-indigo-600 hover:underline">← Back to My Classes</a>
-        <h1 class="mt-1 text-2xl font-bold text-gray-800">{{ $subject->code }} — {{ $subject->name }}</h1>
+        <h1 class="text-2xl font-bold text-gray-800">{{ $subject->code }} — {{ $subject->name }}</h1>
         <p class="mt-1 text-sm text-gray-500">
             {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }} &bull; {{ $section->year_level }} &bull; {{ $currentTerm?->semester }} &bull; {{ $currentTerm?->academic_year }}
         </p>
+        <div class="flex flex-wrap items-center gap-2" style="margin-top:12px;">
+            <span class="px-2 py-1 text-xs font-semibold text-indigo-700 rounded-full bg-indigo-50">Grading: {{ \App\Models\FinalGrade::COMPUTATION_METHODS[$config->computation_method ?? 'standard'] ?? 'Standard conversion table' }}</span>
+            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-full">{{ $enrollments->count() }} {{ \Illuminate\Support\Str::plural('student', $enrollments->count()) }}</span>
+            @if($passedCount > 0)
+                <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">{{ $passedCount }} passed</span>
+            @endif
+            @if($failedCount > 0)
+                <span class="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">{{ $failedCount }} failed</span>
+            @endif
+        </div>
     </div>
     <div class="flex flex-wrap gap-2 mt-1">
         <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
@@ -37,26 +50,31 @@
     </div>
 </div>
 
-{{-- Grade Config Summary --}}
-<div class="flex flex-wrap items-center gap-4 px-5 py-3 mb-6 text-sm text-indigo-700 border border-indigo-100 bg-indigo-50 rounded-xl">
-    @foreach($config->getComponents() as $comp)
-        <span>{{ $comp['label'] }} <strong>{{ $comp['weight'] }}%</strong> <span class="text-xs text-indigo-400">({{ ucfirst($comp['period']) }})</span></span>
-    @endforeach
-    <span class="ml-auto text-xs font-semibold">Grading: {{ \App\Models\FinalGrade::COMPUTATION_METHODS[$config->computation_method ?? 'standard'] ?? 'Standard conversion table' }}</span>
-    <span class="text-gray-400">{{ $enrollments->count() }} students</span>
-</div>
+@if(collect($matrix)->where('type', 'items')->isEmpty())
+    <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg">
+        <span>No grade items yet. Components appear in this record once items are added.</span>
+        <a href="{{ route('teacher.grades.items', [$section, $subject]) }}" class="font-semibold underline">Add grade items</a>
+    </div>
+@endif
 
-
+@if($enrollments->count() > 0)
+    <div class="flex flex-wrap items-center gap-3 mb-3">
+        <input type="text" id="recordSearch" placeholder="Search student name or number..." autocomplete="off"
+               class="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+               style="width:100%; max-width:320px;">
+        <span id="recordCount" class="text-xs text-gray-400"></span>
+    </div>
+@endif
 
 {{-- Spreadsheet --}}
 <div class="overflow-x-auto bg-white border border-gray-200 shadow-sm rounded-xl">
-    <table class="text-sm border-collapse" style="min-width: max-content;">
+    <table class="w-full text-sm border-collapse" style="min-width: max-content;">
         <thead>
             {{-- Component group headers --}}
             <tr class="text-xs font-semibold text-white uppercase">
-                <th class="sticky left-0 z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[40px]">#</th>
-                <th class="sticky left-[40px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[80px]">No.</th>
-                <th class="sticky left-[120px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[180px]">Student Name</th>
+                <th rowspan="2" class="sticky left-0 z-20 px-4 py-3 text-center text-gray-500 bg-gray-50 border border-gray-200 min-w-[40px]">#</th>
+                <th rowspan="2" class="sticky left-[40px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[80px]">Stud. No.</th>
+                <th rowspan="2" class="sticky left-[120px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[180px]">Student Name</th>
 
                 @foreach($matrix as $comp)
                     @php $colspan = $comp['type'] === 'attendance' ? 2 : $comp['items']->count() + 1; @endphp
@@ -70,9 +88,7 @@
 
             {{-- Sub-headers --}}
             <tr class="text-xs text-gray-500 uppercase bg-gray-50">
-                <th class="sticky left-0 z-20 px-4 py-3 text-center border border-gray-200 bg-gray-50">#</th>
-                <th class="sticky left-[40px] z-20 px-4 py-3 text-left bg-gray-50 border border-gray-200">Stud. No.</th>
-                <th class="sticky left-[120px] z-20 px-4 py-3 text-left bg-gray-50 border border-gray-200">Name</th>
+                
 
                 @foreach($matrix as $comp)
                     @if($comp['type'] === 'items')
@@ -109,7 +125,7 @@
                     $fg = $enrollment->finalGrade;
                     $gradeMap = $enrollment->studentGrades->keyBy('grade_item_id');
                 @endphp
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 student-row" data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
                     <td class="sticky left-0 z-10 px-4 py-3 text-center text-gray-400 bg-white border border-gray-100">{{ $i + 1 }}</td>
                     <td class="sticky left-[40px] z-10 px-4 py-3 font-mono text-xs text-gray-500 bg-white border border-gray-100">
                         {{ $enrollment->student?->student_number ?? '—' }}
@@ -221,5 +237,23 @@
         @endif
     </table>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('recordSearch');
+    if (!input) return;
+    var rows  = document.querySelectorAll('tr.student-row');
+    var label = document.getElementById('recordCount');
+    input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase(), shown = 0;
+        rows.forEach(function (r) {
+            var match = q === '' || r.dataset.search.indexOf(q) !== -1;
+            r.style.display = match ? '' : 'none';
+            if (match) shown++;
+        });
+        label.textContent = q === '' ? '' : 'Showing ' + shown + ' of ' + rows.length;
+    });
+});
+</script>
 
 </x-sidebar-layout>
