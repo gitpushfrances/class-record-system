@@ -12,11 +12,10 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    // Self-registration is disabled — accounts are created by Admin/Dean only.
-    // RegisteredUserController is left intact in case this needs to be re-enabled.
-    // Route::get('register', [RegisteredUserController::class, 'create'])
-    //             ->name('register');
-    // Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::get('register', [RegisteredUserController::class, 'create'])
+                ->name('register');
+    Route::post('register', [RegisteredUserController::class, 'store'])
+                ->middleware('throttle:5,1');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
                 ->name('login');

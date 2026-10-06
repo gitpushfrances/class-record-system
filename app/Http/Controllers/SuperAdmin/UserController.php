@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -26,7 +27,7 @@ class UserController extends Controller
                 ->paginate(20)
                 ->withQueryString();
         } else {
-            $query = User::whereIn('role', $this->managedRoles)
+            $query = User::where(fn ($q) => $q->whereIn('role', $this->managedRoles)->orWhere('status', 'pending_review'))
                 ->with('department')
                 ->orderBy('created_at', 'desc');
 
@@ -44,6 +45,8 @@ class UserController extends Controller
             'managedRoles' => $this->managedRoles,
             'activeRoleFilter' => $filter,
             'pendingCount' => $pendingCount,
+            'departments' => Department::where('status', 'active')->orderBy('name')->get(),
+            'programs' => Program::where('status', 'approved')->orderBy('code')->get(['id', 'code', 'name', 'department_id']),
         ]);
     }
 
@@ -52,17 +55,82 @@ class UserController extends Controller
         abort_if($dean->status !== 'pending_review', 403);
 
         $validated = $request->validate([
-            'role' => 'required|in:' . implode(',', $this->managedRoles),
+            'role'          => 'required|in:' . implode(',', $this->managedRoles),
+            'department_id' => 'required|exists:departments,id,status,active',
+            'program_id'    => 'nullable|exists:programs,id,status,approved',
         ]);
 
-        $dean->update([
-            'role'   => $validated['role'],
-            'status' => 'active',
-        ]);
+        if ($error = $this->assignmentError($validated, $dean->id)) {
+            return back()->withInput()->withErrors($error);
+        }
+
+        DB::transaction(function () use ($dean, $validated, $request) {
+            $dean->update([
+                'role'          => $validated['role'],
+                'department_id' => $validated['department_id'],
+                'program_id'    => in_array($validated['role'], ['program_head', 'teacher'], true) ? ($validated['program_id'] ?? null) : null,
+                'status'        => 'active',
+                'approved_by'   => $request->user()->id,
+                'approved_at'   => now(),
+            ]);
+
+            $dean->syncRoles([$validated['role']]);
+        });
 
         $label = ucwords(str_replace('_', ' ', $validated['role']));
 
-        return redirect()->route('admin.deans.index')->with('success', "Request approved as {$label}.");
+        return redirect()->route('admin.deans.index')->with('success', "{$dean->name} was approved as {$label}.");
+    }
+
+    /**
+     * Role-specific assignment rules for approving a sign-up request.
+     * Returns a [field => message] array on failure, or null when valid.
+     */
+    protected function assignmentError(array $data, int $userId): ?array
+    {
+        if ($data['role'] === 'dean') {
+            $taken = User::where('role', 'dean')
+                ->where('department_id', $data['department_id'])
+                ->where('id', '!=', $userId)
+                ->exists();
+
+            return $taken
+                ? ['department_id' => 'This department is already assigned to another Dean.']
+                : null;
+        }
+
+        if ($data['role'] === 'teacher') {
+            if (empty($data['program_id'])) {
+                return null;
+            }
+            $program = Program::find($data['program_id']);
+            return (!$program || (int) $program->department_id !== (int) ($data['department_id'] ?? 0))
+                ? ['program_id' => 'Selected program does not belong to the selected department.']
+                : null;
+        }
+
+        if ($data['role'] === 'program_head') {
+            if (empty($data['program_id'])) {
+                return ['program_id' => 'A program is required for a Program Head.'];
+            }
+
+            $program = Program::find($data['program_id']);
+
+            if (!$program || (int) $program->department_id !== (int) $data['department_id']) {
+                return ['program_id' => 'Selected program does not belong to the selected department.'];
+            }
+
+            $taken = User::where('role', 'program_head')
+                ->where('program_id', $data['program_id'])
+                ->where('id', '!=', $userId)
+                ->exists();
+
+            return $taken
+                ? ['program_id' => 'This program is already assigned to another Program Head.']
+                : null;
+        }
+
+        return null;
     }
 
     public function rejectRequest(User $dean)
@@ -252,12 +320,16 @@ class UserController extends Controller
             }
         }
 
+        if ($validated['role'] === 'teacher' && ($error = $this->assignmentError($validated, $dean->id))) {
+            return back()->withInput()->withErrors($error);
+        }
+
         $dean->update([
             'name'          => $validated['name'],
             'email'         => $validated['email'],
             'role'          => $validated['role'],
             'department_id' => $validated['department_id'] ?? null,
-            'program_id'    => $validated['role'] === 'program_head' ? ($validated['program_id'] ?? null) : null,
+            'program_id'    => in_array($validated['role'], ['program_head', 'teacher'], true) ? ($validated['program_id'] ?? null) : null,
             ...(isset($validated['password']) ? ['password' => Hash::make($validated['password'])] : []),
         ]);
 

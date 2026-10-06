@@ -71,23 +71,10 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 @if($dean->status === 'pending_review')
-                                    <form action="{{ route('admin.deans.approve-request', $dean) }}" method="POST" class="inline-flex items-center gap-1">
-                                        @csrf
-                                        <select name="role" required class="px-2 py-1 text-xs border border-gray-300 rounded">
-                                            <option value="">Assign role…</option>
-                                            @foreach($managedRoles as $role)
-                                                <option value="{{ $role }}">{{ ucwords(str_replace('_', ' ', $role)) }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="submit" title="Approve" class="p-1.5 text-green-600 rounded hover:bg-green-50">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                        </button>
-                                    </form>
+                                    <button type="button" title="Review and approve" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition" data-approve-url="{{ route('admin.deans.approve-request', $dean) }}" data-name="{{ $dean->name }}" data-email="{{ $dean->email }}" data-employee-id="{{ $dean->employee_id }}" onclick="openApproveModal(this)"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Review</button>
                                     <form action="{{ route('admin.deans.reject-request', $dean) }}" method="POST" class="inline">
                                         @csrf
-                                        <button type="button" title="Reject" class="p-1.5 text-red-600 rounded hover:bg-red-50" onclick="confirmAction(this.closest('form'), 'Reject this registration request?', 'This cannot be undone.', 'warning')">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                        </button>
+                                        <button type="button" title="Reject request" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1 transition" onclick="confirmAction(this.closest('form'), 'Reject this registration request?', 'This cannot be undone.', 'warning')"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reject</button>
                                     </form>
                                 @else
                                     <a href="{{ route('admin.deans.edit', $dean) }}" title="Edit" class="p-1.5 text-blue-600 rounded hover:bg-blue-50 inline-flex">
@@ -146,5 +133,9 @@
         });
     }
 </script>
+
+@if(!$activeRoleFilter || $activeRoleFilter === 'pending_review')
+    @include('admin.deans.partials.approve-modal')
+@endif
 
 </x-sidebar-layout>

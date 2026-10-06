@@ -18,12 +18,14 @@ class RegisteredUserController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users,email',
+            'employee_id' => 'nullable|string|max:50|unique:users,employee_id',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
+            'employee_id' => $validated['employee_id'] ?? null,
             'password' => Hash::make($validated['password']),
             'role'     => null,
             'status'   => 'pending_review',

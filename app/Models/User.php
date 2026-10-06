@@ -15,6 +15,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'employee_id',
         'password',
         'role',
         'status',
@@ -104,6 +105,6 @@ class User extends Authenticatable
 
     public function isPending()
     {
-        return $this->status === 'pending';
+        return in_array($this->status, ['pending', 'pending_review'], true);
     }
 }

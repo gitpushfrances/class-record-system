@@ -907,6 +907,35 @@ f
 - `app/Services/StudentNumberGenerator.php`, `app/Exceptions/NoActiveAcademicPeriodException.php`, `app/Models/StudentNumberCounter.php`, and migration `2026_08_19_145019_create_student_number_counters_table.php` are fully orphaned dead code — zero callers remain anywhere in the codebase (confirmed via `git grep`) following the PHASE-13 revert to manual entry. Recommend deleting the three files and adding a migration to drop the `student_number_counters` table before capstone defense.
 - `Dean\StudentController@store()`'s soft-duplicate name check (`whereRaw('LOWER(first_name)...')`) queries `Student` globally with no `department_id` scope, reopening a narrower version of the cross-department data leak addressed under the Aug 20 "Department/Program Data Isolation" fix. Not blocking, but inconsistent with every other query in this controller, which is correctly scoped.
 
+## QA FIXES & PATCHES — October 7, 2026
+
+### Faculty Self-Signup Re-Enabled with Super Admin Approval (client request)
+- Closed Aug 20 because self-registered accounts had no department/program tie, reopening the isolation gap. Re-enabled with the department assigned by the Super Admin at approval, never chosen by the applicant
+- Signup collects name, email, optional employee ID, and password only; accounts are created as `role = null`, `status = pending_review`; `POST /register` throttled to 5 attempts per minute
+- New migration `2026_10_07_000000_add_employee_id_to_users_table` — `users.employee_id` (nullable, unique); `employee_id` added to `User::$fillable`
+- `User::isPending()` now includes `pending_review` — previously a pending signup logging in was told their account was "deactivated"
+- Register page rebuilt to match the login design (header, placeholders, icons, show/hide password, submit spinner)
+
+### Super Admin Accounts — Approval Modal
+- Pending signups now appear under the "All" tab as well as "Pending Requests" (`index()` previously only queried accounts that already had a role, so a `role = null` request was invisible outside its own tab)
+- Inline role dropdown replaced by a Review modal: role and department required for every role; program required for Program Head, optional for Teacher; SweetAlert confirmation (native `confirm()` fallback) before submit
+- `approveRequest()` rewritten: validates active department / approved program, enforces one Dean per department and one Program Head per program, rejects a program outside the chosen department, sets `approved_by` / `approved_at`, and syncs the Spatie role — update and role sync run in one `DB::transaction`
+- Success flash now names the approved user and role
+- Review / Reject actions restyled as labelled pills
+
+### Bug Fixes
+- `UserController@update()` was nulling a Teacher's `program_id` on every edit even though the edit form shows the field; now preserved for Teacher and Program Head, with a same-department check for Teachers
+- Stale Tailwind build — amber classes missing from the compiled CSS left the Pending Requests badge, selected tab text, and Pending Review badge unstyled; resolved with `npm run build`
+
+### Deployment Notes
+- Run `php artisan migrate` and `npm run build` on the server (`public/build` is gitignored)
+
+### Known Gaps (not fixed)
+- Rejected applicants see the "deactivated" login message and cannot re-register with the same email (`unique:users,email`)
+- Employee ID has no format validation — pending a confirmed school format
+- `storeAccount()` calls `assignRole()` only for `program_head`, while `update()` and approval sync every role
+- A Teacher's `program_id` is stored, but no query scoping teachers by program has been verified yet
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -933,7 +962,7 @@ f
 
 ---
 
-**Last Updated:** August 28, 2026  
+**Last Updated:** October 7, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop
 

@@ -96,6 +96,12 @@
 
     </form>
 
+    @if (Route::has('register'))
+        <div style="text-align:center; margin-top:1rem;">
+            <a href="{{ route('register') }}" class="link-forgot">New faculty? Request an account</a>
+        </div>
+    @endif
+
 <div class="card-foot">
         <i class="fas fa-shield-halved"></i>
         Authorized faculty and staff only
