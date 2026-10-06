@@ -66,9 +66,13 @@
         <a href="{{ route('dean.sections.create') }}" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">+ Create Section</a>
     </div>
 
-    @forelse($sections as $yearLevel => $sectionGroup)
-        <div class="mb-8">
-            <h3 class="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">{{ $yearLevel }}</h3>
+    @forelse($sections as $programCode => $sectionGroup)
+        <div class="mb-10">
+            <div class="flex items-center gap-3 pb-2 mb-4 border-b-2" style="border-color:#c8a97e;">
+                <h3 class="text-base font-bold text-gray-800">{{ $programCode }}</h3>
+                <span class="text-sm text-gray-500">{{ $sectionGroup->first()->program->name }}</span>
+                <span class="ml-auto text-xs text-gray-400">{{ $sectionGroup->count() }} {{ $sectionGroup->count() === 1 ? 'section' : 'sections' }}</span>
+            </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @foreach($sectionGroup as $section)
                     @php

@@ -24,6 +24,15 @@ class StudentController extends Controller
         $students = Student::with('program')
             ->whereHas('program', fn($q) => $q->where('department_id', $departmentId))
             ->when($request->filled('program_id'), fn($q) => $q->where('program_id', $request->get('program_id')))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = '%' . trim($request->get('search')) . '%';
+                $q->where(function ($q2) use ($term) {
+                    $q2->where('student_number', 'like', $term)
+                       ->orWhere('email', 'like', $term)
+                       ->orWhereRaw("CONCAT_WS(' ', first_name, middle_name, last_name) LIKE ?", [$term])
+                       ->orWhereRaw("CONCAT_WS(' ', last_name, first_name, middle_name) LIKE ?", [$term]);
+                });
+            })
             ->orderBy($sort, $direction)
             ->paginate(20)
             ->appends($request->query());

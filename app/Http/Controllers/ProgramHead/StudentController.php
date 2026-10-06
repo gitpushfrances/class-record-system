@@ -22,6 +22,15 @@ class StudentController extends Controller
             ->when($request->filled('year_level'), fn($q) => $q->where('year_level', $request->get('year_level')))
             ->when($request->get('section_id') === 'unassigned', fn($q) => $q->whereDoesntHave('enrollments.sectionTerm'))
             ->when($request->filled('section_id') && $request->get('section_id') !== 'unassigned', fn($q) => $q->whereHas('enrollments.sectionTerm', fn($q2) => $q2->where('section_id', $request->get('section_id'))))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = '%' . trim($request->get('search')) . '%';
+                $q->where(function ($q2) use ($term) {
+                    $q2->where('student_number', 'like', $term)
+                       ->orWhere('email', 'like', $term)
+                       ->orWhereRaw("CONCAT_WS(' ', first_name, middle_name, last_name) LIKE ?", [$term])
+                       ->orWhereRaw("CONCAT_WS(' ', last_name, first_name, middle_name) LIKE ?", [$term]);
+                });
+            })
             ->orderBy($sort, $direction)
             ->paginate(20)
             ->appends($request->query());

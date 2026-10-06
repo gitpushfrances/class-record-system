@@ -12,13 +12,30 @@
         </a>
     </div>
 
-    <form method="GET" class="flex items-center gap-3 mb-4">
-        <select name="program_id" onchange="this.form.submit()" class="px-3 py-2 text-sm border rounded-lg" style="border-color:#d1d5db;">
+    <style>
+        .filter-select { height:38px; padding:0 2.25rem 0 .75rem; font-size:.875rem; border:1px solid #d1d5db; border-radius:.5rem; background-color:#fff; background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2020%2020%27%20fill=%27none%27%3E%3Cpath%20d=%27M6%208l4%204%204-4%27%20stroke=%27%236b7280%27%20stroke-width=%271.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3C/svg%3E); background-repeat:no-repeat; background-position:right .75rem center; background-size:1rem; -webkit-appearance:none; appearance:none; cursor:pointer; }
+        .filter-select.is-active { border-color:#c8a97e; background-color:#fbf6ee; font-weight:600; }
+        .filter-select:focus { outline:none; border-color:#c8a97e; box-shadow:0 0 0 2px rgba(200,169,126,.25); }
+    </style>
+    <form method="GET" class="mb-4" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;">
+        <select name="program_id" onchange="this.form.submit()" class="filter-select {{ request()->filled('program_id') ? 'is-active' : '' }}">
             <option value="">All Programs</option>
             @foreach($programs as $program)
                 <option value="{{ $program->id }}" {{ request('program_id') == $program->id ? 'selected' : '' }}>{{ $program->code }}</option>
             @endforeach
         </select>
+        <div style="position:relative; flex:1 1 260px; max-width:360px;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:12px; color:#9ca3af; pointer-events:none;"></i>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, ID, or email…" autocomplete="off"
+                   class="text-sm border rounded-lg" style="width:100%; height:38px; padding:0 12px 0 34px; border-color:#d1d5db; background:#fff;">
+        </div>
+        <button type="submit" class="text-sm font-semibold rounded-lg" style="height:38px; padding:0 16px; background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">Search</button>
+        @if(request()->filled('search') || request()->filled('program_id'))
+            <a href="{{ route('dean.students.index') }}" class="text-sm text-gray-500 hover:text-gray-800" style="display:inline-flex; align-items:center; gap:4px;">
+                <i class="text-xs fa-solid fa-xmark"></i> Clear
+            </a>
+        @endif
+        <span class="text-xs text-gray-400" style="margin-left:auto;">{{ $students->total() }} {{ $students->total() === 1 ? 'student' : 'students' }}</span>
         <input type="hidden" name="sort" value="{{ $sort }}">
         <input type="hidden" name="direction" value="{{ $direction }}">
     </form>

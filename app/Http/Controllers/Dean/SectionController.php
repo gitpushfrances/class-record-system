@@ -25,7 +25,8 @@ class SectionController extends Controller
             ->orderBy('year_level')
             ->orderBy('section_letter')
             ->get()
-            ->groupBy('year_level');
+            ->groupBy(fn($section) => $section->program->code)
+            ->sortKeys();
 
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
