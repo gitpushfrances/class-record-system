@@ -13,7 +13,6 @@
                 <dl class="p-3 space-y-1 text-sm border border-gray-200 rounded-md bg-gray-50">
                     <div class="flex gap-2"><dt class="w-24 text-gray-500">Name</dt><dd id="approveName" class="font-medium text-gray-900"></dd></div>
                     <div class="flex gap-2"><dt class="w-24 text-gray-500">Email</dt><dd id="approveEmail" class="font-medium text-gray-900"></dd></div>
-                    <div class="flex gap-2"><dt class="w-24 text-gray-500">Employee ID</dt><dd id="approveEmployeeId" class="font-medium text-gray-900"></dd></div>
                 </dl>
             </div>
 
@@ -125,7 +124,6 @@
         form.action = btn.dataset.approveUrl;
         document.getElementById('approveName').textContent = btn.dataset.name;
         document.getElementById('approveEmail').textContent = btn.dataset.email;
-        document.getElementById('approveEmployeeId').textContent = btn.dataset.employeeId || '—';
         submitBtn.disabled = false;
         syncFields();
         modal.classList.remove('hidden');

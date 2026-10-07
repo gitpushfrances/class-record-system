@@ -911,8 +911,8 @@ f
 
 ### Faculty Self-Signup Re-Enabled with Super Admin Approval (client request)
 - Closed Aug 20 because self-registered accounts had no department/program tie, reopening the isolation gap. Re-enabled with the department assigned by the Super Admin at approval, never chosen by the applicant
-- Signup collects name, email, optional employee ID, and password only; accounts are created as `role = null`, `status = pending_review`; `POST /register` throttled to 5 attempts per minute
-- New migration `2026_10_07_000000_add_employee_id_to_users_table` — `users.employee_id` (nullable, unique); `employee_id` added to `User::$fillable`
+- Signup collects name, email, and password only; accounts are created as `role = null`, `status = pending_review`; `POST /register` throttled to 5 attempts per minute
+- Employee ID was briefly added (`users.employee_id`) and then removed at client request — see "Employee ID Removed" below
 - `User::isPending()` now includes `pending_review` — previously a pending signup logging in was told their account was "deactivated"
 - Register page rebuilt to match the login design (header, placeholders, icons, show/hide password, submit spinner)
 
@@ -930,9 +930,12 @@ f
 ### Deployment Notes
 - Run `php artisan migrate` and `npm run build` on the server (`public/build` is gitignored)
 
+### Employee ID Removed (client request)
+- Dropped `users.employee_id` with a new forward migration `2026_10_07_100000_drop_employee_id_from_users_table` (the add migration was already pushed, so it was left in place instead of being edited)
+- Removed from signup validation and form, `User::$fillable`, and the Super Admin Review modal / Review button
+
 ### Known Gaps (not fixed)
 - Rejected applicants see the "deactivated" login message and cannot re-register with the same email (`unique:users,email`)
-- Employee ID has no format validation — pending a confirmed school format
 - `storeAccount()` calls `assignRole()` only for `program_head`, while `update()` and approval sync every role
 - A Teacher's `program_id` is stored, but no query scoping teachers by program has been verified yet
 

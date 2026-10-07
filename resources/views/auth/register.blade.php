@@ -61,28 +61,6 @@
             @enderror
         </div>
 
-        {{-- Employee ID (optional) --}}
-        <div class="field">
-            <label class="field-label" for="employee_id">Employee ID <span style="opacity:.6; font-weight:400;">(optional)</span></label>
-            <div class="field-wrap">
-                <i class="fas fa-id-badge field-ico"></i>
-                <input
-                    id="employee_id"
-                    class="field-input"
-                    type="text"
-                    name="employee_id"
-                    value="{{ old('employee_id') }}"
-                    placeholder="Leave blank if not yet issued"
-                    maxlength="50"
-                    autocomplete="off"
-                />
-            </div>
-            @error('employee_id')
-                <div class="field-err">
-                    <i class="fas fa-circle-exclamation"></i> {{ $message }}
-                </div>
-            @enderror
-        </div>
 
         {{-- Password --}}
         <div class="field">
