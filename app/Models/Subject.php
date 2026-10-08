@@ -25,6 +25,7 @@ class Subject extends Model
     ];
 
     protected $casts = [
+        'units' => 'float',
         'approved_at' => 'datetime',
     ];
 

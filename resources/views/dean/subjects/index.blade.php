@@ -19,10 +19,18 @@
     @if($pendingFromProgramHeads->isNotEmpty())
     <div class="mb-8">
         <h2 class="mb-3 text-sm font-semibold text-gray-700 uppercase">Pending Approval ({{ $pendingFromProgramHeads->count() }})</h2>
+        <form method="POST" action="{{ route('dean.subjects.approve-selected') }}" id="bulkApproveForm" class="flex items-center justify-between mb-3">
+            @csrf
+            <label class="flex items-center gap-2 text-xs font-medium text-gray-600"><input type="checkbox" id="selectAll"> Select all</label>
+            <button type="submit" id="bulkApproveBtn" disabled class="px-3 py-1.5 text-xs font-medium text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed" style="background:#059669;">
+                <i class="fa-solid fa-check-double"></i> Approve Selected (<span id="bulkCount">0</span>)
+            </button>
+        </form>
         <div class="space-y-3">
             @foreach($pendingFromProgramHeads as $subject)
             <div class="flex items-center justify-between p-4 border rounded-xl" style="border-color:#fde68a; background:#fffbeb;">
-                <div>
+                <input type="checkbox" name="ids[]" value="{{ $subject->id }}" form="bulkApproveForm" class="mr-3 row-check">
+                <div class="flex-1">
                     <div class="font-semibold text-gray-800">{{ $subject->code }} — {{ $subject->name }}</div>
                     <div class="mt-0.5 text-xs text-gray-500">
                         {{ $subject->units }} units · Requested by {{ $subject->requester->name ?? 'Unknown' }} for {{ $subject->program->code ?? '—' }}
@@ -137,5 +145,41 @@ document.getElementById('confirmRejectBtn').addEventListener('click', function (
     document.getElementById('reject-reason-' + activeRejectId).value = reason;
     document.getElementById('reject-form-' + activeRejectId).submit();
 });
+</script>
+<script>
+(function () {
+    var form = document.getElementById('bulkApproveForm');
+    if (!form) return;
+    var all = document.getElementById('selectAll');
+    var btn = document.getElementById('bulkApproveBtn');
+    var count = document.getElementById('bulkCount');
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+    function refresh() {
+        var n = boxes.filter(function (b) { return b.checked; }).length;
+        count.textContent = n;
+        btn.disabled = n === 0;
+        if (all) all.checked = boxes.length > 0 && n === boxes.length;
+    }
+    if (all) all.addEventListener('change', function () {
+        boxes.forEach(function (b) { b.checked = all.checked; });
+        refresh();
+    });
+    boxes.forEach(function (b) { b.addEventListener('change', refresh); });
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var n = count.textContent;
+        if (typeof Swal === 'undefined') {
+            if (confirm('Approve ' + n + ' selected subject(s)?')) form.submit();
+            return;
+        }
+        Swal.fire({
+            title: 'Approve ' + n + ' selected subject(s)?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            confirmButtonText: 'Yes, Approve'
+        }).then(function (r) { if (r.isConfirmed) form.submit(); });
+    });
+})();
 </script>
 @endsection

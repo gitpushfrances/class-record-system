@@ -34,8 +34,8 @@
                 </div>
                 <div>
                     <label class="block mb-1 text-sm font-semibold text-gray-700">Units <span class="text-red-500">*</span></label>
-                    <input type="number" name="units" value="{{ old('units', $subject->units) }}"
-                           min="1" max="10"
+                    <input type="number" name="units" step="0.1" value="{{ old('units', $subject->units) }}"
+                           min="0.5" max="10"
                            class="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none"
                            style="border-color:#d1d5db;">
                     @error('units')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror

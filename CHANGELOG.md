@@ -939,6 +939,70 @@ f
 - `storeAccount()` calls `assignRole()` only for `program_head`, while `update()` and approval sync every role
 - A Teacher's `program_id` is stored, but no query scoping teachers by program has been verified yet
 
+## QA FIXES & PATCHES — October 9, 2026
+
+### Manage Faculty Wording + Admin Dashboard Cards (client request)
+- `admin/deans/index.blade.php` heading changed from "Accounts" to "Faculty"
+- `admin/dashboard.blade.php` Quick Links replaced with a 5-card Font Awesome icon grid: Manage Faculty, Manage Subjects, Departments, Academic Period, Backup & Restore
+- Route names stay `admin.deans.*` so nothing else breaks; the "Deans" stat card is unchanged since it counts `role = dean` only
+
+### Subject Units Now Accept Decimals (client request)
+- Root cause: `subjects.units` was `int(11)` and validation was `required|integer|min:1|max:10`
+- `doctrine/dbal` is not installed, so `->change()` is unavailable; new migration `2026_10_09_000000_change_units_to_decimal_on_subjects_table` uses raw SQL (`DECIMAL(3,1) NOT NULL DEFAULT 3.0`, `down` restores `INT`)
+- `ProgramHead\SubjectController` `store()` / `update()`: rule is now `required|numeric|decimal:0,1|min:0.5|max:10`
+- `program-head/subjects/create` and `edit`: `step="0.1"`, `min="0.5"`
+- `Subject` model: `'units' => 'float'` cast so `3.0` displays as `3` and `2.5` as `2.5`
+
+### Invisible Exam Header on Class Record (client-reported)
+- Root cause: the color `PALETTE` classes live only in `app/Models/GradeConfiguration.php`, which was missing from the `content` array in `tailwind.config.js`, so Tailwind never compiled classes that appear only there (`bg-purple-500`, `bg-orange-500`, `bg-teal-500`, `bg-rose-500`). Blue and green only worked because they also appear in other Blade views
+- Fixed: `./app/Models/GradeConfiguration.php` added to `content`, then `npm run build`
+
+### Student Gender Field + Roster Grouping (client request)
+- New migration `2026_10_09_000100_add_gender_to_students_table`: nullable enum `gender` (`male`, `female`) after `middle_name`; `Student::$fillable` updated
+- Shared partial `resources/views/partials/gender-field.blade.php` (required select, supports `old()` and `$student->gender`) included in all four student forms (Dean and Program Head, create and edit)
+- Validation `'gender' => 'required|in:male,female'` in `store()` / `update()` of `Dean\StudentController` and `ProgramHead\StudentController`
+- `SampleDataSeeder` students now carry gender
+- New `Enrollment::sortRoster($enrollments)`: Male, then Female, then unset; last name then first name inside each group, case-insensitive
+- Applied to Class Record and Excel export, Attendance (`index`, `summary`), Grades (`scores`, `finalGrades`), and the roster loops in `teacher/classes/show`, `dean/enrollments/show`, `dean/sections/show`, `program-head/sections/show`, `program-head/dashboard`
+- Intentionally unchanged: student list pages (column-header sorting), the Dean enrollment dropdown, and grade computation loops
+
+### Class Record — Gender Filter and Order Toggle (client request)
+- `sortRoster($enrollments, $gender = null, $order = null)`: optional gender filter and `order=id` (Student No.) alongside the default A-Z; every other caller keeps its current behavior
+- `Teacher\ClassController` `record()` and `export()` now take `Request` and pass `gender` / `order` into `sortRoster`; the Print route reuses `record()`, so it follows automatically
+- Because filtering happens before the grade loops, Class Average, the Passed count, and header chips follow the students currently shown
+- `teacher/classes/record.blade.php`: filter chips (All / Male / Female) and order chips (A-Z / Student No.) built with `request()->fullUrlWithQuery()`; Print and Export Excel links carry `gender` and `order` so screen, print and Excel match
+- On All, plain divider rows (Male / Female / No gender set) with numbering restarting at 1 inside each group; on Male or Female, only that group, no divider; no-gender students appear only under All
+- Search box also hides a divider when none of its rows match; empty state reads "No male students enrolled." when a filter has no results
+- `ClassRecordExport`: new `$gender` constructor argument, divider rows merged and styled, numbering restarts per group, class average follows the rows passed in
+- Verified via `php -l` on all changed PHP files and tinker (`all`, `male`, `female` lists sorted by Student No. returned the expected order); browser check of dividers, Print and Excel still pending
+
+### Grade Configuration — Save Button Not Clickable (client-reported)
+- Root cause: `updateTotals()` in `teacher/grades/config.blade.php` set `submitBtn.disabled` whenever a period did not total exactly 100%. The client's photo showed Final Period at 80%, so the button was disabled by design with no explanation
+- Fixed: `disabled` removed from `#submitBtn`; each period total now shows "(N% remaining)" or "(N% over)" via `periodNote()`; totals stored in `window.configTotals`; the submit handler blocks with the existing red banner, for example "Final is 80%. Each period must total exactly 100%."
+- No backend change: `storeConfig()` already enforces 100% server-side
+
+### Approve Multiple Subject Requests (client request)
+- Checkbox flow with Select all and one **Approve Selected (N)** button replaces the earlier "Approve All" idea; this also resolved the Admin question, since the Admin picks exactly which requests to approve
+- New routes: `POST /admin/subjects/approve-selected` (`admin.subjects.approve-selected`) and `POST /dean/subjects/approve-selected` (`dean.subjects.approve-selected`)
+- `approveSelected(Request)` in `SuperAdmin\SubjectController` and `Dean\SubjectController`: validates `ids` as a non-empty integer array, acts only on `pending` rows, sets `status`, `approved_by`, `approved_at`, and clears `rejected_reason`; Dean version is also restricted to the Dean's department and Program Head requests, so tampered IDs are ignored
+- `admin/subjects/index` and `dean/subjects/index`: row checkboxes, select-all, button disabled until at least one box is ticked, live count, SweetAlert confirmation with native `confirm()` fallback
+- Reject stays one by one because it needs a reason
+
+### Blank Department Column on Admin Approved Subjects (client-reported)
+- Root cause: `ProgramHead\SubjectController@store` sets `program_id` but never the legacy `subjects.department` string; new subjects had `department = null, program_id = 1`, while the five seeded subjects had the string but `program_id = null`
+- Fixed: `SuperAdmin\SubjectController` eager-loads `program.department`; `admin/subjects/index` displays `program?->department?->name ?? department ?? 'N/A'`
+
+### Deployment Notes
+- After `git pull` run `php artisan migrate`, `npm run build`, and `php artisan view:clear` (`public/build` is gitignored)
+- Existing students have no gender until edited (column is nullable, so the migration is safe); they list last under "No gender set" and the Male / Female filters stay empty until genders are set through Edit Student. A one-time `UPDATE` by student number on the client's server is the lowest-effort alternative
+
+### Known Gaps (not fixed)
+- Browser checks still open: gender selection on all four student forms, Class Record / Print / Excel matching with the filter and order toggle, Grade Config remaining/over text and Save banner, Approve Selected on Admin and Dean, Department column fill, Program Head accepting `2.5` units, Exam header after a hard refresh
+- `admin/subjects/create.blade.php` and `edit.blade.php` still validate units as integer, but no route points to them
+- `dean/subjects/index.blade.php` and `admin/subjects/index.blade.php` still use `@extends('layouts.app')` instead of `<x-sidebar-layout>` (pre-existing)
+- SweetAlert2 CDN-fallback pattern is still patched per file; the reusable `<x-confirm-form>` component is still planned
+- `php artisan migrate:fresh --seed` would give seeded students a gender but wipes all current data
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -965,7 +1029,7 @@ f
 
 ---
 
-**Last Updated:** October 7, 2026  
+**Last Updated:** October 9, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop
 

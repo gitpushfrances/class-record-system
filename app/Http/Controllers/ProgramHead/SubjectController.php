@@ -37,7 +37,7 @@ class SubjectController extends Controller
             'code'        => 'required|unique:subjects,code|max:20',
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'units'       => 'required|integer|min:1|max:10',
+            'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
         ]);
 
         $validated['program_id']   = $programId;
@@ -67,7 +67,7 @@ class SubjectController extends Controller
             'code'        => 'required|unique:subjects,code,' . $subject->id . '|max:20',
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'units'       => 'required|integer|min:1|max:10',
+            'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
         ]);
 
         $subject->update($validated);

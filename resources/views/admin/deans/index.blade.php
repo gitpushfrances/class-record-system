@@ -2,7 +2,7 @@
 
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h1 class="text-2xl font-bold" style="color:#f0dfc0;">Accounts</h1>
+        <h1 class="text-2xl font-bold" style="color:#f0dfc0;">Faculty</h1>
         <p class="mt-1 text-sm" style="color:rgba(200,169,126,0.6);">Manage Deans, Program Heads, and Teachers.</p>
     </div>
     <a href="{{ route('admin.users.create') }}"

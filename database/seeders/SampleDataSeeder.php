@@ -98,17 +98,18 @@ class SampleDataSeeder extends Seeder
         // Students
 
         $students = [
-            ['student_number' => '2021-00001', 'first_name' => 'Juan',  'last_name' => 'Dela Cruz'],
-            ['student_number' => '2021-00002', 'first_name' => 'Maria', 'last_name' => 'Santos'],
-            ['student_number' => '2021-00003', 'first_name' => 'Jose',  'last_name' => 'Reyes'],
-            ['student_number' => '2021-00004', 'first_name' => 'Ana',   'last_name' => 'Garcia'],
-            ['student_number' => '2021-00005', 'first_name' => 'Pedro', 'last_name' => 'Ramos'],
+            ['student_number' => '2021-00001', 'first_name' => 'Juan', 'gender' => 'male',  'last_name' => 'Dela Cruz'],
+            ['student_number' => '2021-00002', 'first_name' => 'Maria', 'gender' => 'female', 'last_name' => 'Santos'],
+            ['student_number' => '2021-00003', 'first_name' => 'Jose', 'gender' => 'male',  'last_name' => 'Reyes'],
+            ['student_number' => '2021-00004', 'first_name' => 'Ana', 'gender' => 'female',   'last_name' => 'Garcia'],
+            ['student_number' => '2021-00005', 'first_name' => 'Pedro', 'gender' => 'male', 'last_name' => 'Ramos'],
         ];
         foreach ($students as $s) {
             Student::create([
                 'student_number' => $s['student_number'],
                 'first_name'     => $s['first_name'],
                 'middle_name'    => 'M.',
+                'gender'         => $s['gender'],
                 'last_name'      => $s['last_name'],
                 'email'          => strtolower($s['first_name'] . '.' . $s['last_name'] . '@student.test'),
                 'year_level'     => '3rd Year',

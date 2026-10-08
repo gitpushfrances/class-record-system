@@ -63,7 +63,7 @@ class ClassController extends Controller
         return view('teacher.classes.show', compact('section', 'currentTerm', 'subjectsData', 'availableStudents'));
     }
 
-    public function record(Section $section, Subject $subject)
+    public function record(Section $section, Subject $subject, Request $request)
     {
         $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
@@ -86,7 +86,7 @@ class ClassController extends Controller
 
         $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
         $matrix           = $config->buildComponentMatrix($gradeItemsByType);
-        $enrollments      = $currentTerm ? $currentTerm->enrollments : collect();
+        $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
         $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         $liveGrades        = [];
@@ -119,7 +119,7 @@ class ClassController extends Controller
         ));
     }
 
-    public function export(Section $section, Subject $subject)
+    public function export(Section $section, Subject $subject, Request $request)
     {
         $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
@@ -142,7 +142,7 @@ class ClassController extends Controller
 
         $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
         $matrix           = $config->buildComponentMatrix($gradeItemsByType);
-        $enrollments      = $currentTerm ? $currentTerm->enrollments : collect();
+        $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
         $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         $liveGrades = [];
@@ -156,7 +156,7 @@ class ClassController extends Controller
             : 'no-term';
         $filename = $sectionLabel . '_' . $subject->code . '_' . $termLabel . '.xlsx';
 
-        return Excel::download(new ClassRecordExport($section, $currentTerm, $subject, $matrix, $enrollments, $liveGrades), $filename);
+        return Excel::download(new ClassRecordExport($section, $currentTerm, $subject, $matrix, $enrollments, $liveGrades, $request->gender), $filename);
     }
 
     public function enrollStudent(Request $request, Section $section)

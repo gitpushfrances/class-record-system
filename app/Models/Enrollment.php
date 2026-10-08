@@ -20,6 +20,25 @@ class Enrollment extends Model
         'enrolled_at' => 'datetime',
     ];
 
+    public static function sortRoster($enrollments, $gender = null, $order = null)
+    {
+        $rank = ['male' => 0, 'female' => 1];
+
+        if (in_array($gender, ['male', 'female'], true)) {
+            $enrollments = $enrollments->filter(fn ($e) => $e->student?->gender === $gender);
+        }
+
+        return $enrollments
+            ->sortBy(fn ($e) => [
+                $rank[$e->student?->gender] ?? 2,
+                $order === 'id'
+                    ? strtolower($e->student?->student_number ?? '')
+                    : strtolower($e->student?->last_name ?? ''),
+                strtolower($e->student?->first_name ?? ''),
+            ])
+            ->values();
+    }
+
     public function student()
     {
         return $this->belongsTo(Student::class);

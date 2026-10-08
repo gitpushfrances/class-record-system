@@ -6,6 +6,7 @@ export default {
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
+        './app/Models/GradeConfiguration.php',
         './resources/views/**/*.blade.php',
     ],
 

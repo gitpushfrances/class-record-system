@@ -56,6 +56,7 @@ class StudentController extends Controller
             'middle_name'    => 'nullable|string|max:255',
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'student_type'   => 'required|in:regular,irregular',
+            'gender'         => 'required|in:male,female',
             'student_number' => ['required', 'string', 'regex:/^[0-9]{2}-[0-9]{4}$/', 'unique:students,student_number'],
             'email'          => 'nullable|email|unique:students,email',
         ], [
@@ -96,6 +97,7 @@ class StudentController extends Controller
             'middle_name'    => 'nullable|string|max:255',
             'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
             'student_type'   => 'required|in:regular,irregular',
+            'gender'         => 'required|in:male,female',
             'student_number' => ['required', 'string', 'regex:/^[0-9]{2}-[0-9]{4}$/', 'unique:students,student_number,' . $student->id],
             'email'          => 'nullable|email|unique:students,email,' . $student->id,
         ], [

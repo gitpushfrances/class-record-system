@@ -26,7 +26,19 @@
 
             <div class="p-6 bg-white rounded-lg shadow">
                 <h3 class="mb-4 text-lg font-semibold">Quick Links</h3>
-                <div class="space-x-4">
-                    <a href="{{ route('admin.deans.index') }}" class="text-blue-600 hover:text-blue-900">Manage Deans</a>
-                    <a href="{{ route('admin.subjects.index') }}" class="text-blue-600 hover:text-blue-900">Manage Subjects</a>
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
+                    @foreach([
+                        ['admin.deans.index',       'fa-users',         'Manage Faculty'],
+                        ['admin.subjects.index',    'fa-book',          'Manage Subjects'],
+                        ['admin.departments.index', 'fa-building',      'Departments'],
+                        ['admin.academic.index',    'fa-calendar-days', 'Academic Period'],
+                        ['admin.backup.index',      'fa-database',      'Backup & Restore'],
+                    ] as [$r, $icon, $label])
+                        <a href="{{ route($r) }}" class="flex flex-col items-center gap-3 p-5 text-center text-gray-700 transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700">
+                            <i class="text-2xl fa-solid {{ $icon }}"></i>
+                            <span class="text-sm font-semibold">{{ $label }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
 </x-sidebar-layout>

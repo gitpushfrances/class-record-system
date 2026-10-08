@@ -120,7 +120,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    @foreach($currentTerm->enrollments as $enrollment)
+                    @foreach(\App\Models\Enrollment::sortRoster($currentTerm->enrollments) as $enrollment)
                         <tr>
                             <td class="px-6 py-4 font-mono text-sm">{{ $enrollment->student->student_number }}</td>
                             <td class="px-6 py-4 text-sm">{{ $enrollment->student->last_name }}, {{ $enrollment->student->first_name }}</td>

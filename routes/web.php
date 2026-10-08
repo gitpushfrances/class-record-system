@@ -50,6 +50,7 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
 
     Route::get('/subjects', [AdminSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [AdminSubject::class, 'approve'])->name('subjects.approve');
+    Route::post('/subjects/approve-selected', [AdminSubject::class, 'approveSelected'])->name('subjects.approve-selected');
     Route::post('/subjects/{subject}/reject', [AdminSubject::class, 'reject'])->name('subjects.reject');
 
     Route::resource('deans', AdminUser::class)->except(['show', 'destroy'])->parameters(['deans' => 'dean']);
@@ -100,6 +101,7 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::resource('students', DeanStudent::class)->except(['show']);
     Route::get('/subjects', [DeanSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [DeanSubject::class, 'approve'])->name('subjects.approve');
+    Route::post('/subjects/approve-selected', [DeanSubject::class, 'approveSelected'])->name('subjects.approve-selected');
     Route::post('/subjects/{subject}/reject', [DeanSubject::class, 'reject'])->name('subjects.reject');
 
     Route::get('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'index'])->name('assignments.index');

@@ -25,6 +25,7 @@ class AttendanceController extends Controller
                 ])
                 ->get();
         }
+        $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
         return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date'));
     }
     public function store(Request $request, Section $section, Subject $subject)
@@ -65,6 +66,7 @@ class AttendanceController extends Controller
             $enrollments = $currentTerm->enrollments()
                 ->with(['student', 'attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id)])
                 ->get()
+                ->pipe(fn ($c) => \App\Models\Enrollment::sortRoster($c))
                 ->map(function ($enrollment) {
                     $records = $enrollment->attendanceRecords;
                     $total   = $records->count();

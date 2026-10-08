@@ -146,7 +146,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @foreach(($currentTerm ? $currentTerm->enrollments : collect()) as $i => $enrollment)
+                @foreach(\App\Models\Enrollment::sortRoster($currentTerm ? $currentTerm->enrollments : collect()) as $i => $enrollment)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>

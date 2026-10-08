@@ -87,7 +87,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($term->enrollments as $enrollment)
+                            @forelse(\App\Models\Enrollment::sortRoster($term->enrollments) as $enrollment)
                                 @php $grade = ($finalGrades->get($enrollment->id . '-' . $subject->id))?->first(); @endphp
                                 <tr style="border-bottom:1px solid rgba(200,169,126,0.06);">
                                     <td class="px-6 py-3">

@@ -25,6 +25,7 @@
                             <input type="text" name="student_number" value="{{ old('student_number') }}" pattern="[0-9]{2}-[0-9]{4}" maxlength="7" placeholder="22-1251" class="w-full px-3 py-2 font-mono border rounded" required>
                             @error('student_number')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
+@include('partials.gender-field')
 
                         <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
                             <div>

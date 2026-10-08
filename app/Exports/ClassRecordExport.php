@@ -23,6 +23,8 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
     protected array $matrix;
     protected Collection $enrollments;
     protected array $liveGrades;
+    protected ?string $gender;
+    protected array $groupRows = [];
 
     const HEADER_COLOR = 'FF1E3A5F';
     const SUBHEADER_COLOR = 'FF2D6A9F';
@@ -37,7 +39,8 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         Subject $subject,
         array $matrix,
         Collection $enrollments,
-        array $liveGrades
+        array $liveGrades,
+        ?string $gender = null
     ) {
         $this->section     = $section;
         $this->currentTerm = $currentTerm;
@@ -45,6 +48,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         $this->matrix      = $matrix;
         $this->enrollments = $enrollments;
         $this->liveGrades  = $liveGrades;
+        $this->gender      = $gender;
     }
 
     public function title(): string
@@ -111,9 +115,20 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         $columnSums   = [];
         $studentCount = 0;
         $cutoffDate   = \App\Models\AcademicPeriod::getActive()?->midterm_cutoff_date;
+        $prevGroup    = null;
+        $splitGroups  = !in_array($this->gender, ['male', 'female'], true);
 
         foreach ($this->enrollments as $enrollment) {
             $student  = $enrollment->student;
+            $grp = $student->gender ?? 'none';
+            if ($grp !== $prevGroup) {
+                $counter = 1;
+                if ($splitGroups) {
+                    $rows[] = [['male' => 'MALE', 'female' => 'FEMALE'][$grp] ?? 'NO GENDER SET'];
+                    $this->groupRows[] = count($rows);
+                }
+            }
+            $prevGroup = $grp;
             $lg       = $this->liveGrades[$enrollment->id] ?? null;
             $gradeMap = $enrollment->studentGrades->keyBy('grade_item_id');
 
@@ -225,6 +240,14 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
             $sheet->getStyle('A8:' . $lastCol . ($lastRow - 1))->applyFromArray([
                 'font' => ['bold' => false, 'color' => ['rgb' => '000000']],
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFFFFF']],
+            ]);
+        }
+
+        foreach ($this->groupRows as $r) {
+            $sheet->mergeCells('A' . $r . ':' . $lastCol . $r);
+            $sheet->getStyle('A' . $r . ':' . $lastCol . $r)->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => '374151']],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE5E7EB']],
             ]);
         }
 

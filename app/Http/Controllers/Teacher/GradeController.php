@@ -144,6 +144,7 @@ class GradeController extends Controller
                 ->get()
             : collect();
 
+        $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
         return view('teacher.grades.scores', compact('section', 'subject', 'gradeItem', 'enrollments'));
     }
 
@@ -215,6 +216,7 @@ class GradeController extends Controller
             $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
         }
 
+        $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
         return view('teacher.grades.final', compact('section', 'subject', 'config', 'enrollments', 'liveGrades', 'currentTerm'));
     }
 

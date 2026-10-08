@@ -56,6 +56,28 @@ class SubjectController extends Controller
             ->with('success', "Subject [{$subject->code}] approved.");
     }
 
+    public function approveSelected(Request $request)
+    {
+        $data = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = Subject::where('status', 'pending')
+            ->whereIn('id', $data['ids'])
+            ->whereHas('program', fn($q) => $q->where('department_id', auth()->user()->department_id))
+            ->whereHas('requester', fn($q) => $q->where('role', 'program_head'))
+            ->update([
+                'status'          => 'approved',
+                'approved_by'     => auth()->id(),
+                'approved_at'     => now(),
+                'rejected_reason' => null,
+            ]);
+
+        return redirect()->route('dean.subjects.index')
+            ->with('success', "{$count} subject(s) approved.");
+    }
+
     public function reject(Request $request, Subject $subject)
     {
         abort_if($subject->status !== 'pending', 422, 'Subject is not pending.');

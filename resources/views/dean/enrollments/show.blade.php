@@ -82,7 +82,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach($currentTerm->enrollments as $enrollment)
+                            @foreach(\App\Models\Enrollment::sortRoster($currentTerm->enrollments) as $enrollment)
                                 @if($enrollment->student)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 font-mono text-sm text-gray-700">{{ $enrollment->student->student_number }}</td>

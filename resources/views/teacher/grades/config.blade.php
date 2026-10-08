@@ -99,7 +99,7 @@
         <div>
             <span class="text-sm" style="color: #6b5a43;">Both periods must each sum to <strong style="color: #1c1814;">100%</strong></span>
         </div>
-        <button type="submit" id="submitBtn" disabled
+        <button type="submit" id="submitBtn"
                 class="px-6 py-2 text-sm font-medium transition rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 style="background: linear-gradient(135deg, #9a7a50, #c8a97e); color: #1c1814;">
             Save Configuration
@@ -270,6 +270,12 @@ function removeRow(button) {
     renderRows();
 }
 
+function periodNote(v) {
+    var d = Math.round(Math.abs(100 - v) * 100) / 100;
+    if (d < 0.01) return '';
+    return v < 100 ? ' (' + d + '% remaining)' : ' (' + d + '% over)';
+}
+
 function updateTotals() {
     let mid = 0, fin = 0;
     document.querySelectorAll('input[name$="[weight]"]').forEach(input => {
@@ -286,15 +292,25 @@ function updateTotals() {
 
     const mTotal = document.getElementById('midterm-total');
     const fTotal = document.getElementById('final-total');
-    mTotal.textContent = mid + '%';
-    fTotal.textContent = fin + '%';
+    mTotal.textContent = mid + '%' + periodNote(mid);
+    fTotal.textContent = fin + '%' + periodNote(fin);
     mTotal.style.color = midOk ? '#86efac' : '#fca5a5';
     fTotal.style.color = finOk ? '#86efac' : '#fca5a5';
-    document.getElementById('submitBtn').disabled = !(midOk && finOk);
+    window.configTotals = { mid: mid, fin: fin, midOk: midOk, finOk: finOk };
 }
 
 document.getElementById('configForm').addEventListener('submit', function (e) {
     syncFromDOM();
+    updateTotals();
+    var T = window.configTotals;
+    if (!T.midOk || !T.finOk) {
+        e.preventDefault();
+        var parts = [];
+        if (!T.midOk) parts.push('Midterm is ' + T.mid + '%');
+        if (!T.finOk) parts.push('Final is ' + T.fin + '%');
+        showConfigError(parts.join(' and ') + '. Each period must total exactly 100%.');
+        return;
+    }
     const blank = initialComponents.find(c => !c.label || !c.label.trim());
     if (blank) {
         e.preventDefault();

@@ -18,6 +18,12 @@
                 <span class="px-2 py-0.5 rounded-full text-xs font-bold" style="background:#fef3c7; color:#92400e;">
                     {{ $pending->count() }}
                 </span>
+            <form method="POST" action="{{ route('admin.subjects.approve-selected') }}" id="bulkApproveForm" class="ml-auto">
+                @csrf
+                <button type="submit" id="bulkApproveBtn" disabled class="px-3 py-1.5 text-xs font-semibold text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed" style="background:#065f46;">
+                    <i class="fa-solid fa-check-double"></i> Approve Selected (<span id="bulkCount">0</span>)
+                </button>
+            </form>
             @endif
         </div>
 
@@ -25,6 +31,7 @@
             <table class="w-full text-sm">
                 <thead style="background:#fffbeb;">
                     <tr>
+                        <th class="px-4 py-3 w-10"><input type="checkbox" id="selectAll"></th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Code</th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Name</th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Department</th>
@@ -37,9 +44,10 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse($pending as $subject)
                     <tr class="hover:bg-amber-50">
+                        <td class="px-4 py-3"><input type="checkbox" name="ids[]" value="{{ $subject->id }}" form="bulkApproveForm" class="row-check"></td>
                         <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                         <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
-                        <td class="px-4 py-3 text-gray-600">{{ $subject->department }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $subject->program?->department?->name ?? $subject->department ?? 'N/A' }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->requester?->name ?? '—' }}</td>
                         <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->created_at->format('M d, Y h:i A') }}</td>
@@ -75,7 +83,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-sm text-center text-gray-400">No pending subject requests.</td>
+                        <td colspan="8" class="px-4 py-8 text-sm text-center text-gray-400">No pending subject requests.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -103,7 +111,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                         <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
-                        <td class="px-4 py-3 text-gray-600">{{ $subject->department }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $subject->program?->department?->name ?? $subject->department ?? 'N/A' }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->requester?->name ?? '—' }}</td>
                         <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->approved_at?->format('M d, Y h:i A') ?? '—' }}</td>
@@ -165,5 +173,41 @@ document.querySelectorAll('.reject-btn').forEach(btn => {
         });
     });
 });
+</script>
+<script>
+(function () {
+    var form = document.getElementById('bulkApproveForm');
+    if (!form) return;
+    var all = document.getElementById('selectAll');
+    var btn = document.getElementById('bulkApproveBtn');
+    var count = document.getElementById('bulkCount');
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+    function refresh() {
+        var n = boxes.filter(function (b) { return b.checked; }).length;
+        count.textContent = n;
+        btn.disabled = n === 0;
+        if (all) all.checked = boxes.length > 0 && n === boxes.length;
+    }
+    if (all) all.addEventListener('change', function () {
+        boxes.forEach(function (b) { b.checked = all.checked; });
+        refresh();
+    });
+    boxes.forEach(function (b) { b.addEventListener('change', refresh); });
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var n = count.textContent;
+        if (typeof Swal === 'undefined') {
+            if (confirm('Approve ' + n + ' selected subject(s)?')) form.submit();
+            return;
+        }
+        Swal.fire({
+            title: 'Approve ' + n + ' selected subject(s)?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#065f46',
+            confirmButtonText: 'Yes, Approve'
+        }).then(function (r) { if (r.isConfirmed) form.submit(); });
+    });
+})();
 </script>
 @endsection

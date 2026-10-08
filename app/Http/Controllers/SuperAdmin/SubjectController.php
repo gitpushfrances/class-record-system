@@ -10,12 +10,12 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $pending  = Subject::with('requester')
+        $pending  = Subject::with(['requester', 'program.department'])
             ->where('status', 'pending')
             ->orderBy('created_at')
             ->get();
 
-        $approved = Subject::with('requester', 'approver')
+        $approved = Subject::with(['requester', 'approver', 'program.department'])
             ->where('status', 'approved')
             ->orderByDesc('approved_at')
             ->paginate(20);
@@ -36,6 +36,26 @@ class SubjectController extends Controller
 
         return redirect()->route('admin.subjects.index')
             ->with('success', "Subject [{$subject->code}] approved.");
+    }
+
+    public function approveSelected(Request $request)
+    {
+        $data = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = Subject::where('status', 'pending')
+            ->whereIn('id', $data['ids'])
+            ->update([
+                'status'          => 'approved',
+                'approved_by'     => auth()->id(),
+                'approved_at'     => now(),
+                'rejected_reason' => null,
+            ]);
+
+        return redirect()->route('admin.subjects.index')
+            ->with('success', "{$count} subject(s) approved.");
     }
 
     public function reject(Request $request, Subject $subject)
