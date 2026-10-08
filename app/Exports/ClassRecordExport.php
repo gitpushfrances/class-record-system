@@ -72,7 +72,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
                 : 'No active term')
             . '   |   Grading: ' . (\App\Models\FinalGrade::COMPUTATION_METHODS[$method] ?? 'Standard conversion table')
         ];
-        $rows[] = [];
+        $rows[] = [''];
 
         // Group header row
         $groupRow = ['', '', ''];
