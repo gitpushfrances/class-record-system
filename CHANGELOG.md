@@ -1003,6 +1003,63 @@ f
 - SweetAlert2 CDN-fallback pattern is still patched per file; the reusable `<x-confirm-form>` component is still planned
 - `php artisan migrate:fresh --seed` would give seeded students a gender but wipes all current data
 
+## QA FIXES & PATCHES — October 9, 2026 (Session 2)
+
+### Program Head Student Form — Middle Name Field
+- Middle Name field added to the Program Head student create form (`program-head/students/create.blade.php`) to match the Dean's form
+
+### Dean Sections — Year-Level Separators
+- `dean/sections/index.blade.php` now groups sections under year-level separators so 1st to 4th Year sections no longer run together in one list
+
+### Class Record — Header Fallback
+- `teacher/classes/record.blade.php`: `bg-gray-700` added to the component header row as a safety net for the invisible header (Attendance (F))
+- The original cause of that invisible header is still unconfirmed here; the Tailwind `content` fix recorded earlier today is the likely root cause, and this fallback is not a diagnosis
+
+### My Advisory — Gender Filter, Order Toggle, and Search (client request)
+- `teacher/classes/show.blade.php`: filter chips (All / Male / Female), order chips (A-Z / Student No.), and a client-side search box (student name or number, with a "Showing N of M" counter)
+- Gender and order are server-side via the query string, using the existing `Enrollment::sortRoster($enrollments, $gender, $order)`; search is client-side, so behavior matches Class Record
+- No controller, model, or CSS rebuild needed; only classes already in the compiled build were used
+- Empty state reads "No male students enrolled." when a filter has no results
+
+### Contrast Fixes — Sidebar and Native Dropdowns (client-reported: light text unreadable)
+- Sidebar: inactive link color raised from 0.45 to 0.75 alpha (about 2.6:1 to about 5:1; WCAG AA needs 4.5:1), hover to 0.95, and the extra `opacity-60` on icons removed (`layouts/partials/sidebar-link.blade.php`)
+- Sidebar email line 0.45 to 0.75 and Logout 0.65 to 0.85 (`layouts/partials/sidebar.blade.php`)
+- `layouts/app.blade.php`: global rule `select option { color: #1c1814; background-color: #ffffff; }`. The browser option popup is always white, so cream text on it was unreadable. It lives in Blade, not `app.css`, so no build is required
+
+### Light-Card Conversion — One Design Language (partial)
+- Root cause: seven pages used dark `#211a12` cards with inline cream/tan text on a light app body (`bg-stone-100`); two design languages meant every contrast patch was a band-aid
+- Converted to white cards with Tailwind classes: `dean/dashboard`, `dean/assignments/index`, `teacher/grades/items` (redundant `p-6` wrapper removed since the layout already pads the page)
+- Not yet converted: `admin/backup/index`, `admin/users/create`, `program-head/dashboard`, `teacher/grades/config` (its JS builds rows with inline dark colors, so the JS strings change too)
+
+### Duplicate Subject Codes Allowed, with Department-Scoped Confirmation (client request)
+- Root cause: codes were blocked in two places, the DB unique index on `subjects.code` and `unique:subjects,code` in `ProgramHead\SubjectController` `store()` and `update()`. The rule and index also counted soft-deleted rows, so a cancelled request blocked its code forever
+- New migration `2026_10_09_000200_allow_duplicate_subject_codes`: drops `subjects_code_unique`, adds a plain index on `code`. Rollback fails if duplicate codes exist, by design
+- New `guardDuplicateCode()` in `ProgramHead\SubjectController`, called from `store()` and `update()`; it checks only the subject's own department and only `pending` and `approved` subjects
+  - Same code in another department: saved silently, no names shown (preserves department isolation)
+  - Same code in own department (other program, or same program with a different name): flashes `duplicate_subjects` and shows a Continue / Cancel dialog; the server saves only when resubmitted with `confirm_duplicate=1`
+  - Same code, same name, same program: blocked with "This subject already exists in your program."
+- New partial `program-head/subjects/partials/duplicate-dialog.blade.php` (SweetAlert listing code, name, program, department, status; every value escaped); `create` and `edit` views gained the hidden `confirm_duplicate` input, the include, and `id="subject-form"` on the edit form
+- Approval by Dean or Super Admin does not re-check duplicates; the request already passed the check or was confirmed at creation
+
+### Seeder — Re-Seeding No Longer Duplicates Sample Subjects
+- `SampleDataSeeder.php` line 132: `Subject::create` changed to `Subject::firstOrCreate(['code', 'name'], [...])`; without the unique index, a second `db:seed` would otherwise silently duplicate the sample subjects
+- Matches on code and name, so re-seeding will not update existing rows
+
+### Verification
+- Duplicate-code dialog confirmed in browser (own-department match shown with code, name, program, department, status; form values kept)
+- Migration, controller guard, view wiring, and seeder patch confirmed via file checks, `php -l`, and `git diff --stat`
+- Still pending browser checks: Cancel and Continue on the dialog, same code + name + program error, edit-flow behavior, other-department silent save, My Advisory filters and search, sidebar and dropdown contrast for all four roles, and the three converted light-card pages
+
+### Deployment Notes
+- Deploy must include `php artisan migrate` (otherwise the old DB unique index still blocks duplicate codes) and `npm run build` (`public/build` is gitignored)
+
+### Known Gaps (not fixed)
+- Light-card conversion is incomplete (four pages listed above)
+- My Advisory and Class Record always list males before females, even when ordered by Student No. (inside `sortRoster`)
+- `resources/views/components/sidebar-link.blade.php` appears unused; confirm with `grep -rn "x-sidebar-link" resources app` before deleting
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
