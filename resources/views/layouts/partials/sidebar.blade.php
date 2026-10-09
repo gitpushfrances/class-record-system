@@ -275,7 +275,7 @@
                 <div class="text-xs font-semibold truncate" style="color: #f0dfc0;">
                     {{ auth()->user()->name }}
                 </div>
-                <div class="text-xs truncate" style="color: rgba(200,169,126,0.45);">
+                <div class="text-xs truncate" style="color: rgba(200,169,126,0.75);">
                     {{ auth()->user()->email }}
                 </div>
             </div>
@@ -290,9 +290,9 @@
             @csrf
             <button type="submit"
                     class="logout-btn w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-xs font-medium transition-all duration-150"
-                    style="color: rgba(248,113,113,0.65); border: 1px solid transparent;"
+                    style="color: rgba(248,113,113,0.85); border: 1px solid transparent;"
                     onmouseover="this.style.background='rgba(239,68,68,0.08)'; this.style.borderColor='rgba(239,68,68,0.2)'; this.style.color='#f87171';"
-                    onmouseout="this.style.background='transparent'; this.style.borderColor='transparent'; this.style.color='rgba(248,113,113,0.65)';"
+                    onmouseout="this.style.background='transparent'; this.style.borderColor='transparent'; this.style.color='rgba(248,113,113,0.85)';"
                     title="Logout">
                 <i class="flex-shrink-0 w-8 text-xs text-center fas fa-arrow-right-from-bracket"></i>
                 <span class="sidebar-label">Logout</span>

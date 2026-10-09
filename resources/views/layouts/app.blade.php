@@ -12,6 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Native dropdown popups are always light: keep option text dark whatever the select's own color is. */
+        select option { color: #1c1814; background-color: #ffffff; }
+    </style>
 </head>
 <body class="font-sans antialiased bg-stone-100" style="font-family: 'DM Sans', sans-serif;">
 

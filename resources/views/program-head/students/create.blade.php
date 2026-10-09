@@ -21,6 +21,12 @@
                         </div>
 
                         <div class="mb-4">
+                            <label class="block mb-2 text-sm font-bold text-gray-700">Middle Name <span class="font-normal text-gray-400">(optional)</span></label>
+                            <input type="text" name="middle_name" value="{{ old('middle_name') }}" class="w-full px-3 py-2 border rounded">
+                            @error('middle_name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="mb-4">
                             <label class="block mb-2 text-sm font-bold text-gray-700">Student Number</label>
                             <input type="text" name="student_number" value="{{ old('student_number') }}" pattern="[0-9]{2}-[0-9]{4}" maxlength="7" placeholder="22-1251" class="w-full px-3 py-2 font-mono border rounded" required>
                             @error('student_number')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror

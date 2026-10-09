@@ -85,7 +85,7 @@
     <table class="w-full text-sm border-collapse" style="min-width: max-content;">
         <thead>
             {{-- Component group headers --}}
-            <tr class="text-xs font-semibold text-white uppercase">
+            <tr class="text-xs font-semibold text-white uppercase bg-gray-700">
                 <th rowspan="2" class="sticky left-0 z-20 px-4 py-3 text-center text-gray-500 bg-gray-50 border border-gray-200 min-w-[40px]">#</th>
                 <th rowspan="2" class="sticky left-[40px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[80px]">Stud. No.</th>
                 <th rowspan="2" class="sticky left-[120px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[180px]">Student Name</th>

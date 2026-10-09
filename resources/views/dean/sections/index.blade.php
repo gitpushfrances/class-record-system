@@ -75,6 +75,9 @@
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @foreach($sectionGroup as $section)
+                    @if($loop->first || $section->year_level !== $sectionGroup->values()[$loop->index - 1]->year_level)
+                        <h4 class="text-sm font-semibold tracking-wider text-gray-500 uppercase" style="grid-column: 1 / -1; margin-top: {{ $loop->first ? '0' : '0.5rem' }};">{{ $section->year_level }}</h4>
+                    @endif
                     @php
                         $currentTerm = $section->terms->where('status', 'active')->first();
                         $enrolledCount = $currentTerm ? $currentTerm->enrollments->count() : 0;
