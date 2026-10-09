@@ -13,6 +13,7 @@
     <div class="p-6 bg-white border rounded-2xl" style="border-color:#e5e7eb;">
         <form id="subject-form" method="POST" action="{{ route('program-head.subjects.store') }}">
             @csrf
+            <input type="hidden" name="confirm_duplicate" id="confirm_duplicate" value="0">
 
             <div class="space-y-4">
                 <div>
@@ -101,5 +102,7 @@ document.getElementById('preview-btn').addEventListener('click', function () {
     });
 });
 </script>
+
+@include('program-head.subjects.partials.duplicate-dialog')
 
 </x-sidebar-layout>

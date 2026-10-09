@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\ProgramHead;
 
 use App\Http\Controllers\Controller;
+use App\Models\Program;
 use App\Models\Subject;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class SubjectController extends Controller
 {
@@ -34,11 +37,15 @@ class SubjectController extends Controller
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $validated = $request->validate([
-            'code'        => 'required|unique:subjects,code|max:20',
+            'code'        => 'required|max:20',
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
         ]);
+
+        if ($redirect = $this->guardDuplicateCode($request, $validated, $programId)) {
+            return $redirect;
+        }
 
         $validated['program_id']   = $programId;
         $validated['requested_by'] = auth()->id();
@@ -64,16 +71,63 @@ class SubjectController extends Controller
         abort_if($subject->status !== 'pending', 403, 'Only pending subjects can be edited.');
 
         $validated = $request->validate([
-            'code'        => 'required|unique:subjects,code,' . $subject->id . '|max:20',
+            'code'        => 'required|max:20',
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
         ]);
 
+        if ($redirect = $this->guardDuplicateCode($request, $validated, (int) $subject->program_id, $subject->id)) {
+            return $redirect;
+        }
+
         $subject->update($validated);
 
         return redirect()->route('program-head.subjects.index')
             ->with('success', 'Subject request updated.');
+    }
+
+    /**
+     * Subject codes may repeat, but never silently. Looks only at pending/approved
+     * subjects inside the same department, so no other department's data is exposed.
+     * Exact duplicates (same code, name and program) are blocked; other matches
+     * need an explicit confirmation (confirm_duplicate=1).
+     */
+    private function guardDuplicateCode(Request $request, array $validated, int $programId, ?int $ignoreId = null): ?RedirectResponse
+    {
+        $departmentId = Program::whereKey($programId)->value('department_id');
+
+        $matches = Subject::with('program.department')
+            ->where('code', $validated['code'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->whereHas('program', fn ($q) => $q->where('department_id', $departmentId))
+            ->get();
+
+        if ($matches->isEmpty()) {
+            return null;
+        }
+
+        $exact = $matches->contains(fn ($s) => (int) $s->program_id === $programId
+            && mb_strtolower($s->name) === mb_strtolower($validated['name']));
+
+        if ($exact) {
+            throw ValidationException::withMessages([
+                'code' => 'This subject already exists in your program.',
+            ]);
+        }
+
+        if ($request->boolean('confirm_duplicate')) {
+            return null;
+        }
+
+        return back()->withInput()->with('duplicate_subjects', $matches->map(fn ($s) => [
+            'code'       => $s->code,
+            'name'       => $s->name,
+            'program'    => $s->program ? $s->program->code . ' — ' . $s->program->name : '—',
+            'department' => $s->program?->department?->name ?? '—',
+            'status'     => ucfirst($s->status),
+        ])->values()->all());
     }
 
     public function destroy(Subject $subject)

@@ -14,8 +14,9 @@
     </div>
 
     <div class="p-6 bg-white border rounded-2xl" style="border-color:#e5e7eb;">
-        <form method="POST" action="{{ route('program-head.subjects.update', $subject) }}">
+        <form id="subject-form" method="POST" action="{{ route('program-head.subjects.update', $subject) }}">
             @csrf @method('PUT')
+            <input type="hidden" name="confirm_duplicate" id="confirm_duplicate" value="0">
 
             <div class="space-y-4">
                 <div>
@@ -59,4 +60,6 @@
         </form>
     </div>
 </div>
+
+@include('program-head.subjects.partials.duplicate-dialog')
 @endsection
