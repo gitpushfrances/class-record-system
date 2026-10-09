@@ -173,26 +173,36 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @forelse($roster as $i => $enrollment)
-                    <tr class="roster-row hover:bg-gray-50"
+                @php $lastGroup = null; $n = 0; @endphp
+                @forelse($roster as $enrollment)
+                    @php
+                        $g     = $enrollment->student?->gender;
+                        $group = $g === 'male' ? 'Male' : ($g === 'female' ? 'Female' : 'No gender set');
+                        if ($group !== $lastGroup) { $n = 0; }
+                        $n++;
+                    @endphp
+                    @if($gender === 'all' && $group !== $lastGroup)
+                        <tr class="roster-divider" data-group="{{ $group }}">
+                            <td colspan="4" class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase bg-gray-100">{{ $group }}</td>
+                        </tr>
+                    @endif
+                    @php $lastGroup = $group; @endphp
+                    <tr class="roster-row hover:bg-gray-50" data-group="{{ $group }}"
                         data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
-                        <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
+                        <td class="px-6 py-3 text-gray-400">{{ $n }}</td>
                         <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
                         <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
-                        
                         <td class="px-6 py-3 text-center">
-                            <form id="removeForm-{{ $enrollment->id }}"
-                                method="POST" action="{{ route('teacher.classes.unenroll', [$section, $enrollment]) }}">
+                            <form id="removeForm-{{ $enrollment->id }}" method="POST" action="{{ route('teacher.classes.unenroll', [$section, $enrollment]) }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="button"
-                                        onclick="openRemoveModal('{{ $enrollment->id }}', '{{ $enrollment->student?->full_name }}')"
+                                        onclick="openRemoveModal('{{ $enrollment->id }}', '{{ addslashes($enrollment->student?->full_name) }}')"
                                         class="text-xs font-medium text-red-500 hover:text-red-700 hover:underline">
                                     Remove
                                 </button>
                             </form>
                         </td>
-                        
                     </tr>
                 @empty
                     <tr><td colspan="4" class="px-6 py-10 text-sm text-center text-gray-400">No {{ $gender }} students enrolled.</td></tr>
@@ -243,6 +253,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 var match = q === '' || r.dataset.search.indexOf(q) !== -1;
                 r.style.display = match ? '' : 'none';
                 if (match) shown++;
+            });
+            document.querySelectorAll('tr.roster-divider').forEach(function (d) {
+                var any = Array.prototype.some.call(rosterRows, function (r) {
+                    return r.dataset.group === d.dataset.group && r.style.display !== 'none';
+                });
+                d.style.display = any ? '' : 'none';
             });
             rosterCount.textContent = q === '' ? '' : 'Showing ' + shown + ' of ' + rosterRows.length;
         });

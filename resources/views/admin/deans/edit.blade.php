@@ -1,123 +1,137 @@
-<x-sidebar-layout>
+    <x-sidebar-layout>
 
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <form method="POST" action="{{ route('admin.deans.update', $user) }}">
-                        @csrf
-                        @method('PUT')
+        <div class="py-12">
+            <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <form method="POST" action="{{ route('admin.deans.update', $user) }}">
+                            @csrf
+                            @method('PUT')
 
-                        <div class="mb-4">
-                            <x-input-label for="name" :value="__('Full Name')" />
-                            <x-text-input id="name" name="name" type="text" class="block w-full mt-1" :value="old('name', $user->name)" required />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                        </div>
+                            <div class="mb-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div>
+                                        <x-input-label for="last_name" :value="__('Last Name')" />
+                                        <x-text-input id="last_name" name="last_name" type="text" class="block w-full mt-1" :value="old('last_name', $user->last_name)" required />
+                                        <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="first_name" :value="__('First Name')" />
+                                        <x-text-input id="first_name" name="first_name" type="text" class="block w-full mt-1" :value="old('first_name', $user->first_name)" required />
+                                        <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="middle_name" :value="__('Middle Name (optional)')" />
+                                        <x-text-input id="middle_name" name="middle_name" type="text" class="block w-full mt-1" :value="old('middle_name', $user->middle_name)" />
+                                        <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="mb-4">
-                            <x-input-label for="email" :value="__('Email')" />
-                            <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', $user->email)" required />
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                        </div>
-                        <div class="mb-4">
-                            <x-input-label for="role" :value="__('Role')" />
-                            <select id="role" name="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
-                                @foreach($managedRoles as $role)
-                                    <option value="{{ $role }}" {{ old('role', $user->role) === $role ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $role)) }}</option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('role')" class="mt-2" />
-                        </div>
+                            <div class="mb-4">
+                                <x-input-label for="email" :value="__('Email')" />
+                                <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', $user->email)" required />
+                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                            </div>
+                            <div class="mb-4">
+                                <x-input-label for="role" :value="__('Role')" />
+                                <select id="role" name="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
+                                    @foreach($managedRoles as $role)
+                                        <option value="{{ $role }}" {{ old('role', $user->role) === $role ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $role)) }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+                            </div>
 
-                        <div class="mb-4">
-                            <x-input-label for="department_id" :value="__('Department')" />
-                            <select id="department_id" name="department_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
-                                <option value="">Unassigned</option>
-                                @foreach($departments as $department)
-                                    <option value="{{ $department->id }}" {{ old('department_id', $user->department_id) == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
-                                @endforeach
-                            </select>
-                            <p id="dean-department-note" class="mt-1 text-xs text-gray-500" style="display:none;">Only one Dean can be assigned per department — assigning here will unassign any existing Dean from that department.</p>
-                            <x-input-error :messages="$errors->get('department_id')" class="mt-2" />
-                        </div>
-                        <div class="mb-4" id="program-field" style="display:none;">
-                            <x-input-label for="program_id" :value="__('Program')" />
-                            <select id="program_id" name="program_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
-                                <option value="">Select department first</option>
-                            </select>
-                            <p class="mt-1 text-xs text-gray-500">Only one Program Head can be assigned per program.</p>
-                            <x-input-error :messages="$errors->get('program_id')" class="mt-2" />
-                        </div>
+                            <div class="mb-4">
+                                <x-input-label for="department_id" :value="__('Department')" />
+                                <select id="department_id" name="department_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Unassigned</option>
+                                    @foreach($departments as $department)
+                                        <option value="{{ $department->id }}" {{ old('department_id', $user->department_id) == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
+                                    @endforeach
+                                </select>
+                                <p id="dean-department-note" class="mt-1 text-xs text-gray-500" style="display:none;">Only one Dean can be assigned per department — assigning here will unassign any existing Dean from that department.</p>
+                                <x-input-error :messages="$errors->get('department_id')" class="mt-2" />
+                            </div>
+                            <div class="mb-4" id="program-field" style="display:none;">
+                                <x-input-label for="program_id" :value="__('Program')" />
+                                <select id="program_id" name="program_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Select department first</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Only one Program Head can be assigned per program.</p>
+                                <x-input-error :messages="$errors->get('program_id')" class="mt-2" />
+                            </div>
 
-                        <div class="mb-4">
-                            <x-input-label for="password" :value="__('New Password (leave blank to keep current)')" />
-                            <x-text-input id="password" name="password" type="password" class="block w-full mt-1" />
-                            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                        </div>
+                            <div class="mb-4">
+                                <x-input-label for="password" :value="__('New Password (leave blank to keep current)')" />
+                                <x-text-input id="password" name="password" type="password" class="block w-full mt-1" />
+                                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                            </div>
 
-                        <div class="mb-6">
-                            <x-input-label for="password_confirmation" :value="__('Confirm New Password')" />
-                            <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="block w-full mt-1" />
-                        </div>
+                            <div class="mb-6">
+                                <x-input-label for="password_confirmation" :value="__('Confirm New Password')" />
+                                <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="block w-full mt-1" />
+                            </div>
 
-                        <div class="flex items-center gap-4">
-                            <x-primary-button>Update {{ ucwords(str_replace('_', ' ', $user->role)) }}</x-primary-button>
-                            <a href="{{ route('admin.deans.index') }}" class="text-gray-600 hover:text-gray-900">Cancel</a>
-                        </div>
-                    </form>
+                            <div class="flex items-center gap-4">
+                                <x-primary-button>Update {{ ucwords(str_replace('_', ' ', $user->role)) }}</x-primary-button>
+                                <a href="{{ route('admin.deans.index') }}" class="text-gray-600 hover:text-gray-900">Cancel</a>
+                            </div>
+                        </form>
 
-<script>
-    const programsData = @json($programs);
-    const currentProgramId = "{{ old('program_id', $user->program_id) }}";
+    <script>
+        const programsData = @json($programs);
+        const currentProgramId = "{{ old('program_id', $user->program_id) }}";
 
-    function populateProgramOptions() {
-        const deptId = document.getElementById('department_id').value;
-        const progSelect = document.getElementById('program_id');
+        function populateProgramOptions() {
+            const deptId = document.getElementById('department_id').value;
+            const progSelect = document.getElementById('program_id');
 
-        progSelect.innerHTML = '';
+            progSelect.innerHTML = '';
 
-        if (!deptId) {
-            progSelect.innerHTML = '<option value="">Select department first</option>';
-            return;
+            if (!deptId) {
+                progSelect.innerHTML = '<option value="">Select department first</option>';
+                return;
+            }
+
+            const matches = programsData.filter(p => String(p.department_id) === String(deptId));
+
+            progSelect.innerHTML = '<option value="">Unassigned</option>';
+
+            if (matches.length === 0) {
+                progSelect.innerHTML = '<option value="">No programs in this department</option>';
+                return;
+            }
+
+            matches.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.code} - ${p.name}`;
+                if (currentProgramId && String(currentProgramId) === String(p.id)) opt.selected = true;
+                progSelect.appendChild(opt);
+            });
         }
 
-        const matches = programsData.filter(p => String(p.department_id) === String(deptId));
+        function updateFieldsForRole() {
+            const role = document.getElementById('role').value;
+            const programField = document.getElementById('program-field');
+            const deanNote = document.getElementById('dean-department-note');
 
-        progSelect.innerHTML = '<option value="">Unassigned</option>';
+            if (role === 'program_head' || role === 'teacher') {
+                programField.style.display = '';
+                populateProgramOptions();
+            } else {
+                programField.style.display = 'none';
+                document.getElementById('program_id').value = '';
+            }
 
-        if (matches.length === 0) {
-            progSelect.innerHTML = '<option value="">No programs in this department</option>';
-            return;
+            deanNote.style.display = (role === 'dean') ? '' : 'none';
         }
 
-        matches.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `${p.code} - ${p.name}`;
-            if (currentProgramId && String(currentProgramId) === String(p.id)) opt.selected = true;
-            progSelect.appendChild(opt);
-        });
-    }
+        document.getElementById('role').addEventListener('change', updateFieldsForRole);
+        document.getElementById('department_id').addEventListener('change', populateProgramOptions);
+        document.addEventListener('DOMContentLoaded', updateFieldsForRole);
+    </script>
 
-    function updateFieldsForRole() {
-        const role = document.getElementById('role').value;
-        const programField = document.getElementById('program-field');
-        const deanNote = document.getElementById('dean-department-note');
-
-        if (role === 'program_head' || role === 'teacher') {
-            programField.style.display = '';
-            populateProgramOptions();
-        } else {
-            programField.style.display = 'none';
-            document.getElementById('program_id').value = '';
-        }
-
-        deanNote.style.display = (role === 'dean') ? '' : 'none';
-    }
-
-    document.getElementById('role').addEventListener('change', updateFieldsForRole);
-    document.getElementById('department_id').addEventListener('change', populateProgramOptions);
-    document.addEventListener('DOMContentLoaded', updateFieldsForRole);
-</script>
-
-</x-sidebar-layout>
+    </x-sidebar-layout>

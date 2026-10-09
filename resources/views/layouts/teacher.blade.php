@@ -16,7 +16,7 @@
             <a href="{{ route('teacher.dashboard') }}" class="text-sm font-medium text-gray-600 hover:text-indigo-600">Dashboard</a>
         </div>
         <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-500">{{ auth()->user()->name }}</span>
+            <span class="text-sm text-gray-500">{{ auth()->user()->display_name }}</span>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="text-sm text-red-500 hover:underline">Logout</button>

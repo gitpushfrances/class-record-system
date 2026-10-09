@@ -14,28 +14,20 @@
         @csrf
 
         {{-- Name --}}
-        <div class="field">
-            <label class="field-label" for="name">Full Name</label>
-            <div class="field-wrap">
-                <i class="fas fa-user field-ico"></i>
-                <input
-                    id="name"
-                    class="field-input"
-                    type="text"
-                    name="name"
-                    value="{{ old('name') }}"
-                    placeholder="e.g. Juan Dela Cruz"
-                    maxlength="255"
-                    required autofocus
-                    autocomplete="name"
-                />
-            </div>
-            @error('name')
-                <div class="field-err">
-                    <i class="fas fa-circle-exclamation"></i> {{ $message }}
+        @foreach ([['last_name', 'Last Name', 'Dela Cruz', true, 'fa-user'], ['first_name', 'First Name', 'Juan', true, 'fa-user'], ['middle_name', 'Middle Name (optional)', 'Miguel', false, 'fa-user']] as [$field, $label, $hint, $req, $ico])
+            <div class="field">
+                <label class="field-label" for="{{ $field }}">{{ $label }}</label>
+                <div class="field-wrap">
+                    <i class="fas {{ $ico }} field-ico"></i>
+                    <input id="{{ $field }}" class="field-input" type="text" name="{{ $field }}"
+                           value="{{ old($field) }}" placeholder="{{ $hint }}" maxlength="100"
+                           @if($req) required @endif @if($loop->first) autofocus @endif />
                 </div>
-            @enderror
-        </div>
+                @error($field)
+                    <div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>
+                @enderror
+            </div>
+        @endforeach
 
         {{-- Email --}}
         <div class="field">

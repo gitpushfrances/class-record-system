@@ -135,7 +135,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
             $row = [
                 $counter++,
                 $student->student_number,
-                $student->last_name . ', ' . $student->first_name . ($student->middle_name ? ' ' . substr($student->middle_name, 0, 1) . '.' : ''),
+                $student->full_name,
             ];
 
             $colIndex = 3;

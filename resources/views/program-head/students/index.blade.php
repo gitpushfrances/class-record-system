@@ -79,7 +79,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 font-mono text-sm text-gray-700">{{ $student->student_number }}</td>
                         <td class="px-6 py-4">
-                            <div class="font-medium text-gray-800">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</div>
+                            <div class="font-medium text-gray-800">{{ $student->full_name }}</div>
                             @if($student->email)
                                 <div class="text-sm text-gray-500">{{ $student->email }}</div>
                             @endif

@@ -119,7 +119,7 @@
                     @foreach(\App\Models\Enrollment::sortRoster($currentTerm->enrollments) as $enrollment)
                         <tr>
                             <td class="px-6 py-4 font-mono text-sm">{{ $enrollment->student->student_number }}</td>
-                            <td class="px-6 py-4 text-sm">{{ $enrollment->student->last_name }}, {{ $enrollment->student->first_name }}</td>
+                            <td class="px-6 py-4 text-sm">{{ $enrollment->student->full_name }}</td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-1 text-xs rounded {{ $enrollment->status === 'enrolled' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                     {{ ucfirst($enrollment->status) }}

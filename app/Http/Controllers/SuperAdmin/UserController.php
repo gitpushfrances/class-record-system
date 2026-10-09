@@ -150,13 +150,15 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
+            ...User::nameRules(),
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         User::create([
-            'name'     => $validated['name'],
+            'last_name'   => $validated['last_name'],
+            'first_name'  => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role'     => 'dean',
@@ -190,7 +192,7 @@ class UserController extends Controller
     public function storeAccount(Request $request)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
+            ...User::nameRules(),
             'email'         => 'required|email|unique:users,email',
             'password'      => 'required|string|min:8|confirmed',
             'role'          => 'required|in:' . implode(',', $this->managedRoles),
@@ -234,7 +236,9 @@ class UserController extends Controller
         }
 
         $user = User::create([
-            'name'          => $validated['name'],
+            'last_name'   => $validated['last_name'],
+            'first_name'  => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
             'email'         => $validated['email'],
             'password'      => Hash::make($validated['password']),
             'role'          => $validated['role'],
@@ -275,7 +279,7 @@ class UserController extends Controller
         abort_if(!in_array($dean->role, $this->managedRoles, true), 403);
 
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
+            ...User::nameRules(),
             'email'         => 'required|email|unique:users,email,' . $dean->id,
             'password'      => 'nullable|string|min:8|confirmed',
             'role'          => 'required|in:' . implode(',', $this->managedRoles),
@@ -325,7 +329,9 @@ class UserController extends Controller
         }
 
         $dean->update([
-            'name'          => $validated['name'],
+            'last_name'   => $validated['last_name'],
+            'first_name'  => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
             'email'         => $validated['email'],
             'role'          => $validated['role'],
             'department_id' => $validated['department_id'] ?? null,

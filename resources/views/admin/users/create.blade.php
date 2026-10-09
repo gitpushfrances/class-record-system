@@ -49,10 +49,26 @@
                 <p class="mt-1 text-xs" style="color:rgba(200,169,126,0.5);">Only one Program Head can be assigned per program.</p>
             </div>
             <div>
-                <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Full Name</label>
-                <input type="text" name="name" value="{{ old('name') }}"
-                       class="w-full px-3 py-2 text-sm rounded-lg"
-                       style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div>
+                        <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Last Name</label>
+                        <input type="text" name="last_name" value="{{ old('last_name') }}" placeholder="Dela Cruz" required maxlength="100"
+                               class="w-full px-3 py-2 text-sm rounded-lg"
+                               style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">First Name</label>
+                        <input type="text" name="first_name" value="{{ old('first_name') }}" placeholder="Juan" required maxlength="100"
+                               class="w-full px-3 py-2 text-sm rounded-lg"
+                               style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Middle Name <span style="opacity:.6;">(optional)</span></label>
+                        <input type="text" name="middle_name" value="{{ old('middle_name') }}" placeholder="Miguel" maxlength="100"
+                               class="w-full px-3 py-2 text-sm rounded-lg"
+                               style="background:rgba(200,169,126,0.07);border:1px solid rgba(200,169,126,0.2);color:#f0dfc0;">
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="block mb-1 text-xs font-medium" style="color:rgba(200,169,126,0.7);">Email</label>

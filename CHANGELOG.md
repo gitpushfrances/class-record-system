@@ -1060,6 +1060,53 @@ f
 
 ---
 
+## QA FIXES & PATCHES — October 10, 2026
+
+### Formal Name Format — Students (client request)
+- Client decision: all student names display as `Lastname, Firstname M.` across the system
+- Root cause: `Student::full_name` returned `First Middle Last`, and several views built names by hand with inconsistent results (no middle initial, full middle name, or last name only)
+- `Student::getFullNameAttribute()` rewritten: `Dela Cruz, Juan M.`, or `Reyes, Jose` when there is no middle name
+- Replaced hand-built names with `full_name` in `dean/enrollments/show`, `dean/sections/show`, `program-head/sections/show`, `dean/students/index`, `program-head/students/index`, and `ClassRecordExport` (Excel)
+- Intentionally unchanged: the duplicate-name check in `dean/students/create` (not a display), form inputs, and the column-header sort links
+
+### My Advisory — Male/Female Separator Rows (client request)
+- `teacher/classes/show.blade.php`: on All, MALE / FEMALE / "No gender set" divider rows with numbering restarting at 1 per group; on Male or Female, one group with no divider; matches the Class Record behavior
+- Search box hides a divider when none of its rows match (client-side, `tr.roster-divider` toggle)
+- Remove-confirmation call now passes the name through `addslashes()`, so a name with an apostrophe (e.g. `D'Souza`) no longer breaks the inline JavaScript
+- No controller or model change; reuses `Enrollment::sortRoster()`
+
+### Faculty / Dean / Program Head Names — Structured Fields (client request)
+- Decision: lists, tables, dropdowns and labels show `Lastname, Firstname M.`; the logged-in user's own identity (sidebar, avatar initial, "Welcome back") shows natural order `Firstname M. Lastname`
+- Root cause: `users.name` was a single free-text field, so a reliable last-name-first format could not be produced or enforced
+- Migration `2026_10_10_000000_add_name_parts_to_users_table`: nullable `last_name`, `first_name`, `middle_name`; `users.name` is kept
+- New trait `App\Models\Concerns\HasFormalName` (used by `User`): a `saving` hook rebuilds `name` as `Lastname, Firstname M.` whenever first and last name are present; `display_name` accessor returns natural order and falls back to `name` for legacy accounts; `User::nameRules()` is the single shared validation rule set (letters, spaces, `.`, `'`, `-`; middle name optional)
+- Because `name` stays a real column, roughly 40 existing `->name` displays became formal with no view changes
+- Super Admin keeps the single `name` field (no real last name): `ProfileUpdateRequest` and the profile form branch on `role === 'super_admin'`
+- Updated to the three-field input and shared rules: Admin Create Account, Admin Edit Account, faculty signup (`RegisteredUserController`), Profile, and `UserController` (`store`, `storeAccount`, `update`)
+- `User::$fillable` gained the three columns
+- `SuperAdminSeeder`: seeded accounts now use structured names
+- Existing accounts converted once via tinker (ids 2 to 8); output confirmed, e.g. `Sample, Teacher` (name) and `Teacher Sample` (display_name)
+- `admin.deans.create` / `admin.deans.store` routes removed only if nothing referenced them (guarded `grep` before the `sed`)
+
+### Incident During Rollout
+- The `User.php` patch was applied twice, producing a duplicate `use App\Models\Concerns\HasFormalName;` and a fatal error ("name is already in use") on every request
+- Fixed by de-duplicating the import and `$fillable` lines; confirmed one import, one trait use, one entry per column, `php -l` clean
+- Lesson: the patch steps were not idempotent for `User.php`; later `grep -c` checks confirmed no other file was patched twice
+
+### Verification
+- Migration ran clean; tinker conversion output confirmed for all seven accounts
+- Confirmed counts: `nameRules` x3 in `UserController`, `roster-divider` x2 in `teacher/classes/show.blade.php`, one `last_name` input each in the Admin Create and Edit forms
+- Pending: `php artisan view:cache` full Blade compile, `php -l` sweep of the other changed files, and browser checks (My Advisory dividers, Class Record names, sidebar natural order, Admin Create / Edit forms, signup, profile)
+
+### Known Gaps (not fixed)
+- Account id 9 ("test faculty") has no structured name; it must be fixed through Admin > Faculty > Edit (the form shows empty required name fields for unconverted accounts)
+- `tests/Feature/ProfileTest.php` posts a single `name` for a factory user and will fail now that profile requires the three name parts
+- `UserController::create()` and `store()` are unreachable dead code after the route removal; delete in a cleanup commit
+- Other labels that print another person's `->name` (e.g. "Adviser:", "Dean:", "Teacher:") now show the formal format; switch to `display_name` per label if natural order is preferred there
+- Deploy: run `php artisan migrate`, then convert the real production accounts (ids differ from local)
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -1086,7 +1133,7 @@ f
 
 ---
 
-**Last Updated:** October 9, 2026  
+**Last Updated:** October 10, 2026  
 **Next Milestone:** Phase 9 — Reporting & Analytics  
 **Maintained By:** Frances Igop
 

@@ -45,7 +45,7 @@
                                     <option value="">— Choose a student —</option>
                                     @foreach($availableStudents as $student)
                                         <option value="{{ $student->id }}">
-                                            {{ $student->student_number }} — {{ $student->last_name }}, {{ $student->first_name }}
+                                            {{ $student->student_number }} — {{ $student->full_name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -86,7 +86,7 @@
                                 @if($enrollment->student)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 font-mono text-sm text-gray-700">{{ $enrollment->student->student_number }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-700">{{ $enrollment->student->last_name }}, {{ $enrollment->student->first_name }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">{{ $enrollment->student->full_name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">{{ $enrollment->student->year_level }}</td>
                                     <td class="px-6 py-4">
                                         <span class="px-2 py-1 text-xs font-medium rounded-full {{ $enrollment->status === 'enrolled' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
@@ -98,7 +98,7 @@
                                             <form action="{{ route('dean.enrollments.destroy', [$currentTerm, $enrollment]) }}" method="POST" class="remove-enrollment-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <input type="hidden" class="enrollment-label" value="{{ $enrollment->student->last_name }}, {{ $enrollment->student->first_name }} ({{ $enrollment->student->student_number }})">
+                                                <input type="hidden" class="enrollment-label" value="{{ $enrollment->student->full_name }} ({{ $enrollment->student->student_number }})">
                                                 <button type="submit" title="Remove"
                                                         class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
                                                         style="color:#dc2626; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3);">

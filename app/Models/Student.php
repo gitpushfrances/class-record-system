@@ -44,6 +44,9 @@ class Student extends Model
     // Accessors
     public function getFullNameAttribute()
     {
-        return "{$this->first_name} {$this->middle_name} {$this->last_name}";
+        $middle  = trim((string) $this->middle_name);
+        $initial = $middle !== '' ? ' ' . mb_strtoupper(mb_substr($middle, 0, 1)) . '.' : '';
+
+        return trim("{$this->last_name}, {$this->first_name}{$initial}");
     }
 }

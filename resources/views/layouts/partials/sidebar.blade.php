@@ -267,13 +267,13 @@
             {{-- Avatar initial --}}
             <div class="flex items-center justify-center flex-shrink-0 w-8 h-8 text-xs font-bold rounded-full"
                  style="background: rgba(200,169,126,0.15); color: #c8a97e; border: 1px solid rgba(200,169,126,0.25);">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                {{ strtoupper(substr(auth()->user()->display_name, 0, 1)) }}
             </div>
 
             {{-- Name + email (hidden when collapsed) --}}
             <div class="flex-1 min-w-0 sidebar-user-info">
                 <div class="text-xs font-semibold truncate" style="color: #f0dfc0;">
-                    {{ auth()->user()->name }}
+                    {{ auth()->user()->display_name }}
                 </div>
                 <div class="text-xs truncate" style="color: rgba(200,169,126,0.75);">
                     {{ auth()->user()->email }}

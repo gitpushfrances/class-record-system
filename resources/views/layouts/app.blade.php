@@ -48,7 +48,7 @@
                     </span>
                 </div>
                 <div class="text-xs truncate max-w-[140px]" style="color: rgba(200,169,126,0.5);">
-                    {{ auth()->user()->name }}
+                    {{ auth()->user()->display_name }}
                 </div>
             </header>
 
