@@ -133,9 +133,36 @@
         @endif
     </div>
 
+    @php
+        $gender = in_array(request('gender'), ['male', 'female'], true) ? request('gender') : 'all';
+        $order  = request('order') === 'id' ? 'id' : 'name';
+        $roster = $currentTerm
+            ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $gender === 'all' ? null : $gender, $order)
+            : collect();
+    @endphp
+
     @if(!$currentTerm || $currentTerm->enrollments->isEmpty())
         <div class="px-6 py-10 text-sm text-center text-gray-400">No students enrolled yet.</div>
     @else
+        <div class="px-6 py-4 border-b border-gray-100">
+            <div class="flex flex-wrap items-center gap-2 mb-3 text-sm">
+                @foreach(['all' => 'All', 'male' => 'Male', 'female' => 'Female'] as $key => $label)
+                    <a href="{{ request()->fullUrlWithQuery(['gender' => $key === 'all' ? null : $key]) }}"
+                       class="px-3 py-1.5 font-semibold border rounded-lg transition {{ $gender === $key ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' }}">{{ $label }}</a>
+                @endforeach
+                <span class="mx-2 text-gray-300">|</span>
+                @foreach(['name' => 'A-Z', 'id' => 'Student No.'] as $key => $label)
+                    <a href="{{ request()->fullUrlWithQuery(['order' => $key === 'name' ? null : $key]) }}"
+                       class="px-3 py-1.5 font-semibold border rounded-lg transition {{ $order === $key ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' }}">{{ $label }}</a>
+                @endforeach
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <input type="text" id="rosterSearch" placeholder="Search student name or number..." autocomplete="off"
+                       class="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                       style="width:100%; max-width:320px;">
+                <span id="rosterCount" class="text-xs text-gray-400"></span>
+            </div>
+        </div>
         <table class="w-full text-sm">
             <thead class="text-xs text-gray-500 uppercase bg-gray-50">
                 <tr>
@@ -146,8 +173,9 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @foreach(\App\Models\Enrollment::sortRoster($currentTerm ? $currentTerm->enrollments : collect()) as $i => $enrollment)
-                    <tr class="hover:bg-gray-50">
+                @forelse($roster as $i => $enrollment)
+                    <tr class="roster-row hover:bg-gray-50"
+                        data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
                         <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
                         <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
@@ -166,7 +194,9 @@
                         </td>
                         
                     </tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="4" class="px-6 py-10 text-sm text-center text-gray-400">No {{ $gender }} students enrolled.</td></tr>
+                @endforelse
             </tbody>
         </table>
     @endif
@@ -202,6 +232,21 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('removeForm-' + activeRemoveFormId).submit();
         }
     });
+
+    var rosterSearch = document.getElementById('rosterSearch');
+    if (rosterSearch) {
+        var rosterRows  = document.querySelectorAll('tr.roster-row');
+        var rosterCount = document.getElementById('rosterCount');
+        rosterSearch.addEventListener('input', function () {
+            var q = rosterSearch.value.trim().toLowerCase(), shown = 0;
+            rosterRows.forEach(function (r) {
+                var match = q === '' || r.dataset.search.indexOf(q) !== -1;
+                r.style.display = match ? '' : 'none';
+                if (match) shown++;
+            });
+            rosterCount.textContent = q === '' ? '' : 'Showing ' + shown + ' of ' + rosterRows.length;
+        });
+    }
 });
 </script>
 {{-- Remove Student Confirmation Modal --}}
