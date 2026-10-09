@@ -129,17 +129,18 @@ class SampleDataSeeder extends Seeder
             ['code' => 'ENG101',  'name' => 'Technical Writing',              'units' => 3],
         ];
         foreach ($subjects as $sub) {
-            Subject::create([
-                'code'         => $sub['code'],
-                'name'         => $sub['name'],
-                'description'  => 'Sample description for ' . $sub['name'],
-                'units'        => $sub['units'],
-                'department'   => 'Computer Science',
-                'status'       => 'approved',
-                'requested_by' => $dean?->id,
-                'approved_by'  => $admin?->id,
-                'approved_at'  => now(),
-            ]);
+            Subject::firstOrCreate(
+                ['code' => $sub['code'], 'name' => $sub['name']],
+                [
+                    'description'  => 'Sample description for ' . $sub['name'],
+                    'units'        => $sub['units'],
+                    'department'   => 'Computer Science',
+                    'status'       => 'approved',
+                    'requested_by' => $dean?->id,
+                    'approved_by'  => $admin?->id,
+                    'approved_at'  => now(),
+                ]
+            );
         }
         echo "Sample subjects created!\n";
 
