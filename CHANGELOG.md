@@ -1132,31 +1132,6 @@ f
 
 ---
 
-## QA FIXES & PATCHES — October 16, 2026
-
-### Batch 1 — UI (client request)
-- Browser tab title: `APP_NAME` default and `.env.example` set to "Class Record System"
-- Desktop sidebar fixed in place (`position: sticky`) so Logout stays visible
-- New `<x-back-button>` component; blue "← Back" links converted to buttons; back buttons added to Grade Config, Class Record and the Admin department / program / section pages
-
-### Batch 2 — Print, Submit, Backup (client request)
-- Class Record Print now calls `window.print()` with a landscape `@media print` stylesheet; filters, buttons and sidebar hidden
-- Submit for Verification falls back to native `confirm()` when `Swal` is undefined
-- Backup: `backup:run` exit code is checked and the real error is shown; `SystemRoot` passed to `mysqldump` on Windows
-
-### Batch 3 — Teacher Dashboard (client request)
-- "My Advisory" and "Subjects I'm Teaching" cards replaced by one collapsible card per subject class: `CODE — SUBJECT NAME`, Year & Section, Semester, S.Y., student count, Male / Female tables (`Stud. ID`, `Names`)
-- First card open, others collapsed (native `<details>`); classes sorted by program, year, section, subject code
-- Students with no gender appear in a third "No gender set" table
-- Eager-loads `enrollments.student`; reuses `Enrollment::sortRoster()`
-
-### Known Gaps (not fixed)
-- Dropped students still listed (no enrollment status filter yet)
-- Backup restore still accepts only `.sql` / `.txt` and runs it through `DB::unprepared`
-- `teacher.classes.record.print` route no longer linked from the UI
-
----
-
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
