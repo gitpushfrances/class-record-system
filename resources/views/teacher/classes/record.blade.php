@@ -1,5 +1,5 @@
 <x-sidebar-layout>
-<div style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.show', $section)" label="Back to Class" /></div>
+<div class="no-print" style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.show', $section)" label="Back to Class" /></div>
 
 {{-- Header --}}
 @php
@@ -26,7 +26,7 @@
             @endif
         </div>
     </div>
-    <div class="flex flex-wrap gap-2 mt-1">
+    <div class="flex flex-wrap gap-2 mt-1 no-print">
         <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-sliders"></i> Config
@@ -47,10 +47,10 @@
            class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             <i class="fa-solid fa-file-excel"></i> Export Excel
         </a>
-        <a href="{{ route('teacher.classes.record.print', ['section' => $section, 'subject' => $subject, 'gender' => $gender, 'order' => $order]) }}" target="_blank"
-           class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+        <button type="button" onclick="window.print()"
+                class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             <i class="fa-solid fa-print"></i> Print
-        </a>
+        </button>
     </div>
 </div>
 
@@ -61,7 +61,7 @@
     </div>
 @endif
 
-<div class="flex flex-wrap items-center gap-2 mb-3 text-sm">
+<div class="flex flex-wrap items-center gap-2 mb-3 text-sm no-print">
     @foreach(['all' => 'All', 'male' => 'Male', 'female' => 'Female'] as $key => $label)
         <a href="{{ request()->fullUrlWithQuery(['gender' => $key === 'all' ? null : $key]) }}"
            class="px-3 py-1.5 font-semibold border rounded-lg transition {{ $gender === $key ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50' }}">{{ $label }}</a>
@@ -73,13 +73,28 @@
     @endforeach
 </div>
 @if($enrollments->count() > 0)
-    <div class="flex flex-wrap items-center gap-3 mb-3">
+    <div class="flex flex-wrap items-center gap-3 mb-3 no-print">
         <input type="text" id="recordSearch" placeholder="Search student name or number..." autocomplete="off"
                class="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
                style="width:100%; max-width:320px;">
         <span id="recordCount" class="text-xs text-gray-400"></span>
     </div>
 @endif
+
+<style>
+@media print {
+    @page { size: landscape; margin: 10mm; }
+    #sidebar, body header, .no-print { display: none !important; }
+    body, main { background: #fff !important; }
+    main { padding: 0 !important; }
+    .overflow-x-auto { overflow: visible !important; }
+    table { min-width: 0 !important; font-size: 10px; }
+    th.sticky, td.sticky { position: static !important; }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
 
 {{-- Spreadsheet --}}
 <div class="overflow-x-auto bg-white border border-gray-200 shadow-sm rounded-xl">

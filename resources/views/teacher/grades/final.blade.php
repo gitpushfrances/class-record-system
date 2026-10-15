@@ -60,6 +60,12 @@
 
 <script>
 function confirmSubmitVerification() {
+    if (typeof Swal === 'undefined') {
+        if (confirm('Submit for verification? Grades, items, and attendance for this subject will be locked until the Program Head reviews them.')) {
+            document.getElementById('submitVerificationForm').submit();
+        }
+        return;
+    }
     Swal.fire({
         title: 'Submit for verification?',
         text: 'Grades, items, and attendance for this subject will be locked until the Program Head reviews them.',
