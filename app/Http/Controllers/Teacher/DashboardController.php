@@ -3,16 +3,40 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Enrollment;
 use App\Models\SectionTerm;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $advisoryTerms = $this->advisoryQuery()->get();
-        $teachingTerms = $this->teachingQuery()->get();
+        $teachingTerms = $this->teachingQuery()->with('enrollments.student')->get();
 
-        return view('teacher.dashboard', compact('advisoryTerms', 'teachingTerms'));
+        $classes = $teachingTerms
+            ->flatMap(function ($term) {
+                $isMaleOrFemale = fn ($e) => in_array($e->student?->gender, ['male', 'female'], true);
+
+                $roster = [
+                    'male'   => Enrollment::sortRoster($term->enrollments, 'male'),
+                    'female' => Enrollment::sortRoster($term->enrollments, 'female'),
+                    'other'  => Enrollment::sortRoster($term->enrollments->reject($isMaleOrFemale)),
+                ];
+
+                return $term->subjects->map(fn ($subject) => [
+                    'term'    => $term,
+                    'subject' => $subject,
+                    'roster'  => $roster,
+                ]);
+            })
+            ->sortBy(fn ($c) => [
+                $c['term']->section->program->code,
+                (int) $c['term']->section->year_number,
+                strtolower($c['term']->section->section_letter),
+                $c['subject']->code,
+            ])
+            ->values();
+
+        return view('teacher.dashboard', compact('classes'));
     }
 
     public function advisory()
