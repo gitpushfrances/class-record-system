@@ -1,4 +1,5 @@
 <x-sidebar-layout>
+<div style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.show', $section)" label="Back to Class" /></div>
 
 <div class="mb-6">
     <h1 class="mt-1 text-2xl font-bold" style="color: #1c1814;">Grade Configuration</h1>

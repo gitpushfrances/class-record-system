@@ -5,7 +5,7 @@
 
 {{-- Header --}}
 <div class="mb-6">
-    <a href="{{ route('teacher.dashboard') }}" class="text-sm text-indigo-600 hover:underline">← Back to Dashboard</a>
+    <x-back-button :href="route('teacher.dashboard')" label="Back to Dashboard" />
     <h1 class="mt-1 text-2xl font-bold text-gray-800">
         {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
     </h1>

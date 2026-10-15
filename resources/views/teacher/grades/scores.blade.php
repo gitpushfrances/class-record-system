@@ -5,7 +5,7 @@
 
 
 <div class="mb-6">
-    <a href="{{ route('teacher.grades.items', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Grade Items</a>
+    <x-back-button :href="route('teacher.grades.items', [$section, $subject])" label="Back to Grade Items" />
     <h1 class="mt-1 text-2xl font-bold text-gray-800">{{ $gradeItem->name }}</h1>
     <p class="mt-1 text-sm text-gray-500">
         {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }} &bull;

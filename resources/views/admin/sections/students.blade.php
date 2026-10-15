@@ -1,4 +1,5 @@
 <x-sidebar-layout>
+<div style="margin-bottom:12px;"><x-back-button :href="route('admin.sections.show', [$department, $program, $section])" label="Back to Section" /></div>
 
     <div class="mb-4 text-sm text-gray-500">
         <a href="{{ route('admin.departments.index') }}" class="hover:text-gray-700">Departments</a>

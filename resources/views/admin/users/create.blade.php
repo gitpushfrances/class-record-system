@@ -1,7 +1,7 @@
 <x-sidebar-layout>
 
 <div class="mb-6">
-    <a href="{{ route('admin.deans.index') }}" class="text-sm text-indigo-600 hover:underline">← Back to Accounts</a>
+    <x-back-button :href="route('admin.deans.index')" label="Back to Faculty" />
     <h1 class="mt-1 text-2xl font-bold" style="color:#f0dfc0;">Create Account</h1>
 </div>
 

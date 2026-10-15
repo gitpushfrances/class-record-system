@@ -4,7 +4,7 @@
 
         <div class="flex items-center justify-between">
             <div>
-                <a href="{{ route('dean.enrollments.index') }}" class="text-sm text-indigo-600 hover:underline">← Back to Enrollments</a>
+                <x-back-button :href="route('dean.enrollments.index')" label="Back to Enrollments" />
                 <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">
                     {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
                 </h1>

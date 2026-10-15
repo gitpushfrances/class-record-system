@@ -2,7 +2,7 @@
 
 <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <div>
-        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}" class="text-sm text-indigo-600 hover:underline">← Back to Class</a>
+        <x-back-button :href="route('teacher.classes.record', [$section, $subject])" label="Back to Class" />
         <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Final Grades</h1>
         <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>

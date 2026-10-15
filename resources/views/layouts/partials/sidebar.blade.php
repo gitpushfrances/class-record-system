@@ -48,6 +48,11 @@
         padding-left: 0;
         padding-right: 0;
     }
+    /* Desktop: pin the sidebar to the viewport so Logout stays visible while the page scrolls */
+    @media (min-width: 1024px) {
+        #sidebar { position: sticky; top: 0; height: 100vh; align-self: flex-start; }
+    }
+
     /* Mobile: always full width, slide in/out */
     @media (max-width: 1023px) {
         #sidebar {

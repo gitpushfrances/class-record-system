@@ -1,4 +1,5 @@
 <x-sidebar-layout>
+<div style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.show', $section)" label="Back to Class" /></div>
 
 {{-- Header --}}
 @php
