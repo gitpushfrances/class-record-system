@@ -28,7 +28,11 @@ class BackupController extends Controller
     public function run()
     {
         try {
-            Artisan::call('backup:run');
+            if (DIRECTORY_SEPARATOR === '\\' && getenv('SystemRoot') !== false) { $_SERVER['SystemRoot'] = getenv('SystemRoot'); } // WIN-ENV: mysqldump child needs SystemRoot (Winsock)
+            $exit = Artisan::call('backup:run');
+            if ($exit !== 0) {
+                return redirect()->route('admin.backup.index')->with('error', 'Backup failed: ' . \Illuminate\Support\Str::before(trim(Artisan::output()), '#0 '));
+            }
             return redirect()->route('admin.backup.index')->with('success', 'Backup created successfully.');
         } catch (\Exception $e) {
             return redirect()->route('admin.backup.index')->with('error', 'Backup failed: ' . $e->getMessage());
