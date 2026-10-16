@@ -1223,6 +1223,15 @@ f
 - New `App\Services\StudentImport`, `partials/student-import.blade.php`; routes `program-head.students.import/template`, `dean.students.import/template`; tests: `StudentImportTest`
 
 
+### Scope layer and Admin View As (Phase 6a)
+- New `App\Services\Scope` (`departmentId()`, `programId()`, `role()`): Deans and Program Heads use their own assignment; an Admin uses the department or program picked in **View As**
+- All 68 hard-coded `auth()->user()->department_id` / `program_id` reads in the Dean, Program Head and ROG controllers now go through `Scope`
+- Admin → **View As**: work in any department as its Dean or any approved program as its Program Head; sidebar shows that role's menu with a "Viewing as" banner and **Back to Admin**; actions are recorded under the Admin account
+- `CheckRole`: an Admin passes `role:dean` / `role:program_head` only while viewing as that role; otherwise redirected to View As
+- Fixed: Program Head subjects were filtered by `requested_by` (a new Program Head could not see or edit the previous one's requests); now scoped by program
+- Tests: `ViewAsTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1261,6 +1270,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 
 ### Roles and accounts
 - [ ] Admin all-access, Dean faculty management, Admin departments / programs CRUD, subject year level and semester with separators are not built (Phase 6)
+- [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
 - [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role
 - [ ] Teacher `program_id` is stored but no query scoping by it has been verified

@@ -10,7 +10,7 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $sort      = in_array($request->get('sort'), ['last_name', 'student_number', 'created_at']) ? $request->get('sort') : 'last_name';
@@ -40,7 +40,7 @@ class StudentController extends Controller
 
     public function import(Request $request)
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), ['file' => \App\Services\StudentImport::FILE_RULES]);
@@ -66,14 +66,14 @@ class StudentController extends Controller
 
     public function create()
     {
-        abort_if(!auth()->user()->program_id, 403, 'No program assigned to your account.');
+        abort_if(!\App\Services\Scope::programId(), 403, 'No program assigned to your account.');
 
         return view('program-head.students.create');
     }
 
     public function store(Request $request)
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $validated = $request->validate([
@@ -101,7 +101,7 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         abort_if(
-            $student->program_id !== auth()->user()->program_id,
+            $student->program_id !== \App\Services\Scope::programId(),
             403,
             'This student does not belong to your program.'
         );
@@ -112,7 +112,7 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         abort_if(
-            $student->program_id !== auth()->user()->program_id,
+            $student->program_id !== \App\Services\Scope::programId(),
             403,
             'This student does not belong to your program.'
         );
@@ -139,7 +139,7 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         abort_if(
-            $student->program_id !== auth()->user()->program_id,
+            $student->program_id !== \App\Services\Scope::programId(),
             403,
             'This student does not belong to your program.'
         );

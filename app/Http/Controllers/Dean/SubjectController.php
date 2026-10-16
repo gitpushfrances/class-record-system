@@ -11,7 +11,7 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         // Every subject belonging to a program in this Dean's department
         $subjects = Subject::with(['program', 'requester', 'sectionTerms'])
@@ -40,7 +40,7 @@ class SubjectController extends Controller
     {
         abort_if($subject->status !== 'pending', 422, 'Subject is not pending.');
         abort_if(
-            !$subject->program || $subject->program->department_id !== auth()->user()->department_id,
+            !$subject->program || $subject->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This subject does not belong to your department.'
         );
@@ -65,7 +65,7 @@ class SubjectController extends Controller
 
         $count = Subject::where('status', 'pending')
             ->whereIn('id', $data['ids'])
-            ->whereHas('program', fn($q) => $q->where('department_id', auth()->user()->department_id))
+            ->whereHas('program', fn($q) => $q->where('department_id', \App\Services\Scope::departmentId()))
             ->whereHas('requester', fn($q) => $q->where('role', 'program_head'))
             ->update([
                 'status'          => 'approved',
@@ -82,7 +82,7 @@ class SubjectController extends Controller
     {
         abort_if($subject->status !== 'pending', 422, 'Subject is not pending.');
         abort_if(
-            !$subject->program || $subject->program->department_id !== auth()->user()->department_id,
+            !$subject->program || $subject->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This subject does not belong to your department.'
         );

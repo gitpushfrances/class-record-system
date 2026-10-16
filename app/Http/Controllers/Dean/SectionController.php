@@ -14,7 +14,7 @@ class SectionController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $sections = Section::with([
                 'program.department',
@@ -42,7 +42,7 @@ class SectionController extends Controller
     public function create()
     {
         $programs = Program::where('status', 'approved')
-            ->where('department_id', auth()->user()->department_id)
+            ->where('department_id', \App\Services\Scope::departmentId())
             ->orderBy('code')
             ->get();
 
@@ -60,7 +60,7 @@ class SectionController extends Controller
 
         $program = Program::findOrFail($validated['program_id']);
         abort_if(
-            $program->department_id !== auth()->user()->department_id,
+            $program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This program does not belong to your department.'
         );
@@ -82,7 +82,7 @@ class SectionController extends Controller
     public function show(Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -97,7 +97,7 @@ class SectionController extends Controller
 
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
-            ->where('department_id', auth()->user()->department_id)
+            ->where('department_id', \App\Services\Scope::departmentId())
             ->orderBy('name')
             ->get();
 
@@ -107,13 +107,13 @@ class SectionController extends Controller
     public function edit(Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
 
         $programs = Program::where('status', 'approved')
-            ->where('department_id', auth()->user()->department_id)
+            ->where('department_id', \App\Services\Scope::departmentId())
             ->orderBy('code')
             ->get();
 
@@ -123,7 +123,7 @@ class SectionController extends Controller
     public function update(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -138,7 +138,7 @@ class SectionController extends Controller
 
         $program = Program::findOrFail($validated['program_id']);
         abort_if(
-            $program->department_id !== auth()->user()->department_id,
+            $program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This program does not belong to your department.'
         );
@@ -161,7 +161,7 @@ class SectionController extends Controller
     public function destroy(Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -184,7 +184,7 @@ class SectionController extends Controller
     public function attachSubject(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -207,7 +207,7 @@ class SectionController extends Controller
     public function changeSubjectTeacher(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -230,7 +230,7 @@ class SectionController extends Controller
     public function changeAdviser(Request $request, Section $section)
     {
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );

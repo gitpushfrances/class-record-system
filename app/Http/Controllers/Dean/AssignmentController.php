@@ -14,7 +14,7 @@ class AssignmentController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $assignments = DB::table('section_subject_teachers')
             ->join('section_terms', 'section_terms.id', '=', 'section_subject_teachers.section_term_id')
@@ -72,7 +72,7 @@ class AssignmentController extends Controller
 
         $section = Section::with('program')->findOrFail($validated['section_id']);
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -125,7 +125,7 @@ class AssignmentController extends Controller
 
         abort_if(!$assignment, 404);
         abort_if(
-            $assignment->department_id !== auth()->user()->department_id,
+            $assignment->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This assignment does not belong to your department.'
         );

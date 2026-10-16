@@ -11,7 +11,7 @@ class ProgramAssignmentController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $programHeads = User::where('role', 'program_head')
             ->where('department_id', $departmentId)
@@ -30,14 +30,14 @@ class ProgramAssignmentController extends Controller
     public function assign(Request $request, User $programHead)
     {
         abort_if($programHead->role !== 'program_head', 404);
-        abort_if($programHead->department_id !== auth()->user()->department_id, 403);
+        abort_if($programHead->department_id !== \App\Services\Scope::departmentId(), 403);
 
         $validated = $request->validate([
             'program_id' => 'required|exists:programs,id',
         ]);
 
         $program = Program::findOrFail($validated['program_id']);
-        abort_if($program->department_id !== auth()->user()->department_id, 403, 'That program does not belong to your department.');
+        abort_if($program->department_id !== \App\Services\Scope::departmentId(), 403, 'That program does not belong to your department.');
 
         // Only one Program Head per program - reject if already taken by someone else.
         $alreadyTaken = User::where('role', 'program_head')
@@ -57,7 +57,7 @@ class ProgramAssignmentController extends Controller
     public function remove(User $programHead)
     {
         abort_if($programHead->role !== 'program_head', 404);
-        abort_if($programHead->department_id !== auth()->user()->department_id, 403);
+        abort_if($programHead->department_id !== \App\Services\Scope::departmentId(), 403);
 
         $programHead->update(['program_id' => null]);
 

@@ -11,7 +11,7 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $sort      = in_array($request->get('sort'), ['last_name', 'student_number', 'created_at']) ? $request->get('sort') : 'last_name';
         $direction = $request->get('direction') === 'desc' ? 'desc' : 'asc';
@@ -52,7 +52,7 @@ class StudentController extends Controller
 
         $program = Program::findOrFail($request->program_id);
         abort_if(
-            $program->department_id !== auth()->user()->department_id || $program->status !== 'approved',
+            $program->department_id !== \App\Services\Scope::departmentId() || $program->status !== 'approved',
             403,
             'This program does not belong to your department.'
         );
@@ -75,7 +75,7 @@ class StudentController extends Controller
 
     public function create()
     {
-        $programs = Program::where('department_id', auth()->user()->department_id)
+        $programs = Program::where('department_id', \App\Services\Scope::departmentId())
             ->where('status', 'approved')
             ->orderBy('code')
             ->get();
@@ -85,7 +85,7 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $validated = $request->validate([
             'first_name'     => 'required|string|max:255',
@@ -132,7 +132,7 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         abort_if(
             !$student->program || $student->program->department_id !== $departmentId,
@@ -150,7 +150,7 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student)
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         abort_if(
             !$student->program || $student->program->department_id !== $departmentId,
@@ -188,7 +188,7 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         abort_if(
-            !$student->program || $student->program->department_id !== auth()->user()->department_id,
+            !$student->program || $student->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This student does not belong to your department.'
         );

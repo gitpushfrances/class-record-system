@@ -48,6 +48,10 @@ Route::get('/', function () {
 Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
 
+    Route::get('/view-as', [App\Http\Controllers\SuperAdmin\ViewAsController::class, 'index'])->name('view-as.index');
+    Route::post('/view-as', [App\Http\Controllers\SuperAdmin\ViewAsController::class, 'start'])->name('view-as.start');
+    Route::delete('/view-as', [App\Http\Controllers\SuperAdmin\ViewAsController::class, 'stop'])->name('view-as.stop');
+
     Route::get('/subjects', [AdminSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [AdminSubject::class, 'approve'])->name('subjects.approve');
     Route::post('/subjects/approve-selected', [AdminSubject::class, 'approveSelected'])->name('subjects.approve-selected');

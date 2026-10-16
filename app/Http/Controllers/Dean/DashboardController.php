@@ -9,7 +9,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $stats = [
             'total_teachers' => User::where('role', 'teacher')
