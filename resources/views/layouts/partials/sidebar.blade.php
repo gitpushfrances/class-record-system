@@ -141,6 +141,12 @@
                 'icon'   => 'fa-database',
                 'label'  => 'Backup & Restore',
             ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('admin.rog.index'),
+                'active' => request()->routeIs('admin.rog.*'),
+                'icon'   => 'fa-file-lines',
+                'label'  => 'ROG Settings',
+            ])
         @endif
 
         @if(auth()->user()->role === 'dean')

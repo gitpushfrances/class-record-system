@@ -113,6 +113,15 @@ class GradeCalculator
         return $missing;
     }
 
+    /** The student's result under the INC rule: what the teacher sees, what is submitted and what the ROG prints. */
+    public static function result($enrollment, GradeConfiguration $config, $cutoffDate): array
+    {
+        return self::applyInc(
+            self::summary($enrollment, $config, $cutoffDate),
+            self::incompletePeriods($enrollment, $config, $cutoffDate)
+        );
+    }
+
     public static function applyInc(array $result, array $missing): array
     {
         if (isset($missing['midterm'])) {

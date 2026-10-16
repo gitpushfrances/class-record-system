@@ -67,7 +67,8 @@ class AssignmentController extends Controller
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
-        ]);
+            ...\App\Services\ClassSchedule::rules(),
+        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
 
         $section = Section::with('program')->findOrFail($validated['section_id']);
         abort_if(
@@ -95,13 +96,18 @@ class AssignmentController extends Controller
                 ->with('error', 'A teacher is already assigned to that subject for this section\'s current term. Remove it first to reassign.');
         }
 
+        $slot = \App\Services\ClassSchedule::fromRequest($request);
+        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $validated['subject_id'], $slot)) {
+            return redirect()->route('dean.assignments.index')->with('error', $conflict)->withInput();
+        }
+
         DB::table('section_subject_teachers')->insert([
             'section_term_id' => $currentTerm->id,
             'subject_id' => $validated['subject_id'],
             'teacher_id' => $validated['teacher_id'],
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ] + $slot);
 
         return redirect()->route('dean.assignments.index')
             ->with('success', 'Teacher assigned successfully.');

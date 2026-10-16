@@ -249,8 +249,8 @@
                     <td data-calc="r{{ $enrollment->id }}-pct" class="px-3 py-3 font-bold text-center text-gray-800 border border-gray-200 bg-gray-50">{{ $lg['final_grade'] !== null ? number_format($lg['final_grade'], 2) . '%' : '—' }}</td>
                     <td data-calc="r{{ $enrollment->id }}-letter" class="px-3 py-3 font-bold text-center text-indigo-600 border border-gray-200 bg-gray-50">{{ $lg['letter_grade'] }}</td>
                     <td data-calc="r{{ $enrollment->id }}-remarks" class="px-3 py-3 text-center border border-gray-200 bg-gray-50">
-                        @if($fg && $fg->is_locked)
-                            <span class="px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
+                        @if($lg['remarks'] === 'incomplete')
+                            <span class="px-2 py-1 text-xs font-medium rounded-full" style="color:#b45309; background:#fef3c7;">INC</span>
                         @elseif($lg['remarks'] === null)
                             <span class="text-gray-300">—</span>
                         @elseif($lg['remarks'] === 'passed')

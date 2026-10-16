@@ -149,55 +149,7 @@
 
                                         <div class="pt-4 border-t">
                                             <h4 class="mb-2 text-sm font-semibold text-gray-700">Subjects & Teachers</h4>
-                                            <div class="overflow-hidden border border-gray-200 rounded-lg">
-                                                <table class="w-full text-sm">
-                                                    <thead class="bg-gray-50">
-                                                        <tr>
-                                                            <th class="px-3 py-2 text-xs font-medium text-left text-gray-500 uppercase">Subject</th>
-                                                            <th class="px-3 py-2 text-xs font-medium text-left text-gray-500 uppercase">Teacher</th>
-                                                            <th class="px-3 py-2 text-xs font-medium text-left text-gray-500 uppercase">Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="divide-y divide-gray-100">
-                                                        @forelse($termSubjects as $subj)
-                                                            <tr>
-                                                                <td class="px-3 py-2">{{ $subj->code }} — {{ $subj->name }}</td>
-                                                                <td class="px-3 py-2">{{ $teachers->firstWhere('id', $subj->pivot->teacher_id)?->name ?? '—' }}</td>
-                                                                <td class="px-3 py-2">
-                                                                    <form method="POST" action="{{ route('program-head.sections.change-subject-teacher', $section) }}" class="flex items-center gap-1">
-                                                                        @csrf
-                                                                        <input type="hidden" name="subject_id" value="{{ $subj->id }}">
-                                                                        <select name="teacher_id" class="px-1 py-1 text-xs border border-gray-300 rounded">
-                                                                            @foreach($teachers as $t)
-                                                                                <option value="{{ $t->id }}" {{ $subj->pivot->teacher_id == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                                                            @endforeach
-                                                                        </select>
-                                                                        <button type="submit" class="px-2 py-1 text-xs border rounded" style="border-color:#d1d5db;">Update</button>
-                                                                    </form>
-                                                                </td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr><td colspan="3" class="px-3 py-3 text-xs text-center text-gray-400">No subjects added yet.</td></tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                                <form method="POST" action="{{ route('program-head.sections.attach-subject', $section) }}" class="flex items-center gap-2 px-3 py-3 border-t border-gray-100 bg-gray-50">
-                                                    @csrf
-                                                    <select name="subject_id" required class="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded">
-                                                        <option value="">— Select subject —</option>
-                                                        @foreach($availableSubjects as $s)
-                                                            <option value="{{ $s->id }}">{{ $s->code }} — {{ $s->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    <select name="teacher_id" required class="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded">
-                                                        <option value="">— Select teacher —</option>
-                                                        @foreach($teachers as $t)
-                                                            <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white rounded" style="background:#1c1814;">Add</button>
-                                                </form>
-                                            </div>
+                                            @include('program-head.sections.partials.subjects', ['subjects' => $termSubjects])
                                         </div>
                                     @else
                                         <div class="pt-4 text-center border-t">

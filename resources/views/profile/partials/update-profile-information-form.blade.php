@@ -40,6 +40,19 @@
                         <x-input-error class="mt-2" :messages="$errors->get('middle_name')" />
                     </div>
                 </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:16px;">
+                    <div>
+                        <x-input-label for="academic_rank" :value="__('Academic Rank (optional)')" />
+                        <x-text-input id="academic_rank" name="academic_rank" type="text" class="mt-1 block w-full" :value="old('academic_rank', $user->academic_rank)" placeholder="e.g. Asst. Professor III" />
+                        <x-input-error class="mt-2" :messages="$errors->get('academic_rank')" />
+                    </div>
+                    <div>
+                        <x-input-label for="credentials" :value="__('Credentials (optional)')" />
+                        <x-text-input id="credentials" name="credentials" type="text" class="mt-1 block w-full" :value="old('credentials', $user->credentials)" placeholder="e.g. MIT, PCpE" />
+                        <x-input-error class="mt-2" :messages="$errors->get('credentials')" />
+                    </div>
+                </div>
+                <p style="margin-top:6px; font-size:12px; color:#6b7280;">Printed under your name on the Report of Grades.</p>
             @endif
         </div>
 

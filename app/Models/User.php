@@ -18,6 +18,8 @@ class User extends Authenticatable
         'last_name',
         'first_name',
         'middle_name',
+        'academic_rank',
+        'credentials',
         'email',
         'password',
         'role',

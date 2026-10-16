@@ -119,6 +119,12 @@
                 </div>
 
                 <div class="px-6 py-4" style="border-top:1px solid rgba(200,169,126,0.1);background:rgba(200,169,126,0.03);">
+                    @if(in_array($status, ['pending', 'verified']))
+                        <a href="{{ route('program-head.rog.show', [$term, $subject]) }}" target="_blank"
+                           style="display:inline-flex; align-items:center; gap:6px; margin-bottom:12px; padding:6px 12px; font-size:12px; font-weight:600; color:#c8a97e; border:1px solid rgba(200,169,126,0.4); border-radius:8px; text-decoration:none;">
+                            <i class="fa-solid fa-file-lines"></i> View Report of Grades
+                        </a>
+                    @endif
                     @if($status === 'pending')
                         <div class="flex flex-wrap items-center gap-3">
                             <form method="POST" action="{{ route('program-head.verify', [$term, $subject]) }}" class="flex items-center gap-2">

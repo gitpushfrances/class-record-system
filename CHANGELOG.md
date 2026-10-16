@@ -1169,6 +1169,86 @@ f
 
 ---
 
+## QA FIXES & PATCHES — October 17, 2026
+
+### Report of Grades (Phase 4)
+- Printable Report of Grades replicating form ESSU-ACAD-712.b: 8.5 × 13 in (Long), logos, course block, grading legend, MALE and FEMALE pages (25 rows each, more pages when needed), signature block, form code / version / effectivity and "Page x of y" footer
+- Built only from submitted grades (`ReportOfGrades::isSubmitted`, status pending or verified); INC periods print "INC"
+- Teacher: "Report of Grades" button on Final Grades after submission (`teacher.rog.show`). The Program Head sets the Schedule of Classes when adding or updating a subject on the section (the Dean on Assignments): day checkboxes M, T, W, Th, F, S (Saturday), Su (Sunday) and a start-end time, saved as `schedule_days`, `schedule_start`, `schedule_end`; a time that overlaps another subject of the same section on a shared day is rejected with the conflicting subject named (`ClassSchedule::conflict`); the ROG prints it as "10:30-12:00PM (MW)" and shows it read-only
+- Program Head: "View Report of Grades" on the dashboard (`program-head.rog.show`), own program only. Dean: "View ROG" on the section page (`dean.rog.show`), own department only
+- Admin → ROG Settings: replace or reset the left and right logos (stored on the `public` disk, needs `php artisan storage:link`), form code, version, effectivity date, Registrar name (`settings` table, `Setting::rog()`)
+- Profile: Academic Rank and Credentials for faculty, Program Heads and Deans, printed under their names (`users.academic_rank`, `users.credentials`)
+- Default logos in `public/images/rog/` (taken from the official form)
+- Tests: `RogSettingsTest`, `ReportOfGradesTest`, `ClassScheduleTest`
+- One INC-aware result everywhere (`GradeCalculator::result()`): Final Grades, Class Record, Excel export, submit and the ROG now agree. Before this, Final Grades and the Class Record showed a grade (skipping empty components) while the submitted record and the ROG said INC; Remarks now shows INC instead of "Locked"
+
+### Known Gaps (not fixed)
+- The printed legend (55-69% = Failed) does not match the S/TS formulas used to compute grades
+- "Dr" (dropped) is not printed yet: dropping a student still deletes the enrollment (Phase 5)
+
+---
+
+## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
+
+Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
+
+### Decisions and sign-offs (client)
+- [ ] Written approval from Sir Roger that grades use the S/TS formulas (major 5 − 4(S/TS), minor 4 − 3(S/TS)) while the printed ROG legend says 55-69% = Failed; with the formulas, 3.0 (passing) falls at 50% (major) and 33.3% (minor)
+- [ ] Confirm the Registrar name on Admin → ROG Settings (sample form: REGINA L. DOCENA, DBA)
+- [ ] Default grade-configuration components still include "Security" (20%, Finals) in `teacher/grades/config.blade.php`; confirm the default Finals components with the client
+- [ ] Teacher double-booking (same teacher, two sections, same time) is not checked; only subjects inside the same section are (`ClassSchedule::conflict`)
+
+### Grading (Phase 2)
+- [ ] Run `php artisan grades:recompute` then `--apply` on the client server after deploy; stored `final_grades` keep old values until then
+- [ ] The grade conversion is still ported to JavaScript for the live preview on the Scores page (`teacher/grades/scores.blade.php`); it can drift from `FinalGrade::convertToNumericalGrade()` if the formula changes
+- [ ] A weighted component with no items, attendance with no records, or no midterm cutoff on the active Academic Period makes the period INC for every student (rule as approved; teachers must be told)
+
+### Class Record and attendance (Phase 3)
+- [ ] Attendance date columns (✓ / ✗ per date) on the Class Record are not built; attendance shows as "present / total"
+- [ ] The old Grade Items and Scores pages still exist alongside "+ Add" and inline entry in the Class Record
+- [ ] Inline score save re-fetches the whole Class Record page for every cell (slow on large classes)
+- [ ] Attendance migration `down()` fails when a student has lecture and laboratory records on the same date; converted late / excused marks cannot be restored
+- [ ] The Dean's subject approval pages do not show the "Has laboratory" flag
+
+### Report of Grades (Phase 4)
+- [ ] "Dr" (dropped) does not print: removing a student deletes the enrollment (fixed by the Phase 5 soft drop)
+- [ ] Dean → Assignments can set a schedule only when assigning; changing it later means remove and re-assign (the Program Head can edit it)
+- [ ] Faculty without structured names (last / first name) print their old single `name` on the ROG signature block
+- [ ] Students with no gender set print on an extra "GENDER NOT SET" page
+
+### Enrollment and students
+- [ ] Unenrolling a student hard-deletes the enrollment and cascades to scores, attendance and final grades (Phase 5 soft drop)
+- [ ] Dropped students are still listed on the teacher dashboard (no enrollment status filter)
+- [ ] No UI to change a student's status
+- [ ] `Dean\StudentController@store` soft-duplicate name check is not department-scoped
+- [ ] Global student search, per-subject class roster and student import are not built (Phase 5)
+
+### Roles and accounts
+- [ ] Admin all-access, Dean faculty management, Admin departments / programs CRUD, subject year level and semester with separators are not built (Phase 6)
+- [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
+- [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role
+- [ ] Teacher `program_id` is stored but no query scoping by it has been verified
+- [ ] `Dean\SectionController@attachSubject` / `@changeSubjectTeacher` duplicate the Assignments page; decide which one stays
+- [ ] Sweep Phases 1–8 for `nullable` combined with `required_if` and for `$fillable` gaps (not started)
+
+### Backup
+- [ ] Restore accepts only `.sql` / `.txt` and runs the upload through `DB::unprepared`; it cannot restore the `.zip` backups the system creates
+
+### UI and dead code
+- [ ] Light-card conversion incomplete: `admin/backup/index`, `admin/users/create`, `program-head/dashboard`, `teacher/grades/config`
+- [ ] `dean/subjects/index` and `admin/subjects/index` still use `@extends('layouts.app')` instead of `<x-sidebar-layout>`
+- [ ] Reusable `<x-confirm-form>` not built; the SweetAlert2 CDN fallback is still patched per file
+- [ ] My Advisory and Class Record always list males before females, even when ordered by Student No.
+- [ ] ESSU palette (white, green, gold) and the ESSU seal in place of the book icon (Phase 7; seal at `public/images/rog/essu-seal.png`)
+- [ ] Dead code to delete: `StudentNumberGenerator`, `NoActiveAcademicPeriodException`, `StudentNumberCounter` and the `student_number_counters` table; `UserController::create()` / `store()`; unrouted `admin/subjects/create` and `edit` (still validate units as integer); `components/sidebar-link.blade.php` (confirm unused); route `teacher.classes.record.print`
+
+### Before production
+- [ ] Change the default seeder passwords
+- [ ] Server: `php artisan migrate`, `php artisan storage:link` (once), `npm run build`, `php artisan view:clear`, then `grades:recompute --apply`; back up the database first
+- [ ] Production `.env`: `APP_NAME`, `APP_ENV=production`, `APP_DEBUG=false`, HTTPS
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends

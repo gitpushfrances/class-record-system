@@ -19,3 +19,4 @@ yarn-error.log
 /.vscode
 storage/framework/lsp-*.php
 /.phpunit.result.cache
+/public/storage

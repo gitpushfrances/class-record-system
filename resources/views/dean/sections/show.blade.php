@@ -67,7 +67,12 @@
                     @forelse($currentTerm->subjects as $subj)
                         <tr>
                             <td class="px-6 py-4 text-sm">{{ $subj->code }} — {{ $subj->name }}</td>
-                            <td class="px-6 py-4 text-sm">{{ $subj->pivot->teacher_id ? \App\Models\User::find($subj->pivot->teacher_id)?->name : '—' }}</td>
+                            <td class="px-6 py-4 text-sm">
+                                {{ $subj->pivot->teacher_id ? \App\Models\User::find($subj->pivot->teacher_id)?->name : '—' }}
+                                @if(\App\Services\ReportOfGrades::isSubmitted($currentTerm, $subj))
+                                    <a href="{{ route('dean.rog.show', [$currentTerm, $subj]) }}" target="_blank" style="margin-left:6px; font-size:12px; font-weight:600; color:#4f46e5;">View ROG</a>
+                                @endif
+                            </td>
                             <td class="px-6 py-4">
                                 <form method="POST" action="{{ route('dean.sections.change-subject-teacher', $section) }}" class="flex items-center gap-2">
                                     @csrf
