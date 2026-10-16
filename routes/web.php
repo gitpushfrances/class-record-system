@@ -69,6 +69,8 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
     Route::get('/backup/download/{filename}', [BackupController::class, 'download'])->name('backup.download');
     Route::delete('/backup/{filename}', [BackupController::class, 'delete'])->name('backup.delete');
     Route::post('/backup/restore', [BackupController::class, 'restore'])->name('backup.restore');
+    Route::get('/rog-settings', [App\Http\Controllers\SuperAdmin\RogSettingController::class, 'index'])->name('rog.index');
+    Route::put('/rog-settings', [App\Http\Controllers\SuperAdmin\RogSettingController::class, 'update'])->name('rog.update');
 
     Route::patch('/deans/{dean}/deactivate', [AdminUser::class, 'deactivate'])->name('deans.deactivate');
     Route::patch('/deans/{dean}/activate', [AdminUser::class, 'activate'])->name('deans.activate');
