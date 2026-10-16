@@ -24,12 +24,20 @@
             <input type="date" name="date" value="{{ $date }}"
                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                    onchange="this.form.submit()">
+            @if($subject->has_laboratory)
+                <label class="text-sm font-medium text-gray-600">Session:</label>
+                <select name="session" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" onchange="this.form.submit()">
+                    <option value="lecture" @selected($session === 'lecture')>Lecture</option>
+                    <option value="laboratory" @selected($session === 'laboratory')>Laboratory</option>
+                </select>
+            @endif
         </form>
     </div>
 
     <form method="POST" action="{{ route('teacher.attendance.store', [$section, $subject]) }}" id="attendanceForm">
         @csrf
         <input type="hidden" name="date" value="{{ $date }}">
+        <input type="hidden" name="session" value="{{ $session }}">
 
         {{-- Quick Actions --}}
         <div class="flex gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50">
@@ -59,14 +67,12 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-6 py-3 font-mono text-xs text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
-                        <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}@if(($streaks[$enrollment->id] ?? 0) >= \App\Models\AttendanceRecord::ABSENCE_WARNING)<span class="px-2 py-1 ml-2 text-xs font-medium rounded-full" style="background:#fef3c7; color:#b45309;" title="Needs a guidance office permission slip before re-entering class">{{ $streaks[$enrollment->id] }} absences in a row</span>@endif</td>
                         <td class="px-6 py-3 text-center">
                             <input type="hidden" name="attendance[{{ $i }}][enrollment_id]" value="{{ $enrollment->id }}">
                             <div class="flex flex-wrap justify-center gap-2">
                                 @foreach(['present' => ['bg-green-100 text-green-700 border-green-300', '<i class="fa-solid fa-circle-check"></i> Present'],
-                                          'absent'  => ['bg-red-100 text-red-700 border-red-300', '<i class="fa-solid fa-circle-xmark"></i> Absent'],
-                                          'late'    => ['bg-yellow-100 text-yellow-700 border-yellow-300', '<i class="fa-solid fa-triangle-exclamation"></i> Late'],
-                                          'excused' => ['bg-blue-100 text-blue-700 border-blue-300', '<i class="fa-solid fa-circle-minus"></i> Excused']] as $val => [$cls, $lbl])
+                                          'absent'  => ['bg-red-100 text-red-700 border-red-300', '<i class="fa-solid fa-circle-xmark"></i> Absent']] as $val => [$cls, $lbl])
                                     <label class="cursor-pointer">
                                         <input type="radio"
                                                name="attendance[{{ $i }}][status]"
@@ -106,8 +112,6 @@ document.querySelectorAll('.status-radio').forEach(radio => {
         const colors = {
             present: 'bg-green-100 text-green-700 border-green-300 border-current',
             absent:  'bg-red-100 text-red-700 border-red-300 border-current',
-            late:    'bg-yellow-100 text-yellow-700 border-yellow-300 border-current',
-            excused: 'bg-blue-100 text-blue-700 border-blue-300 border-current',
         };
         this.nextElementSibling.className = 'status-btn border rounded-lg px-3 py-1 text-xs font-medium transition ' + colors[this.value];
     });

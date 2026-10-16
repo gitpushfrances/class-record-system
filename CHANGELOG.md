@@ -1132,10 +1132,39 @@ f
 - Final Grades shows a non-blocking review list of students who will be marked INC
 - New `php artisan grades:recompute` — recomputes stored `final_grades` under the current rules; dry run by default, `--apply` writes, rows already verified are kept unless `--include-verified`; uses each row's own academic period for the cutoff date
 
+### Attendance (Phase 3)
+- Attendance is present / absent only; existing late and excused records converted to present (migration `2026_10_16_000000_attendance_present_absent_and_sessions`)
+- New `subjects.has_laboratory` flag (Program Head subject create / edit). Lab subjects record Lecture and Laboratory attendance separately on the same date (`attendance_records.session_type`; the unique key now includes it)
+- Attendance rate = present sessions / all recorded sessions
+- Consecutive absences: `AttendanceRecord::ABSENCE_WARNING = 3`, `consecutiveAbsences()`, `streaksFor()`. Warning popup on save, badge on the Attendance page, icon on the Class Record, "Absent streak" column on Summary
+- Attendance save rejects enrollments that are not in the class (403)
+- Tests: `AttendanceTest`
+
+### Inline score entry (Phase 3)
+- Class Record score cells are editable inputs, saved on change through `teacher.grades.score.cell` (`GradeController@storeScore`); totals refresh in place
+- A blank cell clears the score (soft delete). A cleared score is written to `grade_change_logs` with `new_score = NULL` (migration `2026_10_16_000100_allow_null_new_score_on_grade_change_logs`)
+- The bulk `storeScores` form now shares `saveScore()`
+
+### Class Record items (Phase 3c1)
+- Header row "Midterm | Finals" above the components
+- Every weighted component shows in the Class Record, even with no items yet (`buildComponentMatrix($items, true)`; the Excel export is unchanged)
+- "+ Add" on a component header opens a dialog (date, highest possible score); "+ Take" on Attendance opens the attendance page. Hidden once grades are submitted
+- Item names are assigned by the server (`GradeItem::autoName()`): "Quiz 1", "Quiz 2", ...; exam components (key starting with `exam`) hold one item per period, named "Midterm Examination" / "Final Examination"
+- `storeItem()` takes the period from the grade configuration, not the form
+- Tests: `GradeItemAutoNameTest`
+
+### Test Safety
+- `phpunit.xml` runs tests on the `class_record_test` database (create it once) with `BCRYPT_ROUNDS=10`. Before this, `php artisan test` ran `RefreshDatabase` against the `.env` database and wiped it
+- `.phpunit.result.cache` ignored
+
 ### Known Gaps (not fixed)
 - Dropped students still listed (no enrollment status filter yet)
 - Backup restore still accepts only `.sql` / `.txt` and runs it through `DB::unprepared`
 - `teacher.classes.record.print` route no longer linked from the UI
+- Unenrolling a student hard-deletes the enrollment and cascades to scores and attendance (soft drop planned)
+- Inline score save refetches the whole Class Record page for each cell (slow on large classes)
+- 5 default Breeze auth tests still fail (under triage)
+- Attendance date columns on the Class Record not built yet; the old Grade Items and Scores pages still exist
 - Stored `final_grades` rows keep their old values until `php artisan grades:recompute --apply` is run (run it after the Phase 3 attendance change)
 
 ---

@@ -98,8 +98,7 @@ class GradeController extends Controller
 
         $data = $request->validate([
             'component_type' => ['required', 'string', 'max:50', 'in:' . implode(',', $validKeys)],
-            'period'         => 'required|in:midterm,final',
-            'name'           => 'required|string|max:100',
+            'name'           => 'nullable|string|max:100',
             'max_score'      => 'required|numeric|min:1',
             'date_given'     => 'nullable|date',
             'description'    => 'nullable|string|max:500',
@@ -109,6 +108,16 @@ class GradeController extends Controller
         if ($weight === 0.0) {
             return back()->withErrors(['component_type' => 'This component has 0% weight. Update grade configuration to enable it.'])->withInput();
         }
+
+        $component      = collect($config->getComponents())->firstWhere('key', $data['component_type']);
+        $data['period'] = $component['period'];
+
+        $existing = $section->gradeItemsFor($subject->id)->where('component_type', $component['key'])->get();
+        $autoName = GradeItem::autoName($existing, $component['key'], $component['label'] ?? '', $component['period']);
+        if ($autoName === null) {
+            return back()->with('warning', 'This period already has an exam. Enter its scores in the class record.');
+        }
+        $data['name'] = filled($data['name'] ?? null) ? $data['name'] : $autoName;
 
         $section->gradeItems()->create($data + [
             'subject_id' => $subject->id,
@@ -162,31 +171,75 @@ class GradeController extends Controller
 
         DB::transaction(function () use ($request, $gradeItem) {
             foreach ($request->scores as $entry) {
-                $existing = StudentGrade::where('enrollment_id', $entry['enrollment_id'])
-                    ->where('grade_item_id', $gradeItem->id)
-                    ->first();
-
-                if ($existing) {
-                    if ((float) $existing->score !== (float) $entry['score']) {
-                        $existing->changeLogs()->create([
-                            'old_score'  => $existing->score,
-                            'new_score'  => $entry['score'],
-                            'changed_by' => auth()->id(),
-                        ]);
-                        $existing->update(['score' => $entry['score']]);
-                    }
-                } else {
-                    StudentGrade::create([
-                        'enrollment_id' => $entry['enrollment_id'],
-                        'grade_item_id' => $gradeItem->id,
-                        'score'         => $entry['score'],
-                        'recorded_by'   => auth()->id(),
-                    ]);
-                }
+                $this->saveScore((int) $entry['enrollment_id'], $gradeItem, $entry['score']);
             }
         });
 
         return redirect()->route('teacher.grades.items', [$section, $subject])->with('success', 'Scores saved.');
+    }
+
+    public function storeScore(Request $request, Section $section, Subject $subject, GradeItem $gradeItem)
+    {
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->assertNotLocked($subject, $currentTerm);
+        abort_if($gradeItem->section_id !== $section->id || $gradeItem->subject_id !== $subject->id, 403);
+        abort_if($gradeItem->is_locked, 403, 'Grade item is locked.');
+
+        $data = $request->validate([
+            'enrollment_id' => 'required|integer',
+            'score'         => "nullable|numeric|min:0|max:{$gradeItem->max_score}",
+        ]);
+
+        abort_unless($currentTerm->enrollments()->whereKey($data['enrollment_id'])->exists(), 403);
+
+        $this->saveScore((int) $data['enrollment_id'], $gradeItem, $data['score'] ?? null);
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function saveScore(int $enrollmentId, GradeItem $gradeItem, $score): void
+    {
+        $existing = StudentGrade::withTrashed()
+            ->where('enrollment_id', $enrollmentId)
+            ->where('grade_item_id', $gradeItem->id)
+            ->first();
+
+        if ($score === null) {
+            if ($existing && !$existing->trashed()) {
+                $existing->changeLogs()->create([
+                    'old_score'  => $existing->score,
+                    'new_score'  => null,
+                    'changed_by' => auth()->id(),
+                ]);
+                $existing->delete();
+            }
+            return;
+        }
+
+        if (!$existing) {
+            StudentGrade::create([
+                'enrollment_id' => $enrollmentId,
+                'grade_item_id' => $gradeItem->id,
+                'score'         => $score,
+                'recorded_by'   => auth()->id(),
+            ]);
+            return;
+        }
+
+        if ($existing->trashed()) {
+            $existing->restore();
+            $existing->update(['score' => $score, 'recorded_by' => auth()->id()]);
+            return;
+        }
+
+        if ((float) $existing->score !== (float) $score) {
+            $existing->changeLogs()->create([
+                'old_score'  => $existing->score,
+                'new_score'  => $score,
+                'changed_by' => auth()->id(),
+            ]);
+            $existing->update(['score' => $score]);
+        }
     }
 
     public function finalGrades(Section $section, Subject $subject)

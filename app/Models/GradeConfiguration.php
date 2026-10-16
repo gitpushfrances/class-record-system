@@ -88,7 +88,7 @@ class GradeConfiguration extends Model
      * $gradeItems must be a Collection of GradeItem already grouped by component_type,
      * e.g. Section::gradeItemsFor($subjectId)->get()->groupBy('component_type').
      */
-    public function buildComponentMatrix($gradeItemsByType): array
+    public function buildComponentMatrix($gradeItemsByType, bool $includeEmpty = false): array
     {
         $components = $this->getComponents();
 
@@ -103,7 +103,7 @@ class GradeConfiguration extends Model
             $isAttendance = in_array($comp['key'], ['attendance', 'attendance_f'], true);
             $items = $gradeItemsByType->get($comp['key'], collect());
 
-            if (!$isAttendance && $items->isEmpty()) {
+            if (!$isAttendance && $items->isEmpty() && (!$includeEmpty || (float) $comp['weight'] === 0.0)) {
                 continue;
             }
 

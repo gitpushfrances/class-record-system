@@ -12,7 +12,8 @@ class AttendanceController extends Controller
     public function index(Request $request, Section $section, Subject $subject)
     {
         $this->authorizeSectionSubject($section, $subject);
-        $date = $request->input('date', today()->toDateString());
+        $date    = $request->input('date', today()->toDateString());
+        $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
         $currentTerm = $section->terms()->where('status', 'active')->first();
         $enrollments = collect();
         if ($currentTerm) {
@@ -21,12 +22,14 @@ class AttendanceController extends Controller
                     'student',
                     'attendanceRecords' => fn($q) => $q
                         ->where('subject_id', $subject->id)
-                        ->whereDate('date', $date),
+                        ->whereDate('date', $date)
+                        ->where('session_type', $session),
                 ])
                 ->get();
         }
         $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
-        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date'));
+        $streaks = AttendanceRecord::streaksFor($subject->id, $enrollments->pluck('id'));
+        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date', 'session', 'streaks'));
     }
     public function store(Request $request, Section $section, Subject $subject)
     {
@@ -36,15 +39,22 @@ class AttendanceController extends Controller
             'date'                       => 'required|date',
             'attendance'                 => 'required|array',
             'attendance.*.enrollment_id' => 'required|exists:enrollments,id',
-            'attendance.*.status'        => 'required|in:present,absent,late,excused',
+            'session'                    => 'nullable|in:lecture,laboratory',
+            'attendance.*.status'        => 'required|in:present,absent',
         ]);
-        DB::transaction(function () use ($request, $subject) {
+        $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
+
+        $classEnrollmentIds = $currentTerm->enrollments()->pluck('id');
+        abort_if(collect($request->attendance)->pluck('enrollment_id')->diff($classEnrollmentIds)->isNotEmpty(), 403);
+
+        DB::transaction(function () use ($request, $subject, $session) {
             foreach ($request->attendance as $entry) {
                 AttendanceRecord::updateOrCreate(
                     [
                         'enrollment_id' => $entry['enrollment_id'],
                         'subject_id'    => $subject->id,
                         'date'          => $request->date,
+                        'session_type'  => $session,
                     ],
                     [
                         'status'      => $entry['status'],
@@ -54,8 +64,19 @@ class AttendanceController extends Controller
                 );
             }
         });
+        $absentIds = collect($request->attendance)->where('status', 'absent')->pluck('enrollment_id');
+        $flagged   = AttendanceRecord::streaksFor($subject->id, $absentIds)
+            ->filter(fn ($streak) => $streak >= AttendanceRecord::ABSENCE_WARNING)
+            ->keys();
+        $warning   = null;
+        if ($flagged->isNotEmpty()) {
+            $names   = $currentTerm->enrollments()->with('student')->whereIn('id', $flagged)->get()
+                ->map(fn ($e) => $e->student?->full_name)->filter()->implode(', ');
+            $warning = 'Attendance saved. Needs a guidance office permission slip (' . AttendanceRecord::ABSENCE_WARNING . '+ absences in a row): ' . $names . '.';
+        }
+
         return redirect()->route('teacher.classes.record', [$section, $subject])
-            ->with('success', 'Attendance saved.');
+            ->with($warning ? 'warning' : 'success', $warning ?? 'Attendance saved.');
     }
     public function summary(Section $section, Subject $subject)
     {
@@ -70,9 +91,8 @@ class AttendanceController extends Controller
                 ->map(function ($enrollment) {
                     $records = $enrollment->attendanceRecords;
                     $total   = $records->count();
-                    $present = $records->whereIn('status', ['present', 'late'])->count();
+                    $present = $records->where('status', 'present')->count();
                     $absent  = $records->where('status', 'absent')->count();
-                    $excused = $records->where('status', 'excused')->count();
                     $percent = $total > 0 ? round(($present / $total) * 100, 2) : 0;
                     return [
                         'enrollment' => $enrollment,
@@ -80,7 +100,7 @@ class AttendanceController extends Controller
                         'total'      => $total,
                         'present'    => $present,
                         'absent'     => $absent,
-                        'excused'    => $excused,
+                        'streak'     => AttendanceRecord::consecutiveAbsences($records),
                         'percent'    => $percent,
                     ];
                 });

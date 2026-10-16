@@ -15,6 +15,7 @@ class Subject extends Model
         'name',
         'description',
         'units',
+        'has_laboratory',
         'department',
         'program_id',
         'status',
@@ -26,6 +27,7 @@ class Subject extends Model
 
     protected $casts = [
         'units' => 'float',
+        'has_laboratory' => 'boolean',
         'approved_at' => 'datetime',
     ];
 
