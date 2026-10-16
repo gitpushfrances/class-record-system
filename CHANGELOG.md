@@ -1125,10 +1125,18 @@ f
 - Students with no gender appear in a third "No gender set" table
 - Eager-loads `enrollments.student`; reuses `Enrollment::sortRoster()`
 
+### Grading engine (Phase 2)
+- Characterization tests for grade conversion (`tests/Unit/GradeConversionTest.php`) and the INC rules (`tests/Unit/GradeIncTest.php`)
+- Grades display to one decimal; formula A/B conversions round half up to one decimal; the average is the half-up average of the two grades (`FinalGrade::averageGrade`); the Scores page live preview uses the same rounding
+- INC at submit: a weighted component with no scores, or a total of zero, makes that period incomplete (`GradeCalculator::incompletePeriods`, `applyInc`); the hard block in Submit for Verification is removed
+- Final Grades shows a non-blocking review list of students who will be marked INC
+- New `php artisan grades:recompute` — recomputes stored `final_grades` under the current rules; dry run by default, `--apply` writes, rows already verified are kept unless `--include-verified`; uses each row's own academic period for the cutoff date
+
 ### Known Gaps (not fixed)
 - Dropped students still listed (no enrollment status filter yet)
 - Backup restore still accepts only `.sql` / `.txt` and runs it through `DB::unprepared`
 - `teacher.classes.record.print` route no longer linked from the UI
+- Stored `final_grades` rows keep their old values until `php artisan grades:recompute --apply` is run (run it after the Phase 3 attendance change)
 
 ---
 
