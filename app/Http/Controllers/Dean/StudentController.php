@@ -40,6 +40,39 @@ class StudentController extends Controller
         return view('dean.students.index', compact('students', 'programs', 'sort', 'direction'));
     }
 
+    public function import(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'program_id' => 'required|exists:programs,id',
+            'file'       => \App\Services\StudentImport::FILE_RULES,
+        ]);
+        if ($validator->fails()) {
+            return back()->withInput()->with('import_errors', $validator->errors()->all());
+        }
+
+        $program = Program::findOrFail($request->program_id);
+        abort_if(
+            $program->department_id !== auth()->user()->department_id || $program->status !== 'approved',
+            403,
+            'This program does not belong to your department.'
+        );
+
+        $result = \App\Services\StudentImport::run($request->file('file'), $program->id);
+        if ($result['errors']) {
+            return back()->withInput()->with('import_errors', $result['errors']);
+        }
+
+        return redirect()->route('dean.students.index')->with('success', "{$program->code}: " . \App\Services\StudentImport::summary($result));
+    }
+
+    public function template()
+    {
+        return response(\App\Services\StudentImport::template(), 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="student-import-template.csv"',
+        ]);
+    }
+
     public function create()
     {
         $programs = Program::where('department_id', auth()->user()->department_id)

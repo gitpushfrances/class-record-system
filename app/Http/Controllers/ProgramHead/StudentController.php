@@ -38,6 +38,32 @@ class StudentController extends Controller
         return view('program-head.students.index', compact('students', 'sections', 'sort', 'direction'));
     }
 
+    public function import(Request $request)
+    {
+        $programId = auth()->user()->program_id;
+        abort_if(!$programId, 403, 'No program assigned to your account.');
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), ['file' => \App\Services\StudentImport::FILE_RULES]);
+        if ($validator->fails()) {
+            return back()->with('import_errors', $validator->errors()->all());
+        }
+
+        $result = \App\Services\StudentImport::run($request->file('file'), $programId);
+        if ($result['errors']) {
+            return back()->with('import_errors', $result['errors']);
+        }
+
+        return redirect()->route('program-head.students.index')->with('success', \App\Services\StudentImport::summary($result));
+    }
+
+    public function template()
+    {
+        return response(\App\Services\StudentImport::template(), 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="student-import-template.csv"',
+        ]);
+    }
+
     public function create()
     {
         abort_if(!auth()->user()->program_id, 403, 'No program assigned to your account.');

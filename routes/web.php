@@ -100,6 +100,8 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
 
+    Route::get('/students/import-template', [DeanStudent::class, 'template'])->name('students.template');
+    Route::post('/students/import', [DeanStudent::class, 'import'])->name('students.import');
     Route::resource('students', DeanStudent::class)->except(['show']);
     Route::get('/subjects', [DeanSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [DeanSubject::class, 'approve'])->name('subjects.approve');
@@ -185,6 +187,8 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'programHead'])->name('rog.show');
 
     Route::get('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'index'])->name('students.index');
+    Route::get('/students/import-template', [App\Http\Controllers\ProgramHead\StudentController::class, 'template'])->name('students.template');
+    Route::post('/students/import', [App\Http\Controllers\ProgramHead\StudentController::class, 'import'])->name('students.import');
     Route::get('/students/create', [App\Http\Controllers\ProgramHead\StudentController::class, 'create'])->name('students.create');
     Route::post('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'store'])->name('students.store');
     Route::get('/students/{student}/edit', [App\Http\Controllers\ProgramHead\StudentController::class, 'edit'])->name('students.edit');
