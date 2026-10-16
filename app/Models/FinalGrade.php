@@ -60,11 +60,11 @@ class FinalGrade extends Model
         'formula_b' => 'Minor subjects: 4 − 3(S/TS)',
     ];
 
-    /** Average of the midterm and final grades. Standard keeps the 0.25 rounding; formulas keep 2 decimals. */
+    /** Average of the midterm and final grades, rounded half up to one decimal. */
     public static function averageGrade($mid, $fin, ?string $method = 'standard')
     {
         $avg = ((float) $mid + (float) $fin) / 2;
-        return in_array($method, ['formula_a', 'formula_b'], true) ? round($avg, 2) : round($avg * 4) / 4;
+        return round($avg + 1e-9, 1);
     }
 
     public static function convertToNumericalGrade($percentage, ?string $method = 'standard')
@@ -75,8 +75,8 @@ class FinalGrade extends Model
         if ($method === 'formula_a' || $method === 'formula_b') {
             $ratio = max(0.0, min(1.0, $percentage / 100));
             return $method === 'formula_a'
-                ? round(5 - 4 * $ratio, 2)
-                : round(4 - 3 * $ratio, 2);
+                ? round(5 - 4 * $ratio + 1e-9, 1)
+                : round(4 - 3 * $ratio + 1e-9, 1);
         }
 
         // Flat zones — match Scholaro's Most Common Tertiary table exactly,

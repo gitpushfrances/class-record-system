@@ -21,8 +21,8 @@ class GradeConversionTest extends TestCase
     public static function formulaProvider(): array
     {
         return [
-            [100, 1.0, 1.0], [98, 1.08, 1.06], [88, 1.48, 1.36], [76, 1.96, 1.72],
-            [74, 2.04, 1.78], [50, 3.0, 2.5], [33.3333, 3.67, 3.0], [0, 5.0, 4.0],
+            [100, 1.0, 1.0], [98, 1.1, 1.1], [88, 1.5, 1.4], [76, 2.0, 1.7],
+            [74, 2.0, 1.8], [50, 3.0, 2.5], [33.3333, 3.7, 3.0], [0, 5.0, 4.0],
             [120, 1.0, 1.0], [-5, 5.0, 4.0],
         ];
     }
@@ -30,14 +30,14 @@ class GradeConversionTest extends TestCase
     public static function averageProvider(): array
     {
         return [
-            [1.7, 1.4, 1.5, 1.55], [1.0, 1.0, 1.0, 1.0], [2.0, 3.0, 2.5, 2.5],
-            [1.3, 1.4, 1.25, 1.35], [1.1, 1.2, 1.25, 1.15],
+            [1.7, 1.4, 1.6, 1.6], [1.0, 1.0, 1.0, 1.0], [2.0, 3.0, 2.5, 2.5],
+            [1.3, 1.4, 1.4, 1.4], [1.1, 1.2, 1.2, 1.2],
         ];
     }
 
     public static function formatProvider(): array
     {
-        return [[1.25, 'standard', '1.3'], [1.25, 'formula_a', '1.25'], [3, 'standard', '3.0']];
+        return [[1.25, 'standard', '1.3'], [1.25, 'formula_a', '1.3'], [3, 'standard', '3.0'], [1.04, 'formula_a', '1.0']];
     }
 
     /** @dataProvider standardProvider */

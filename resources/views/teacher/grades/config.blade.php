@@ -329,8 +329,8 @@ document.getElementById('configForm').addEventListener('submit', function (e) {
 
 const METHOD_HINTS = {
     standard:  'Uses the standard conversion table. Example: 60% = 5.00 and 100% = 1.00.',
-    formula_a: 'Major subject. Grade = 5 \u2212 4(S/TS). Example: 60% = 2.60 and 100% = 1.00.',
-    formula_b: 'Minor subject. Grade = 4 \u2212 3(S/TS). Example: 60% = 2.20 and 100% = 1.00.',
+    formula_a: 'Major subject. Grade = 5 \u2212 4(S/TS). Example: 60% = 2.6 and 100% = 1.00.',
+    formula_b: 'Minor subject. Grade = 4 \u2212 3(S/TS). Example: 60% = 2.2 and 100% = 1.00.',
 };
 
 function updateMethodHint() {

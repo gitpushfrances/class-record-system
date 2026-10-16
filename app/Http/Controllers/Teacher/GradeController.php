@@ -216,8 +216,16 @@ class GradeController extends Controller
             $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
         }
 
+        $incReview = [];
+        foreach ($enrollments as $enrollment) {
+            $missing = GradeCalculator::incompletePeriods($enrollment, $config, $cutoffDate);
+            if ($missing) {
+                $incReview[$enrollment->id] = $missing;
+            }
+        }
+
         $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
-        return view('teacher.grades.final', compact('section', 'subject', 'config', 'enrollments', 'liveGrades', 'currentTerm'));
+        return view('teacher.grades.final', compact('section', 'subject', 'config', 'enrollments', 'liveGrades', 'currentTerm', 'incReview'));
     }
 
     public function submitForVerification(Section $section, Subject $subject)
@@ -239,24 +247,12 @@ class GradeController extends Controller
 
         $cutoffDate = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
-        $results    = [];
-        $incomplete = [];
+        $results = [];
 
         foreach ($currentTerm->enrollments as $enrollment) {
-            $result = GradeCalculator::summary($enrollment, $config, $cutoffDate);
-
-            if ($result['midterm_percentage'] === null || $result['final_percentage'] === null) {
-                $incomplete[] = $enrollment->student?->full_name ?? "Enrollment {$enrollment->id}";
-                continue;
-            }
-
-            $results[$enrollment->id] = $result;
-        }
-
-        if (!empty($incomplete)) {
-            return back()->with('submit_blocked',
-                'Cannot submit. These students have no recorded scores for the midterm or final period: '
-                . implode(', ', $incomplete) . '. Enter their scores (a score of 0 counts) and submit again.'
+            $results[$enrollment->id] = GradeCalculator::applyInc(
+                GradeCalculator::summary($enrollment, $config, $cutoffDate),
+                GradeCalculator::incompletePeriods($enrollment, $config, $cutoffDate)
             );
         }
 
@@ -265,12 +261,12 @@ class GradeController extends Controller
                 FinalGrade::updateOrCreate(
                     ['enrollment_id' => $enrollmentId, 'subject_id' => $subject->id],
                     [
-                        'midterm_percentage' => $r['midterm_percentage'],
+                        'midterm_percentage' => $r['midterm_percentage'] ?? 0,
                         'midterm_numerical'  => $r['midterm_numerical'],
-                        'final_percentage'   => $r['final_percentage'],
+                        'final_percentage'   => $r['final_percentage'] ?? 0,
                         'final_numerical'    => $r['final_numerical'],
                         'average_numerical'  => $r['average_numerical'],
-                        'final_grade'        => $r['final_grade'],
+                        'final_grade'        => $r['final_grade'] ?? 0,
                         'numerical_grade'    => $r['numerical_grade'],
                         'letter_grade'       => $r['letter_grade'],
                         'remarks'            => $r['remarks'],

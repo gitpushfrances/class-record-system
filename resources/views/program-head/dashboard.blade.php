@@ -94,13 +94,15 @@
                                         <div class="font-medium text-sm" style="color:#f0dfc0;">{{ $enrollment->student->full_name ?? '—' }}</div>
                                         <div class="text-xs" style="color:rgba(200,169,126,0.4);">{{ $enrollment->student->student_number ?? '' }}</div>
                                     </td>
-                                    <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade ? number_format($grade->midterm_percentage, 1).'%' : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? \App\Services\GradeCalculator::formatGrade($grade->midterm_numerical, $method) : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade ? number_format($grade->final_percentage, 1).'%' : '—' }}</td>
-                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? \App\Services\GradeCalculator::formatGrade($grade->final_numerical, $method) : '—' }}</td>
-                                     <td class="px-6 py-3 text-center text-sm font-bold" style="color:#c8a97e;">{{ $grade ? number_format($grade->average_numerical, 2) : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade && $grade->midterm_numerical !== null ? number_format($grade->midterm_percentage, 1).'%' : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? ($grade->midterm_numerical !== null ? \App\Services\GradeCalculator::formatGrade($grade->midterm_numerical, $method) : 'INC') : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm" style="color:rgba(200,169,126,0.8);">{{ $grade && $grade->final_numerical !== null ? number_format($grade->final_percentage, 1).'%' : '—' }}</td>
+                                    <td class="px-6 py-3 text-center text-sm font-medium" style="color:#f0dfc0;">{{ $grade ? ($grade->final_numerical !== null ? \App\Services\GradeCalculator::formatGrade($grade->final_numerical, $method) : 'INC') : '—' }}</td>
+                                     <td class="px-6 py-3 text-center text-sm font-bold" style="color:#c8a97e;">{{ $grade ? ($grade->average_numerical !== null ? \App\Services\GradeCalculator::formatGrade($grade->average_numerical, $method) : 'INC') : '—' }}</td>
                                     <td class="px-6 py-3 text-center">
-                                        @if($grade)
+                                        @if($grade && $grade->remarks === 'incomplete')
+                                            <span class="text-xs px-2 py-1 rounded-full" style="background:rgba(245,158,11,0.1);color:#fcd34d;">INC</span>
+                                        @elseif($grade)
                                             <span class="text-xs px-2 py-1 rounded-full" style="{{ $grade->average_numerical <= 3.00 ? 'background:rgba(34,197,94,0.1);color:#86efac;' : 'background:rgba(239,68,68,0.1);color:#fca5a5;' }}">
                                                 {{ $grade->average_numerical <= 3.00 ? 'Passed' : 'Failed' }}
                                             </span>

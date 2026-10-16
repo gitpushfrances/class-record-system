@@ -89,6 +89,57 @@ class GradeCalculator
         return ['scores' => $scores, 'percentage' => round(array_sum($scores), 2)];
     }
 
+    public static function incompletePeriods($enrollment, GradeConfiguration $config, $cutoffDate): array
+    {
+        $missing = [];
+
+        foreach (['midterm', 'final'] as $period) {
+            foreach ($config->getComponentsByPeriod($period) as $comp) {
+                $key = $comp['key'];
+                if ((float) $comp['weight'] === 0.0) continue;
+
+                if (self::isAttendance($key)) {
+                    $earned = self::attendanceRate($enrollment, $period, $cutoffDate) ?? 0.0;
+                } else {
+                    $earned = $enrollment->studentGrades
+                        ->filter(fn($g) => $g->gradeItem !== null
+                            && $g->gradeItem->component_type === $key
+                            && $g->gradeItem->period === $period)
+                        ->sum(fn($g) => (float) $g->score);
+                }
+
+                if ($earned <= 0) {
+                    $missing[$period][] = $comp['label'] ?? $key;
+                }
+            }
+        }
+
+        return $missing;
+    }
+
+    public static function applyInc(array $result, array $missing): array
+    {
+        if (isset($missing['midterm'])) {
+            $result['midterm_percentage'] = null;
+            $result['midterm_numerical']  = null;
+        }
+
+        if (isset($missing['final'])) {
+            $result['final_percentage'] = null;
+            $result['final_numerical']  = null;
+        }
+
+        if ($missing) {
+            $result['final_grade']       = null;
+            $result['average_numerical'] = null;
+            $result['numerical_grade']   = null;
+            $result['letter_grade']      = 'INC';
+            $result['remarks']           = 'incomplete';
+        }
+
+        return $result;
+    }
+
     /**
      * One student's complete result. A period with no data is null and is left
      * out of the average instead of counting as 0.
@@ -123,10 +174,9 @@ class GradeCalculator
         ];
     }
 
-    /** Formulas show 2 decimals; the standard table shows 1. */
+    /** Grades display to one decimal. */
     public static function formatGrade($grade, ?string $method = 'standard'): string
     {
-        $decimals = in_array($method, ['formula_a', 'formula_b'], true) ? 2 : 1;
-        return number_format((float) $grade, $decimals);
+        return number_format((float) $grade, 1);
     }
 }

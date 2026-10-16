@@ -171,7 +171,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
             }
 
             $row[] = ($lg && $lg['final_grade'] !== null) ? round($lg['final_grade'], 2) : '';
-            $row[] = ($lg && $lg['numerical_grade'] !== null) ? number_format($lg['numerical_grade'], 2) : '';
+            $row[] = ($lg && $lg['numerical_grade'] !== null) ? number_format($lg['numerical_grade'], 1) : '';
             $row[] = ($lg && $lg['remarks'] !== null) ? ucfirst($lg['remarks']) : '';
 
             $rows[] = $row;

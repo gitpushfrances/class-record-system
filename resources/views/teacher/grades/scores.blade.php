@@ -93,7 +93,7 @@ function convertToNumericalGrade(percentage) {
     if (gradeMethod === 'formula_a' || gradeMethod === 'formula_b') {
         const ratio = Math.max(0, Math.min(1, percentage / 100));
         const g = gradeMethod === 'formula_a' ? 5 - 4 * ratio : 4 - 3 * ratio;
-        return Math.round(g * 100) / 100;
+        return Math.round((g + 1e-9) * 10) / 10;
     }
     if (percentage >= 75 && percentage < 77) return 3.00;
     if (percentage >= 70 && percentage < 75) return 4.00;
@@ -132,7 +132,7 @@ document.querySelectorAll('.score-input').forEach(input => {
 
         if (!isNaN(val) && max > 0) {
             const pct = (val / max) * 100;
-            cell.textContent = convertToNumericalGrade(pct).toFixed(gradeMethod === 'standard' ? 1 : 2);
+            cell.textContent = convertToNumericalGrade(pct).toFixed(1);
             this.classList.toggle('border-red-400', val > max);
         } else {
             cell.textContent = '—';

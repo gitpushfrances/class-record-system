@@ -43,6 +43,24 @@
     </div>
 @endif
 
+@if(!in_array($status, ['pending', 'verified']) && !empty($incReview))
+    <div class="px-4 py-3 mb-4 text-sm border rounded-lg bg-amber-50 border-amber-200 text-amber-700">
+        <div class="font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> {{ count($incReview) }} {{ \Illuminate\Support\Str::plural('student', count($incReview)) }} will be marked INC on submit</div>
+        <p class="mt-1 text-xs">A component with no scores, or a total of zero, makes that period incomplete. Blank scores are not counted; enter 0 for an unexcused miss.</p>
+        <ul class="mt-2 text-xs" style="list-style:none; padding-left:0;">
+            @foreach($enrollments as $enrollment)
+                @continue(!isset($incReview[$enrollment->id]))
+                <li style="margin-top:4px;">
+                    <strong>{{ $enrollment->student?->full_name ?? 'N/A' }}</strong>
+                    @foreach($incReview[$enrollment->id] as $period => $labels)
+                        &mdash; {{ ucfirst($period) }}: {{ implode(', ', $labels) }}
+                    @endforeach
+                </li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div class="flex gap-3 mb-4">
     @if(in_array($status, ['pending', 'verified']))
         <span class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 border border-gray-200 text-gray-400">
