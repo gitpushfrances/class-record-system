@@ -98,8 +98,7 @@ class GradeController extends Controller
 
         $data = $request->validate([
             'component_type' => ['required', 'string', 'max:50', 'in:' . implode(',', $validKeys)],
-            'period'         => 'required|in:midterm,final',
-            'name'           => 'required|string|max:100',
+            'name'           => 'nullable|string|max:100',
             'max_score'      => 'required|numeric|min:1',
             'date_given'     => 'nullable|date',
             'description'    => 'nullable|string|max:500',
@@ -109,6 +108,16 @@ class GradeController extends Controller
         if ($weight === 0.0) {
             return back()->withErrors(['component_type' => 'This component has 0% weight. Update grade configuration to enable it.'])->withInput();
         }
+
+        $component      = collect($config->getComponents())->firstWhere('key', $data['component_type']);
+        $data['period'] = $component['period'];
+
+        $existing = $section->gradeItemsFor($subject->id)->where('component_type', $component['key'])->get();
+        $autoName = GradeItem::autoName($existing, $component['key'], $component['label'] ?? '', $component['period']);
+        if ($autoName === null) {
+            return back()->with('warning', 'This period already has an exam. Enter its scores in the class record.');
+        }
+        $data['name'] = filled($data['name'] ?? null) ? $data['name'] : $autoName;
 
         $section->gradeItems()->create($data + [
             'subject_id' => $subject->id,

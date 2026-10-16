@@ -85,11 +85,12 @@ class ClassController extends Controller
         }
 
         $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
-        $matrix           = $config->buildComponentMatrix($gradeItemsByType);
+        $matrix           = $config->buildComponentMatrix($gradeItemsByType, true);
         $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
         $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
         $streaks = \App\Models\AttendanceRecord::streaksFor($subject->id, $enrollments->pluck('id'));
+        $locked  = $currentTerm->verifications()->where('subject_id', $subject->id)->whereIn('status', ['pending', 'verified'])->exists();
 
         $liveGrades        = [];
         $attendanceDisplay = [];
@@ -117,7 +118,7 @@ class ClassController extends Controller
 
         return view('teacher.classes.record', compact(
             'section', 'subject', 'currentTerm', 'config', 'matrix',
-            'enrollments', 'liveGrades', 'attendanceDisplay', 'componentGrades', 'streaks'
+            'enrollments', 'liveGrades', 'attendanceDisplay', 'componentGrades', 'streaks', 'locked'
         ));
     }
 
