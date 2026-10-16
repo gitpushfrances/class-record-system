@@ -180,6 +180,12 @@
             ])
 
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.faculty.index'),
+                'active' => request()->routeIs('dean.faculty.*') || request()->routeIs('dean.teachers.*'),
+                'icon'   => 'fa-id-badge',
+                'label'  => 'Faculty',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.sections.index'),
                 'active' => request()->routeIs('dean.sections.*'),
                 'icon'   => 'fa-layer-group',

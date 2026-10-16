@@ -1232,6 +1232,13 @@ f
 - Tests: `ViewAsTest`
 
 
+### Dean faculty management (Phase 6b)
+- New Dean → **Faculty** page: active / inactive teachers of the department with search, this term's load (subjects taught, sections advised) and a link to pending approvals
+- **Deactivate** (status `inactive`, cannot sign in, records kept) and **Reactivate**; never deleted. Deactivation is refused while the teacher still has subjects or advisory sections in an active term
+- Dean sections are view-only (`index`, `show`): create / edit / delete routes, methods and views removed; the Program Head creates and edits sections. The Dean keeps subject / teacher / adviser assignment
+- New `Dean\FacultyController`; tests: `DeanFacultyTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.

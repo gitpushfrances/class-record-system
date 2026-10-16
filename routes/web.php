@@ -99,7 +99,11 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/teachers/{user}/approve', [DeanTeacherApproval::class, 'approve'])->name('teachers.approve');
     Route::delete('/teachers/{user}/reject', [DeanTeacherApproval::class, 'reject'])->name('teachers.reject');
 
-    Route::resource('sections', DeanSection::class);
+    Route::get('/faculty', [App\Http\Controllers\Dean\FacultyController::class, 'index'])->name('faculty.index');
+    Route::patch('/faculty/{user}/deactivate', [App\Http\Controllers\Dean\FacultyController::class, 'deactivate'])->name('faculty.deactivate');
+    Route::patch('/faculty/{user}/activate', [App\Http\Controllers\Dean\FacultyController::class, 'activate'])->name('faculty.activate');
+
+    Route::resource('sections', DeanSection::class)->only(['index', 'show']);
     Route::post('/sections/{section}/change-adviser', [DeanSection::class, 'changeAdviser'])->name('sections.change-adviser');
     Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');

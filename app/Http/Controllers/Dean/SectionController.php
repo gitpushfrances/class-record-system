@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicPeriod;
 use App\Models\Section;
 use App\Models\SectionTerm;
-use App\Models\Program;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -39,46 +38,6 @@ class SectionController extends Controller
         return view('dean.sections.index', compact('sections', 'teachers', 'allSubjects', 'activePeriod'));
     }
 
-    public function create()
-    {
-        $programs = Program::where('status', 'approved')
-            ->where('department_id', \App\Services\Scope::departmentId())
-            ->orderBy('code')
-            ->get();
-
-        return view('dean.sections.create', compact('programs'));
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'program_id'     => 'required|exists:programs,id',
-            'year_number'    => 'required|in:1,2,3,4,5',
-            'section_letter' => 'required|string|max:50',
-            'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
-        ]);
-
-        $program = Program::findOrFail($validated['program_id']);
-        abort_if(
-            $program->department_id !== \App\Services\Scope::departmentId(),
-            403,
-            'This program does not belong to your department.'
-        );
-
-        $exists = Section::where('program_id', $validated['program_id'])
-            ->where('year_number', $validated['year_number'])
-            ->where('section_letter', $validated['section_letter'])
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors(['section_letter' => 'This section already exists for this program and year.'])->withInput();
-        }
-
-        Section::create($validated);
-
-        return redirect()->route('dean.sections.index')->with('success', 'Section created successfully.');
-    }
-
     public function show(Section $section)
     {
         abort_if(
@@ -102,83 +61,6 @@ class SectionController extends Controller
             ->get();
 
         return view('dean.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers'));
-    }
-
-    public function edit(Section $section)
-    {
-        abort_if(
-            $section->program->department_id !== \App\Services\Scope::departmentId(),
-            403,
-            'This section does not belong to your department.'
-        );
-
-        $programs = Program::where('status', 'approved')
-            ->where('department_id', \App\Services\Scope::departmentId())
-            ->orderBy('code')
-            ->get();
-
-        return view('dean.sections.edit', compact('section', 'programs'));
-    }
-
-    public function update(Request $request, Section $section)
-    {
-        abort_if(
-            $section->program->department_id !== \App\Services\Scope::departmentId(),
-            403,
-            'This section does not belong to your department.'
-        );
-
-        $validated = $request->validate([
-            'program_id'     => 'required|exists:programs,id',
-            'year_number'    => 'required|in:1,2,3,4,5',
-            'section_letter' => 'required|string|max:50',
-            'year_level'     => 'required|in:1st Year,2nd Year,3rd Year,4th Year,5th Year',
-            'status'         => 'required|in:active,inactive',
-        ]);
-
-        $program = Program::findOrFail($validated['program_id']);
-        abort_if(
-            $program->department_id !== \App\Services\Scope::departmentId(),
-            403,
-            'This program does not belong to your department.'
-        );
-
-        $exists = Section::where('program_id', $validated['program_id'])
-            ->where('year_number', $validated['year_number'])
-            ->where('section_letter', $validated['section_letter'])
-            ->where('id', '!=', $section->id)
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors(['section_letter' => 'This section already exists for this program and year.'])->withInput();
-        }
-
-        $section->update($validated);
-
-        return redirect()->route('dean.sections.index')->with('success', 'Section updated successfully.');
-    }
-
-    public function destroy(Section $section)
-    {
-        abort_if(
-            $section->program->department_id !== \App\Services\Scope::departmentId(),
-            403,
-            'This section does not belong to your department.'
-        );
-
-        $activeEnrollments = $section->terms()
-            ->where('status', 'active')
-            ->withCount('enrollments')
-            ->get()
-            ->sum('enrollments_count');
-
-        if ($activeEnrollments > 0) {
-            return redirect()->route('dean.sections.index')
-                ->with('error', 'Cannot delete section with active enrolled students.');
-        }
-
-        $section->delete();
-        return redirect()->route('dean.sections.index')->with('success', 'Section deleted.');
     }
 
     public function attachSubject(Request $request, Section $section)
