@@ -107,7 +107,7 @@ class ClassController extends Controller
                         : false
                 );
                 $attendanceDisplay[$enrollment->id][$comp['key']] = [
-                    'present' => $records->whereIn('status', ['present', 'late'])->count(),
+                    'present' => $records->where('status', 'present')->count(),
                     'total'   => $records->count(),
                 ];
             }

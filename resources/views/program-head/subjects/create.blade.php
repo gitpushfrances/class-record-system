@@ -44,6 +44,13 @@
                 </div>
 
                 <div>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                        <input type="checkbox" name="has_laboratory" value="1" {{ old('has_laboratory', false) ? 'checked' : '' }}>
+                        Has laboratory (lecture and laboratory attendance are recorded separately)
+                    </label>
+                </div>
+
+                <div>
                     <label class="block mb-1 text-sm font-semibold text-gray-700">Description</label>
                     <textarea name="description" id="description" rows="3"
                               placeholder="Optional short description..."

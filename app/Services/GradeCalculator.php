@@ -28,11 +28,7 @@ class GradeCalculator
             return null;
         }
 
-        $credit = $records->sum(fn($r) => match ($r->status) {
-            'present', 'excused' => 1.0,
-            'late'               => 0.5,
-            default              => 0.0,
-        });
+        $credit = $records->where('status', 'present')->count();
 
         return round(($credit / $records->count()) * 100, 2);
     }

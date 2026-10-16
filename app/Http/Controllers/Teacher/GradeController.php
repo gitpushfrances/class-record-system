@@ -162,31 +162,70 @@ class GradeController extends Controller
 
         DB::transaction(function () use ($request, $gradeItem) {
             foreach ($request->scores as $entry) {
-                $existing = StudentGrade::where('enrollment_id', $entry['enrollment_id'])
-                    ->where('grade_item_id', $gradeItem->id)
-                    ->first();
-
-                if ($existing) {
-                    if ((float) $existing->score !== (float) $entry['score']) {
-                        $existing->changeLogs()->create([
-                            'old_score'  => $existing->score,
-                            'new_score'  => $entry['score'],
-                            'changed_by' => auth()->id(),
-                        ]);
-                        $existing->update(['score' => $entry['score']]);
-                    }
-                } else {
-                    StudentGrade::create([
-                        'enrollment_id' => $entry['enrollment_id'],
-                        'grade_item_id' => $gradeItem->id,
-                        'score'         => $entry['score'],
-                        'recorded_by'   => auth()->id(),
-                    ]);
-                }
+                $this->saveScore((int) $entry['enrollment_id'], $gradeItem, $entry['score']);
             }
         });
 
         return redirect()->route('teacher.grades.items', [$section, $subject])->with('success', 'Scores saved.');
+    }
+
+    public function storeScore(Request $request, Section $section, Subject $subject, GradeItem $gradeItem)
+    {
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
+        $this->assertNotLocked($subject, $currentTerm);
+        abort_if($gradeItem->section_id !== $section->id || $gradeItem->subject_id !== $subject->id, 403);
+        abort_if($gradeItem->is_locked, 403, 'Grade item is locked.');
+
+        $data = $request->validate([
+            'enrollment_id' => 'required|integer',
+            'score'         => "nullable|numeric|min:0|max:{$gradeItem->max_score}",
+        ]);
+
+        abort_unless($currentTerm->enrollments()->whereKey($data['enrollment_id'])->exists(), 403);
+
+        $this->saveScore((int) $data['enrollment_id'], $gradeItem, $data['score'] ?? null);
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function saveScore(int $enrollmentId, GradeItem $gradeItem, $score): void
+    {
+        $existing = StudentGrade::withTrashed()
+            ->where('enrollment_id', $enrollmentId)
+            ->where('grade_item_id', $gradeItem->id)
+            ->first();
+
+        if ($score === null) {
+            if ($existing && !$existing->trashed()) {
+                $existing->delete();
+            }
+            return;
+        }
+
+        if (!$existing) {
+            StudentGrade::create([
+                'enrollment_id' => $enrollmentId,
+                'grade_item_id' => $gradeItem->id,
+                'score'         => $score,
+                'recorded_by'   => auth()->id(),
+            ]);
+            return;
+        }
+
+        if ($existing->trashed()) {
+            $existing->restore();
+            $existing->update(['score' => $score, 'recorded_by' => auth()->id()]);
+            return;
+        }
+
+        if ((float) $existing->score !== (float) $score) {
+            $existing->changeLogs()->create([
+                'old_score'  => $existing->score,
+                'new_score'  => $score,
+                'changed_by' => auth()->id(),
+            ]);
+            $existing->update(['score' => $score]);
+        }
     }
 
     public function finalGrades(Section $section, Subject $subject)

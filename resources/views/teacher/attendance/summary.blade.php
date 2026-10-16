@@ -20,7 +20,7 @@
                 <th class="px-6 py-3 text-center">Total</th>
                 <th class="px-6 py-3 text-center">Present</th>
                 <th class="px-6 py-3 text-center">Absent</th>
-                <th class="px-6 py-3 text-center">Excused</th>
+                <th class="px-6 py-3 text-center">Absent streak</th>
                 <th class="px-6 py-3 text-center">Rate</th>
             </tr>
         </thead>
@@ -33,7 +33,13 @@
                     <td class="px-6 py-3 text-center">{{ $row['total'] }}</td>
                     <td class="px-6 py-3 text-center text-green-700">{{ $row['present'] }}</td>
                     <td class="px-6 py-3 text-center text-red-600">{{ $row['absent'] }}</td>
-                    <td class="px-6 py-3 text-center text-blue-600">{{ $row['excused'] }}</td>
+                    <td class="px-6 py-3 text-center">
+                        @if($row['streak'] >= \App\Models\AttendanceRecord::ABSENCE_WARNING)
+                            <span class="px-2 py-1 text-xs font-medium rounded-full" style="background:#fef3c7; color:#b45309;" title="Needs a guidance office permission slip before re-entering class">{{ $row['streak'] }} in a row</span>
+                        @else
+                            <span class="text-gray-400">{{ $row['streak'] }}</span>
+                        @endif
+                    </td>
                     <td class="px-6 py-3 text-center">
                         <span class="px-2 py-1 text-xs rounded-full font-medium
                             {{ $row['percent'] >= 75 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">

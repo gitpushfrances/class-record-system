@@ -14,6 +14,7 @@ class AttendanceRecord extends Model
         'enrollment_id',
         'subject_id',
         'date',
+        'session_type',
         'status',
         'remarks',
         'recorded_by',
@@ -22,6 +23,21 @@ class AttendanceRecord extends Model
     protected $casts = [
         'date' => 'date',
     ];
+
+    public const ABSENCE_WARNING = 3;
+
+    public static function consecutiveAbsences($records): int
+    {
+        $ordered = $records->sortBy(fn($r) => [$r->date->toDateString(), $r->session_type === 'laboratory' ? 1 : 0])->reverse();
+        $streak  = 0;
+
+        foreach ($ordered as $record) {
+            if ($record->status !== 'absent') break;
+            $streak++;
+        }
+
+        return $streak;
+    }
 
     // Relationships
     public function enrollment()

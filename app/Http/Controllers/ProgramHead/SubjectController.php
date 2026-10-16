@@ -43,6 +43,8 @@ class SubjectController extends Controller
             'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
         ]);
 
+        $validated['has_laboratory'] = $request->boolean('has_laboratory');
+
         if ($redirect = $this->guardDuplicateCode($request, $validated, $programId)) {
             return $redirect;
         }
@@ -76,6 +78,8 @@ class SubjectController extends Controller
             'description' => 'nullable|string',
             'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
         ]);
+
+        $validated['has_laboratory'] = $request->boolean('has_laboratory');
 
         if ($redirect = $this->guardDuplicateCode($request, $validated, (int) $subject->program_id, $subject->id)) {
             return $redirect;

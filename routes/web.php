@@ -146,6 +146,7 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     // Score entry
     Route::get('/classes/{section}/subjects/{subject}/grade-items/{gradeItem}/scores', [GradeController::class, 'scores'])->name('grades.scores');
     Route::post('/classes/{section}/subjects/{subject}/grade-items/{gradeItem}/scores', [GradeController::class, 'storeScores'])->name('grades.scores.store');
+    Route::post('/classes/{section}/subjects/{subject}/grade-items/{gradeItem}/score', [GradeController::class, 'storeScore'])->name('grades.score.cell');
 
     // Final grades
     Route::get('/classes/{section}/subjects/{subject}/final-grades', [GradeController::class, 'finalGrades'])->name('grades.final');

@@ -182,15 +182,24 @@
                             @foreach($comp['items'] as $item)
                                 @php $sg = $gradeMap->get($item->id); @endphp
                                 <td class="px-3 py-3 text-center border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}/30">
-                                    @if($sg)
-                                        <span class="font-medium text-gray-800">{{ number_format($sg->score, 0) }}</span>
-                                        <span class="text-xs text-gray-400">/{{ number_format($item->max_score, 0) }}</span>
+                                    @php $shown = $sg ? rtrim(rtrim(number_format($sg->score, 2, '.', ''), '0'), '.') : ''; @endphp
+                                    @if($item->is_locked)
+                                        @if($sg)
+                                            <span class="font-medium text-gray-800">{{ $shown }}</span>
+                                            <span class="text-xs text-gray-400">/{{ number_format($item->max_score, 0) }}</span>
+                                        @else
+                                            <span class="text-gray-300">—</span>
+                                        @endif
                                     @else
-                                        <span class="text-gray-300">—</span>
+                                        <input type="number" step="any" min="0" max="{{ $item->max_score + 0 }}"
+                                               value="{{ $shown }}" data-original="{{ $shown }}"
+                                               data-save="{{ route('teacher.grades.score.cell', [$section, $subject, $item]) }}"
+                                               data-enrollment="{{ $enrollment->id }}"
+                                               class="score-input" style="width:64px; padding:4px; text-align:center; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
                                     @endif
                                 </td>
                             @endforeach
-                            <td class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
+                            <td data-calc="r{{ $enrollment->id }}-{{ $comp['key'] }}" class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
                                 @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
                                 {{ $cg !== null ? \App\Services\GradeCalculator::formatGrade($cg, $config->computation_method ?? 'standard') : '—' }}
                             </td>
@@ -204,16 +213,16 @@
                                     <span class="text-gray-300">—</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
+                            <td data-calc="r{{ $enrollment->id }}-{{ $comp['key'] }}" class="px-3 py-3 font-semibold text-center {{ $comp['color']['text'] }} border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}">
                                 @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
                                 {{ $cg !== null ? \App\Services\GradeCalculator::formatGrade($cg, $config->computation_method ?? 'standard') : '—' }}
                             </td>
                         @endif
                     @endforeach
 
-                    <td class="px-3 py-3 font-bold text-center text-gray-800 border border-gray-200 bg-gray-50">{{ $lg['final_grade'] !== null ? number_format($lg['final_grade'], 2) . '%' : '—' }}</td>
-                    <td class="px-3 py-3 font-bold text-center text-indigo-600 border border-gray-200 bg-gray-50">{{ $lg['letter_grade'] }}</td>
-                    <td class="px-3 py-3 text-center border border-gray-200 bg-gray-50">
+                    <td data-calc="r{{ $enrollment->id }}-pct" class="px-3 py-3 font-bold text-center text-gray-800 border border-gray-200 bg-gray-50">{{ $lg['final_grade'] !== null ? number_format($lg['final_grade'], 2) . '%' : '—' }}</td>
+                    <td data-calc="r{{ $enrollment->id }}-letter" class="px-3 py-3 font-bold text-center text-indigo-600 border border-gray-200 bg-gray-50">{{ $lg['letter_grade'] }}</td>
+                    <td data-calc="r{{ $enrollment->id }}-remarks" class="px-3 py-3 text-center border border-gray-200 bg-gray-50">
                         @if($fg && $fg->is_locked)
                             <span class="px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
                         @elseif($lg['remarks'] === null)
@@ -231,7 +240,7 @@
         </tbody>
 
         @if($enrollments->count() > 0)
-        <tfoot>
+        <tfoot data-calc="foot">
             <tr class="text-xs font-semibold text-gray-600 uppercase bg-gray-100">
                 <td class="sticky left-0 z-10 px-4 py-3 text-center bg-gray-100 border border-gray-200" colspan="3">Class Average</td>
 
@@ -302,6 +311,65 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+</script>
+
+<div id="scoreToast" style="position:fixed; right:16px; bottom:16px; display:none; padding:8px 14px; border-radius:8px; font-size:13px; color:#fff; z-index:60;"></div>
+<script>
+(function () {
+    var toast = document.getElementById('scoreToast');
+    var timer;
+
+    function say(msg, ok) {
+        toast.textContent = msg;
+        toast.style.background = ok ? '#15803d' : '#b91c1c';
+        toast.style.display = 'block';
+        clearTimeout(timer);
+        timer = setTimeout(function () { toast.style.display = 'none'; }, 2500);
+    }
+
+    function refresh() {
+        return fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                doc.querySelectorAll('[data-calc]').forEach(function (n) {
+                    var cur = document.querySelector('[data-calc="' + n.getAttribute('data-calc') + '"]');
+                    if (cur) cur.innerHTML = n.innerHTML;
+                });
+            });
+    }
+
+    document.addEventListener('change', function (e) {
+        var el = e.target;
+        if (!el.classList.contains('score-input')) return;
+
+        var v = el.value.trim();
+        if (v !== '' && (isNaN(v) || Number(v) < 0 || Number(v) > Number(el.max))) {
+            el.value = el.dataset.original;
+            say('Score must be between 0 and ' + el.max + '.', false);
+            return;
+        }
+
+        fetch(el.dataset.save, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ enrollment_id: el.dataset.enrollment, score: v === '' ? null : v })
+        }).then(function (res) {
+            if (!res.ok) throw new Error(res.status === 403 ? 'Grades are locked.' : 'Could not save the score.');
+            el.dataset.original = v;
+            return refresh();
+        }).then(function () {
+            say('Saved', true);
+        }).catch(function (err) {
+            el.value = el.dataset.original;
+            say(err.message, false);
+        });
+    });
+})();
 </script>
 
 </x-sidebar-layout>

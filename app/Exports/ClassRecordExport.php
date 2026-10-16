@@ -159,7 +159,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
                             : false
                     );
                     $total   = $records->count();
-                    $present = $records->whereIn('status', ['present', 'late'])->count();
+                    $present = $records->where('status', 'present')->count();
                     $row[] = $total > 0 ? $present . '/' . $total : '—';
                     $colIndex++;
 

@@ -12,7 +12,8 @@ class AttendanceController extends Controller
     public function index(Request $request, Section $section, Subject $subject)
     {
         $this->authorizeSectionSubject($section, $subject);
-        $date = $request->input('date', today()->toDateString());
+        $date    = $request->input('date', today()->toDateString());
+        $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
         $currentTerm = $section->terms()->where('status', 'active')->first();
         $enrollments = collect();
         if ($currentTerm) {
@@ -21,12 +22,13 @@ class AttendanceController extends Controller
                     'student',
                     'attendanceRecords' => fn($q) => $q
                         ->where('subject_id', $subject->id)
-                        ->whereDate('date', $date),
+                        ->whereDate('date', $date)
+                        ->where('session_type', $session),
                 ])
                 ->get();
         }
         $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
-        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date'));
+        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date', 'session'));
     }
     public function store(Request $request, Section $section, Subject $subject)
     {
@@ -36,15 +38,19 @@ class AttendanceController extends Controller
             'date'                       => 'required|date',
             'attendance'                 => 'required|array',
             'attendance.*.enrollment_id' => 'required|exists:enrollments,id',
-            'attendance.*.status'        => 'required|in:present,absent,late,excused',
+            'session'                    => 'nullable|in:lecture,laboratory',
+            'attendance.*.status'        => 'required|in:present,absent',
         ]);
-        DB::transaction(function () use ($request, $subject) {
+        $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
+
+        DB::transaction(function () use ($request, $subject, $session) {
             foreach ($request->attendance as $entry) {
                 AttendanceRecord::updateOrCreate(
                     [
                         'enrollment_id' => $entry['enrollment_id'],
                         'subject_id'    => $subject->id,
                         'date'          => $request->date,
+                        'session_type'  => $session,
                     ],
                     [
                         'status'      => $entry['status'],
@@ -70,9 +76,8 @@ class AttendanceController extends Controller
                 ->map(function ($enrollment) {
                     $records = $enrollment->attendanceRecords;
                     $total   = $records->count();
-                    $present = $records->whereIn('status', ['present', 'late'])->count();
+                    $present = $records->where('status', 'present')->count();
                     $absent  = $records->where('status', 'absent')->count();
-                    $excused = $records->where('status', 'excused')->count();
                     $percent = $total > 0 ? round(($present / $total) * 100, 2) : 0;
                     return [
                         'enrollment' => $enrollment,
@@ -80,7 +85,7 @@ class AttendanceController extends Controller
                         'total'      => $total,
                         'present'    => $present,
                         'absent'     => $absent,
-                        'excused'    => $excused,
+                        'streak'     => AttendanceRecord::consecutiveAbsences($records),
                         'percent'    => $percent,
                     ];
                 });
