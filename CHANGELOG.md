@@ -1188,6 +1188,16 @@ f
 
 ---
 
+### Roster and soft drop (Phase 5a)
+- New `subject_enrollments` table and `enrollments.type` (`regular` / `irregular`), migration `2026_10_17_000200_create_subject_enrollments_and_enrollment_type`
+- `SectionTerm::enrollments()` now means section members only (regular, not dropped); section pages, counts and advisory rosters follow automatically
+- `SectionTerm::rosterFor($subjectId)` = section members not dropped from the subject + irregular students added to it; used by the Class Record, Scores, Attendance, Final Grades, Submit, Excel export, ROG, teacher dashboard and Program Head verification
+- Removing a student (Dean Enrollments, teacher class page) marks the enrollment `dropped` instead of deleting it; scores, attendance and final grades are kept; enrolling the same student again restores the record
+- The ROG prints dropped students with "Dr" in Remarks and blank grades
+- Score and attendance saves reject students who are not on the subject roster
+- Tests: `RosterTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1211,14 +1221,14 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] The Dean's subject approval pages do not show the "Has laboratory" flag
 
 ### Report of Grades (Phase 4)
-- [ ] "Dr" (dropped) does not print: removing a student deletes the enrollment (fixed by the Phase 5 soft drop)
+- [x] "Dr" (dropped) does not print — fixed October 17, 2026 (Phase 5a soft drop)
 - [ ] Dean → Assignments can set a schedule only when assigning; changing it later means remove and re-assign (the Program Head can edit it)
 - [ ] Faculty without structured names (last / first name) print their old single `name` on the ROG signature block
 - [ ] Students with no gender set print on an extra "GENDER NOT SET" page
 
 ### Enrollment and students
-- [ ] Unenrolling a student hard-deletes the enrollment and cascades to scores, attendance and final grades (Phase 5 soft drop)
-- [ ] Dropped students are still listed on the teacher dashboard (no enrollment status filter)
+- [x] Unenrolling a student hard-deletes the enrollment — fixed October 17, 2026 (Phase 5a: marked dropped, records kept)
+- [x] Dropped students listed on the teacher dashboard — fixed October 17, 2026 (Phase 5a roster)
 - [ ] No UI to change a student's status
 - [ ] `Dean\StudentController@store` soft-duplicate name check is not department-scoped
 - [ ] Global student search, per-subject class roster and student import are not built (Phase 5)

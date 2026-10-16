@@ -42,6 +42,7 @@ class SectionController extends Controller
                 $q->select('student_id')
                     ->from('enrollments')
                     ->where('section_term_id', $currentTerm->id)
+                    ->where('type', 'regular')
                     ->where('status', 'enrolled');
             })->orderBy('last_name')->get();
         }

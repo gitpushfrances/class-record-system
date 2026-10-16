@@ -74,7 +74,7 @@ class ClassController extends Controller
         }
 
         if ($currentTerm) {
-            $currentTerm->load([
+            $currentTerm->loadRoster($subject->id, [
                 'enrollments.student',
                 'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
                 'enrollments.studentGrades' => fn($q) => $q
@@ -133,7 +133,7 @@ class ClassController extends Controller
         }
 
         if ($currentTerm) {
-            $currentTerm->load([
+            $currentTerm->loadRoster($subject->id, [
                 'enrollments.student',
                 'enrollments.studentGrades' => fn($q) => $q
                     ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
@@ -182,20 +182,18 @@ class ClassController extends Controller
             'This student does not belong to this section\'s program.'
         );
 
-        $alreadyEnrolled = Enrollment::where('section_term_id', $currentTerm->id)
+        $existing = Enrollment::where('section_term_id', $currentTerm->id)
             ->where('student_id', $request->student_id)
-            ->exists();
+            ->first();
 
-        if ($alreadyEnrolled) {
+        if ($existing && $existing->type === Enrollment::TYPE_REGULAR && $existing->status !== Enrollment::STATUS_DROPPED) {
             return back()->with('error', 'Student is already enrolled in this class.');
         }
 
-        Enrollment::create([
-            'student_id'      => $request->student_id,
-            'section_term_id' => $currentTerm->id,
-            'status'          => 'enrolled',
-            'enrolled_at'     => now(),
-        ]);
+        Enrollment::updateOrCreate(
+            ['student_id' => $request->student_id, 'section_term_id' => $currentTerm->id],
+            ['type' => Enrollment::TYPE_REGULAR, 'status' => Enrollment::STATUS_ENROLLED, 'enrolled_at' => $existing?->enrolled_at ?? now()]
+        );
 
         return back()->with('success', 'Student enrolled successfully.');
     }
@@ -207,8 +205,8 @@ class ClassController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         abort_if(!$currentTerm || (int) $enrollment->section_term_id !== (int) $currentTerm->id, 404);
 
-        $enrollment->delete();
-        return back()->with('success', 'Student removed from class.');
+        $enrollment->update(['status' => Enrollment::STATUS_DROPPED]);
+        return back()->with('success', 'Student dropped from the section. Grades and attendance are kept.');
     }
 
     private function authorizeSection(Section $section): void

@@ -34,13 +34,16 @@ class ReportOfGrades
         $pivot    = $term->subjects()->where('subjects.id', $subject->id)->firstOrFail()->pivot;
         $schedule = ClassSchedule::label($pivot->schedule_days, $pivot->schedule_start, $pivot->schedule_end);
 
-        $enrollments = Enrollment::sortRoster($term->enrollments()->with('student')->get());
+        $active      = $term->rosterFor($subject->id)->with('student')->get();
+        $dropped     = $term->droppedFrom($subject->id)->with('student')->get();
+        $droppedIds  = $dropped->pluck('id')->all();
+        $enrollments = Enrollment::sortRoster($active->concat($dropped));
         $grades      = FinalGrade::where('subject_id', $subject->id)
             ->whereIn('enrollment_id', $enrollments->pluck('id'))
             ->get()
             ->keyBy('enrollment_id');
 
-        $rows = $enrollments->map(fn ($e) => self::row($e, $grades->get($e->id)));
+        $rows = $enrollments->map(fn ($e) => self::row($e, $grades->get($e->id), in_array($e->id, $droppedIds, true)));
 
         $groups = [
             'MALE'   => $rows->where('gender', 'male'),
@@ -85,9 +88,21 @@ class ReportOfGrades
         ];
     }
 
-    private static function row(Enrollment $enrollment, ?FinalGrade $grade): array
+    private static function row(Enrollment $enrollment, ?FinalGrade $grade, bool $dropped = false): array
     {
         $student = $enrollment->student;
+
+        if ($dropped) {
+            return [
+                'gender'  => $student?->gender,
+                'name'    => $student?->full_name ?? '',
+                'number'  => $student?->student_number ?? '',
+                'midterm' => '',
+                'finals'  => '',
+                'average' => '',
+                'remarks' => 'Dr',
+            ];
+        }
         $inc     = $grade?->remarks === 'incomplete';
         $cell    = fn ($value) => $grade === null ? '' : ($value !== null ? GradeCalculator::formatGrade($value) : ($inc ? 'INC' : ''));
 

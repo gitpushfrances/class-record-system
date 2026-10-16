@@ -145,7 +145,7 @@ class GradeController extends Controller
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
         $enrollments = $currentTerm
-            ? $currentTerm->enrollments()
+            ? $currentTerm->rosterFor($subject->id)
                 ->with([
                     'student',
                     'studentGrades' => fn($q) => $q->where('grade_item_id', $gradeItem->id),
@@ -159,7 +159,7 @@ class GradeController extends Controller
 
     public function storeScores(Request $request, Section $section, Subject $subject, GradeItem $gradeItem)
     {
-        $this->authorizeSectionSubject($section, $subject);
+        $currentTerm = $this->authorizeSectionSubject($section, $subject);
         abort_if($gradeItem->section_id !== $section->id || $gradeItem->subject_id !== $subject->id, 403);
         abort_if($gradeItem->is_locked, 403, 'Grade item is locked.');
 
@@ -168,6 +168,9 @@ class GradeController extends Controller
             'scores.*.enrollment_id' => 'required|exists:enrollments,id',
             'scores.*.score'         => "required|numeric|min:0|max:{$gradeItem->max_score}",
         ]);
+
+        $rosterIds = $currentTerm->rosterFor($subject->id)->pluck('id');
+        abort_if(collect($request->scores)->pluck('enrollment_id')->diff($rosterIds)->isNotEmpty(), 403);
 
         DB::transaction(function () use ($request, $gradeItem) {
             foreach ($request->scores as $entry) {
@@ -190,7 +193,7 @@ class GradeController extends Controller
             'score'         => "nullable|numeric|min:0|max:{$gradeItem->max_score}",
         ]);
 
-        abort_unless($currentTerm->enrollments()->whereKey($data['enrollment_id'])->exists(), 403);
+        abort_unless($currentTerm->rosterFor($subject->id)->whereKey($data['enrollment_id'])->exists(), 403);
 
         $this->saveScore((int) $data['enrollment_id'], $gradeItem, $data['score'] ?? null);
 
@@ -251,7 +254,7 @@ class GradeController extends Controller
 
         $enrollments = collect();
         if ($currentTerm) {
-            $currentTerm->load([
+            $currentTerm->loadRoster($subject->id, [
                 'enrollments.student',
                 'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
                 'enrollments.studentGrades' => fn($q) => $q
@@ -291,7 +294,7 @@ class GradeController extends Controller
             return back()->with('error', 'No grade configuration found.');
         }
 
-        $currentTerm->load([
+        $currentTerm->loadRoster($subject->id, [
             'enrollments.studentGrades' => fn($q) => $q
                 ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
                 ->with('gradeItem'),

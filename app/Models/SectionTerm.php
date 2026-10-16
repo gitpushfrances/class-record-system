@@ -38,9 +38,39 @@ class SectionTerm extends Model
         return $this->belongsTo(User::class, 'adviser_id');
     }
 
+    /** Section members: regular students not dropped from the section. */
     public function enrollments()
     {
-        return $this->hasMany(Enrollment::class);
+        return $this->hasMany(Enrollment::class)
+            ->where('enrollments.type', Enrollment::TYPE_REGULAR)
+            ->where('enrollments.status', '!=', Enrollment::STATUS_DROPPED);
+    }
+
+    /** Students taking one subject in this term (see Enrollment::scopeInRoster). */
+    public function rosterFor(int $subjectId)
+    {
+        return Enrollment::where('section_term_id', $this->id)->inRoster($subjectId);
+    }
+
+    /** Students dropped from one subject in this term (see Enrollment::scopeDroppedFrom). */
+    public function droppedFrom(int $subjectId)
+    {
+        return Enrollment::where('section_term_id', $this->id)->droppedFrom($subjectId);
+    }
+
+    /** Puts the subject roster in the "enrollments" relation; eager loads are written as "enrollments.x". */
+    public function loadRoster(int $subjectId, array $with = []): static
+    {
+        $nested = [];
+        foreach ($with as $key => $value) {
+            if (is_int($key)) {
+                $nested[] = \Illuminate\Support\Str::after($value, 'enrollments.');
+            } else {
+                $nested[\Illuminate\Support\Str::after($key, 'enrollments.')] = $value;
+            }
+        }
+
+        return $this->setRelation('enrollments', $this->rosterFor($subjectId)->with($nested)->get());
     }
 
     public function verifications()

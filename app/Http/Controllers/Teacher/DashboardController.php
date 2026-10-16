@@ -10,23 +10,25 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $teachingTerms = $this->teachingQuery()->with('enrollments.student')->get();
+        $teachingTerms = $this->teachingQuery()->get();
 
         $classes = $teachingTerms
             ->flatMap(function ($term) {
                 $isMaleOrFemale = fn ($e) => in_array($e->student?->gender, ['male', 'female'], true);
 
-                $roster = [
-                    'male'   => Enrollment::sortRoster($term->enrollments, 'male'),
-                    'female' => Enrollment::sortRoster($term->enrollments, 'female'),
-                    'other'  => Enrollment::sortRoster($term->enrollments->reject($isMaleOrFemale)),
-                ];
+                return $term->subjects->map(function ($subject) use ($term, $isMaleOrFemale) {
+                    $students = $term->rosterFor($subject->id)->with('student')->get();
 
-                return $term->subjects->map(fn ($subject) => [
-                    'term'    => $term,
-                    'subject' => $subject,
-                    'roster'  => $roster,
-                ]);
+                    return [
+                        'term'    => $term,
+                        'subject' => $subject,
+                        'roster'  => [
+                            'male'   => Enrollment::sortRoster($students, 'male'),
+                            'female' => Enrollment::sortRoster($students, 'female'),
+                            'other'  => Enrollment::sortRoster($students->reject($isMaleOrFemale)),
+                        ],
+                    ];
+                });
             })
             ->sortBy(fn ($c) => [
                 $c['term']->section->program->code,
