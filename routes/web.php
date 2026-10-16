@@ -114,6 +114,7 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
     Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
     Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
+    Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'dean'])->name('rog.show');
 
     Route::get('/program-heads', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'index'])->name('program-heads.index');
     Route::post('/program-heads/{programHead}/assign', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'assign'])->name('program-heads.assign');
@@ -163,6 +164,7 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     Route::get('/classes/{section}/subjects/{subject}/record', [ClassController::class, 'record'])->name('classes.record');
     Route::get('/classes/{section}/subjects/{subject}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
     Route::get('/classes/{section}/subjects/{subject}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
+    Route::get('/classes/{section}/subjects/{subject}/rog', [App\Http\Controllers\ReportOfGradesController::class, 'teacher'])->name('rog.show');
 });
 
 /*
@@ -176,6 +178,7 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::post('/verify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'verify'])->name('verify');
     Route::post('/reject/{sectionTerm}/{subject}', [ProgramHeadController::class, 'reject'])->name('reject');
     Route::delete('/unverify/{sectionTerm}/{subject}', [ProgramHeadController::class, 'unverify'])->name('unverify');
+    Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'programHead'])->name('rog.show');
 
     Route::get('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'index'])->name('students.index');
     Route::get('/students/create', [App\Http\Controllers\ProgramHead\StudentController::class, 'create'])->name('students.create');

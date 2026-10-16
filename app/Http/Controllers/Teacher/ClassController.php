@@ -97,7 +97,7 @@ class ClassController extends Controller
         $componentGrades   = [];
 
         foreach ($enrollments as $enrollment) {
-            $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
+            $liveGrades[$enrollment->id] = GradeCalculator::result($enrollment, $config, $cutoffDate);
 
             $componentGrades[$enrollment->id] = $this->calculateComponentGrades($enrollment, $config, $cutoffDate);
 
@@ -150,7 +150,7 @@ class ClassController extends Controller
 
         $liveGrades = [];
         foreach ($enrollments as $enrollment) {
-            $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
+            $liveGrades[$enrollment->id] = GradeCalculator::result($enrollment, $config, $cutoffDate);
         }
 
         $sectionLabel = $section->program->code . '_' . $section->year_number . '-' . $section->section_letter;

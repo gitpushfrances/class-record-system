@@ -66,6 +66,10 @@
         <span class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 border border-gray-200 text-gray-400">
             <i class="fa-solid fa-lock"></i> {{ $status === 'verified' ? 'Verified — editing locked' : 'Pending review — editing locked' }}
         </span>
+        <a href="{{ route('teacher.rog.show', [$section, $subject]) }}" target="_blank"
+           style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; font-size:14px; font-weight:600; color:#fff; background:#15803d; border-radius:8px; text-decoration:none;">
+            <i class="fa-solid fa-file-lines"></i> Report of Grades
+        </a>
     @else
         <form id="submitVerificationForm" method="POST" action="{{ route('teacher.grades.submit', [$section, $subject]) }}">
             @csrf
@@ -123,7 +127,7 @@ function confirmSubmitVerification() {
                         $fg = $enrollment->finalGrade;
                         $m       = $config->computation_method ?? 'standard';
                         $pct     = fn($v) => $v !== null ? number_format($v, 2) . '%' : "\u{2014}";
-                        $fmt     = fn($v) => $v !== null ? \App\Services\GradeCalculator::formatGrade($v, $m) : "\u{2014}";
+                        $fmt     = fn($v) => $v !== null ? \App\Services\GradeCalculator::formatGrade($v, $m) : ($lg['remarks'] === 'incomplete' ? 'INC' : "\u{2014}");
                         $remarks = $lg['remarks'];
                     @endphp
                     <tr class="hover:bg-gray-50">
@@ -138,8 +142,8 @@ function confirmSubmitVerification() {
                         <td class="px-5 py-3 font-bold text-center" style="color:#8a6a3d;">{{ $fmt($lg['final_numerical']) }}</td>
                         <td class="px-5 py-3 text-lg font-bold text-center text-gray-900">{{ $fmt($lg['average_numerical']) }}</td>
                         <td class="px-5 py-3 text-center">
-                            @if($fg && $fg->is_locked)
-                                <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded-full"><i class="fa-solid fa-lock"></i> Locked</span>
+                            @if($remarks === 'incomplete')
+                                <span class="px-2 py-1 text-xs font-medium rounded-full" style="color:#b45309; background:#fef3c7;">INC</span>
                             @elseif($remarks === null)
                                 <span class="text-gray-300">&mdash;</span>
                             @elseif($remarks === 'passed')

@@ -111,6 +111,18 @@ class GradeIncTest extends TestCase
         $this->assertSame('incomplete', $out['remarks']);
     }
 
+    public function test_result_marks_missing_finals_as_inc(): void
+    {
+        $grades = array_values(array_filter($this->complete(), fn ($g) => $g->gradeItem->period !== 'final'));
+        $result = GradeCalculator::result($this->enrollment($grades), $this->config(), null);
+
+        $this->assertNotNull($result['midterm_numerical']);
+        $this->assertNull($result['final_numerical']);
+        $this->assertNull($result['average_numerical']);
+        $this->assertSame('incomplete', $result['remarks']);
+        $this->assertSame('INC', $result['letter_grade']);
+    }
+
     public function test_apply_inc_without_missing_changes_nothing(): void
     {
         $result = ['midterm_numerical' => 1.4, 'final_numerical' => 2.2, 'remarks' => 'passed'];

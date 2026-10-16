@@ -181,7 +181,8 @@ class SectionController extends Controller
         $request->validate([
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
-        ]);
+            ...\App\Services\ClassSchedule::rules(),
+        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
 
         $subject = Subject::findOrFail($request->subject_id);
         abort_if(
@@ -190,8 +191,13 @@ class SectionController extends Controller
             'This subject does not belong to your program.'
         );
 
+        $slot = \App\Services\ClassSchedule::fromRequest($request);
+        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
+            return back()->withErrors(['schedule_days' => $conflict])->withInput();
+        }
+
         $currentTerm->subjects()->syncWithoutDetaching([
-            $request->subject_id => ['teacher_id' => $request->teacher_id],
+            $request->subject_id => ['teacher_id' => $request->teacher_id] + $slot,
         ]);
 
         return redirect()->route('program-head.sections.show', $section)->with('success', 'Subject added and teacher assigned.');
@@ -211,13 +217,17 @@ class SectionController extends Controller
         $request->validate([
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
-        ]);
+            ...\App\Services\ClassSchedule::rules(),
+        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        $currentTerm->subjects()->updateExistingPivot($request->subject_id, [
-            'teacher_id' => $request->teacher_id,
-        ]);
+        $slot = \App\Services\ClassSchedule::fromRequest($request);
+        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
+            return back()->withErrors(['schedule_days' => $conflict])->withInput();
+        }
 
-        return redirect()->route('program-head.sections.show', $section)->with('success', 'Teacher updated.');
+        $currentTerm->subjects()->updateExistingPivot($request->subject_id, ['teacher_id' => $request->teacher_id] + $slot);
+
+        return redirect()->route('program-head.sections.show', $section)->with('success', 'Teacher and schedule updated.');
     }
 
     public function changeAdviser(Request $request, Section $section)

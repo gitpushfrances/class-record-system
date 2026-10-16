@@ -15,7 +15,7 @@
 {{-- Add Assignment Form --}}
 <div class="p-5 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
     <h2 class="mb-4 font-semibold text-gray-700">New Assignment</h2>
-    <form method="POST" action="{{ route('dean.assignments.store') }}" class="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <form method="POST" action="{{ route('dean.assignments.store') }}" class="grid grid-cols-1 gap-3 md:grid-cols-4" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));">
         @csrf
         <div>
             <label class="block mb-1 text-xs font-medium text-gray-600">Section</label>
@@ -46,6 +46,9 @@
                     <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
                 @endforeach
             </select>
+        </div>
+        <div style="grid-column:1 / -1;">
+            @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null))
         </div>
         <div class="flex items-end">
             <button type="submit"

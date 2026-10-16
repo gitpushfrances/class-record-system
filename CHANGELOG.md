@@ -1169,6 +1169,25 @@ f
 
 ---
 
+## QA FIXES & PATCHES — October 17, 2026
+
+### Report of Grades (Phase 4)
+- Printable Report of Grades replicating form ESSU-ACAD-712.b: 8.5 × 13 in (Long), logos, course block, grading legend, MALE and FEMALE pages (25 rows each, more pages when needed), signature block, form code / version / effectivity and "Page x of y" footer
+- Built only from submitted grades (`ReportOfGrades::isSubmitted`, status pending or verified); INC periods print "INC"
+- Teacher: "Report of Grades" button on Final Grades after submission (`teacher.rog.show`). The Program Head sets the Schedule of Classes when adding or updating a subject on the section (the Dean on Assignments): day checkboxes M, T, W, Th, F, S (Saturday), Su (Sunday) and a start-end time, saved as `schedule_days`, `schedule_start`, `schedule_end`; a time that overlaps another subject of the same section on a shared day is rejected with the conflicting subject named (`ClassSchedule::conflict`); the ROG prints it as "10:30-12:00PM (MW)" and shows it read-only
+- Program Head: "View Report of Grades" on the dashboard (`program-head.rog.show`), own program only. Dean: "View ROG" on the section page (`dean.rog.show`), own department only
+- Admin → ROG Settings: replace or reset the left and right logos (stored on the `public` disk, needs `php artisan storage:link`), form code, version, effectivity date, Registrar name (`settings` table, `Setting::rog()`)
+- Profile: Academic Rank and Credentials for faculty, Program Heads and Deans, printed under their names (`users.academic_rank`, `users.credentials`)
+- Default logos in `public/images/rog/` (taken from the official form)
+- Tests: `RogSettingsTest`, `ReportOfGradesTest`, `ClassScheduleTest`
+- One INC-aware result everywhere (`GradeCalculator::result()`): Final Grades, Class Record, Excel export, submit and the ROG now agree. Before this, Final Grades and the Class Record showed a grade (skipping empty components) while the submitted record and the ROG said INC; Remarks now shows INC instead of "Locked"
+
+### Known Gaps (not fixed)
+- The printed legend (55-69% = Failed) does not match the S/TS formulas used to compute grades
+- "Dr" (dropped) is not printed yet: dropping a student still deletes the enrollment (Phase 5)
+
+---
+
 ## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
 
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends

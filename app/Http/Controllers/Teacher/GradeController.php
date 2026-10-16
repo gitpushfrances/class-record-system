@@ -266,7 +266,7 @@ class GradeController extends Controller
         $liveGrades  = [];
 
         foreach ($enrollments as $enrollment) {
-            $liveGrades[$enrollment->id] = GradeCalculator::summary($enrollment, $config, $cutoffDate);
+            $liveGrades[$enrollment->id] = GradeCalculator::result($enrollment, $config, $cutoffDate);
         }
 
         $incReview = [];
@@ -303,10 +303,7 @@ class GradeController extends Controller
         $results = [];
 
         foreach ($currentTerm->enrollments as $enrollment) {
-            $results[$enrollment->id] = GradeCalculator::applyInc(
-                GradeCalculator::summary($enrollment, $config, $cutoffDate),
-                GradeCalculator::incompletePeriods($enrollment, $config, $cutoffDate)
-            );
+            $results[$enrollment->id] = GradeCalculator::result($enrollment, $config, $cutoffDate);
         }
 
         DB::transaction(function () use ($results, $subject) {
