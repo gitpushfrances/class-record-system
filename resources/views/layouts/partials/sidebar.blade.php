@@ -233,9 +233,7 @@
                         ->where('status', 'active')
                         ->where('adviser_id', auth()->id())
                         ->exists();
-                $onSectionRoute = request()->routeIs('teacher.classes.show')
-                    || request()->routeIs('teacher.classes.enroll')
-                    || request()->routeIs('teacher.classes.unenroll');
+                $onSectionRoute = request()->routeIs('teacher.classes.show');
             @endphp
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('teacher.dashboard'),

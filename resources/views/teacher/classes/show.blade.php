@@ -77,60 +77,10 @@
     </div>
 @endif
 
-{{-- Add Student Modal --}}
-<div id="enrollModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40">
-    <div class="w-full max-w-md p-6 bg-white shadow-lg rounded-xl">
-        <h3 class="mb-4 text-lg font-semibold text-gray-800">Add Student to Class</h3>
-
-        @if(session('error'))
-            <div class="px-4 py-2 mb-3 text-sm text-red-600 border border-red-200 rounded-lg bg-red-50">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        {{-- Search box --}}
-        <input type="text" id="studentSearch"
-               placeholder="Search by name or student number..."
-               class="w-full px-4 py-2 mb-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-               oninput="filterStudents(this.value)">
-
-        {{-- Student list --}}
-        <div id="studentList" class="mb-4 overflow-y-auto border border-gray-200 divide-y divide-gray-100 rounded-lg max-h-56">
-            @forelse($availableStudents as $student)
-                <form method="POST" action="{{ route('teacher.classes.enroll', $section) }}">
-                    @csrf
-                    <input type="hidden" name="student_id" value="{{ $student->id }}">
-                    <button type="submit"
-                            class="w-full px-4 py-3 text-sm text-left transition student-row hover:bg-indigo-50"
-                            data-name="{{ strtolower($student->full_name) }}"
-                            data-number="{{ strtolower($student->student_number) }}">
-                        <span class="font-medium text-gray-800">{{ $student->full_name }}</span>
-                        <span class="ml-2 text-xs text-gray-400">{{ $student->student_number }}</span>
-                        <span class="ml-2 text-xs text-indigo-500">{{ $student->student_type }}</span>
-                    </button>
-                </form>
-            @empty
-                <div class="px-4 py-4 text-sm text-center text-gray-400">No available students to enroll.</div>
-            @endforelse
-        </div>
-
-        <button onclick="closeEnrollModal()"
-                class="w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
-            Cancel
-        </button>
-    </div>
-</div>
-
 {{-- Students Table --}}
 <div class="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <h2 class="font-semibold text-gray-700">Enrolled Students ({{ $currentTerm ? $currentTerm->enrollments->count() : 0 }})</h2>
-        @if($currentTerm)
-            <button onclick="openEnrollModal()"
-                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
-                + Add Student
-            </button>
-        @endif
     </div>
 
     @php
@@ -169,7 +119,6 @@
                     <th class="px-6 py-3 text-left">#</th>
                     <th class="px-6 py-3 text-left">Student No.</th>
                     <th class="px-6 py-3 text-left">Name</th>
-                    <th class="px-6 py-3 text-center">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -183,7 +132,7 @@
                     @endphp
                     @if($gender === 'all' && $group !== $lastGroup)
                         <tr class="roster-divider" data-group="{{ $group }}">
-                            <td colspan="4" class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase bg-gray-100">{{ $group }}</td>
+                            <td colspan="3" class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase bg-gray-100">{{ $group }}</td>
                         </tr>
                     @endif
                     @php $lastGroup = $group; @endphp
@@ -192,20 +141,9 @@
                         <td class="px-6 py-3 text-gray-400">{{ $n }}</td>
                         <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
                         <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
-                        <td class="px-6 py-3 text-center">
-                            <form id="removeForm-{{ $enrollment->id }}" method="POST" action="{{ route('teacher.classes.unenroll', [$section, $enrollment]) }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button"
-                                        onclick="openRemoveModal('{{ $enrollment->id }}', '{{ addslashes($enrollment->student?->full_name) }}')"
-                                        class="text-xs font-medium text-red-500 hover:text-red-700 hover:underline">
-                                    Remove
-                                </button>
-                            </form>
-                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-6 py-10 text-sm text-center text-gray-400">No {{ $gender }} students enrolled.</td></tr>
+                    <tr><td colspan="3" class="px-6 py-10 text-sm text-center text-gray-400">No {{ $gender }} students enrolled.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -214,35 +152,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    window.openEnrollModal  = function () { document.getElementById('enrollModal').classList.replace('hidden','flex'); };
-    window.closeEnrollModal = function () { document.getElementById('enrollModal').classList.replace('flex','hidden'); };
-    window.filterStudents   = function (q) {
-        q = q.toLowerCase();
-        document.querySelectorAll('.student-row').forEach(row => {
-            const match = row.dataset.name.includes(q) || row.dataset.number.includes(q);
-            row.closest('form').style.display = match ? '' : 'none';
-        });
-    };
-
-    let activeRemoveFormId = null;
-
-    window.openRemoveModal = function (enrollmentId, studentName) {
-        activeRemoveFormId = enrollmentId;
-        document.getElementById('removeStudentName').textContent = studentName;
-        document.getElementById('removeModal').classList.replace('hidden', 'flex');
-    };
-
-    window.closeRemoveModal = function () {
-        activeRemoveFormId = null;
-        document.getElementById('removeModal').classList.replace('flex', 'hidden');
-    };
-
-    document.getElementById('confirmRemoveBtn').addEventListener('click', function () {
-        if (activeRemoveFormId) {
-            document.getElementById('removeForm-' + activeRemoveFormId).submit();
-        }
-    });
-
     var rosterSearch = document.getElementById('rosterSearch');
     if (rosterSearch) {
         var rosterRows  = document.querySelectorAll('tr.roster-row');
@@ -265,29 +174,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
-{{-- Remove Student Confirmation Modal --}}
-<div id="removeModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40 backdrop-blur-sm">
-    <div class="w-full max-w-sm p-6 bg-white shadow-xl rounded-2xl">
-        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            </svg>
-        </div>
-        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Remove Student</h3>
-        <p class="text-sm text-center text-gray-500">You are about to remove</p>
-        <p id="removeStudentName" class="mb-1 text-sm font-semibold text-center text-gray-800"></p>
-        <p class="mb-6 text-xs text-center text-gray-400">This will unenroll them from the class.<br>This action cannot be undone.</p>
-        <div class="flex gap-3">
-            <button onclick="closeRemoveModal()"
-                    class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Cancel
-            </button>
-            <button id="confirmRemoveBtn"
-                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
-                Yes, Remove
-            </button>
-        </div>
-    </div>
-</div>
 </x-sidebar-layout>

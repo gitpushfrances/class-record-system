@@ -134,8 +134,6 @@ Route::middleware(['auth', 'status', 'role:teacher', 'no.cache'])->prefix('teach
 
     // Class overview
     Route::get('/classes/{section}', [ClassController::class, 'show'])->name('classes.show');
-Route::post('/classes/{section}/enroll', [ClassController::class, 'enrollStudent'])->name('classes.enroll');
-Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class, 'unenrollStudent'])->name('classes.unenroll');
 
     // Grade configuration
     Route::get('/classes/{section}/subjects/{subject}/grade-config', [GradeController::class, 'config'])->name('grades.config');
@@ -210,6 +208,8 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::post('/sections/{section}/attach-subject', [App\Http\Controllers\ProgramHead\SectionController::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
     Route::post('/sections/{section}/change-adviser', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeAdviser'])->name('sections.change-adviser');
+    Route::post('/sections/{section}/enroll', [App\Http\Controllers\ProgramHead\SectionController::class, 'enrollStudent'])->name('sections.enroll');
+    Route::delete('/sections/{section}/enroll/{enrollment}', [App\Http\Controllers\ProgramHead\SectionController::class, 'dropStudent'])->name('sections.drop');
 });
 
 /*

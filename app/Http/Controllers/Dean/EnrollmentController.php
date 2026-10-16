@@ -59,26 +59,12 @@ class EnrollmentController extends Controller
         ]);
 
         $student = Student::findOrFail($request->student_id);
-        abort_if(
-            $student->program_id !== $sectionTerm->section->program_id,
-            403,
-            'This student does not belong to this section\'s program.'
-        );
 
-        $existing = Enrollment::where('section_term_id', $sectionTerm->id)
-            ->where('student_id', $request->student_id)
-            ->first();
-
-        if ($existing && $existing->type === Enrollment::TYPE_REGULAR && $existing->status !== Enrollment::STATUS_DROPPED) {
-            return back()->with('error', 'Student is already enrolled in this section for this term.');
+        if ($error = \App\Services\SectionEnrollment::enroll($sectionTerm, $student)) {
+            return back()->with('error', $error);
         }
 
-        Enrollment::updateOrCreate(
-            ['student_id' => $request->student_id, 'section_term_id' => $sectionTerm->id],
-            ['type' => Enrollment::TYPE_REGULAR, 'status' => Enrollment::STATUS_ENROLLED, 'enrolled_at' => $existing?->enrolled_at ?? now()]
-        );
-
-        return back()->with('success', 'Student enrolled successfully.');
+        return back()->with('success', "{$student->full_name} enrolled.");
     }
 
     public function destroy(SectionTerm $sectionTerm, Enrollment $enrollment)
@@ -90,7 +76,7 @@ class EnrollmentController extends Controller
         );
         abort_if($enrollment->section_term_id !== $sectionTerm->id, 404);
 
-        $enrollment->update(['status' => Enrollment::STATUS_DROPPED]);
+        \App\Services\SectionEnrollment::drop($enrollment);
         return back()->with('success', 'Student dropped from the section. Grades and attendance are kept.');
     }
 }

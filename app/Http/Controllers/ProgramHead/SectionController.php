@@ -100,7 +100,23 @@ class SectionController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers'));
+        $availableStudents = $currentTerm
+            ? \App\Models\Student::where('program_id', $section->program_id)
+                ->where('status', 'active')
+                ->whereNotIn('id', $currentTerm->enrollments->pluck('student_id'))
+                ->orderBy('last_name')->orderBy('first_name')
+                ->get()
+            : collect();
+
+        $droppedEnrollments = $currentTerm
+            ? \App\Models\Enrollment::with('student')
+                ->where('section_term_id', $currentTerm->id)
+                ->where('type', \App\Models\Enrollment::TYPE_REGULAR)
+                ->where('status', \App\Models\Enrollment::STATUS_DROPPED)
+                ->get()
+            : collect();
+
+        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments'));
     }
 
     public function edit(Section $section)
@@ -228,6 +244,40 @@ class SectionController extends Controller
         $currentTerm->subjects()->updateExistingPivot($request->subject_id, ['teacher_id' => $request->teacher_id] + $slot);
 
         return redirect()->route('program-head.sections.show', $section)->with('success', 'Teacher and schedule updated.');
+    }
+
+    public function enrollStudent(Request $request, Section $section)
+    {
+        $term = $this->activeTermOfMyProgram($section);
+
+        $request->validate(['student_id' => 'required|exists:students,id']);
+        $student = \App\Models\Student::findOrFail($request->student_id);
+
+        if ($error = \App\Services\SectionEnrollment::enroll($term, $student)) {
+            return back()->with('error', $error);
+        }
+
+        return back()->with('success', "{$student->full_name} enrolled.");
+    }
+
+    public function dropStudent(Section $section, \App\Models\Enrollment $enrollment)
+    {
+        $term = $this->activeTermOfMyProgram($section);
+        abort_unless($term->enrollments()->whereKey($enrollment->id)->exists(), 404);
+
+        \App\Services\SectionEnrollment::drop($enrollment);
+
+        return back()->with('success', "{$enrollment->student->full_name} dropped from the section. Grades and attendance are kept.");
+    }
+
+    private function activeTermOfMyProgram(Section $section): SectionTerm
+    {
+        abort_if($section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+
+        $term = $section->terms()->where('status', 'active')->first();
+        abort_if(!$term, 422, 'This section has no active term.');
+
+        return $term;
     }
 
     public function changeAdviser(Request $request, Section $section)

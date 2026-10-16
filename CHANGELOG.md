@@ -1206,6 +1206,14 @@ f
 - New `Teacher\SubjectRosterController`; tests: `SubjectRosterTest`
 
 
+### Program Head enrollment (Phase 5c)
+- Program Head section page: **Enroll** (active students of the program not yet in the section), **Drop** per student, and a **Dropped** list with **Re-enroll**
+- New routes `program-head.sections.enroll` and `program-head.sections.drop`; the Dean keeps the Enrollments page
+- Enroll and drop logic moved to `App\Services\SectionEnrollment`, shared by the Program Head and the Dean (program check, duplicate check, restore on re-enroll, soft drop)
+- Retired the teacher section-level enroll/unenroll (`teacher.classes.enroll` / `teacher.classes.unenroll`, the Add Student and Remove modals); teachers manage their own subject list on the Class List page (Phase 5b)
+- Tests: `SectionEnrollmentTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
