@@ -197,6 +197,11 @@ class GradeController extends Controller
 
         if ($score === null) {
             if ($existing && !$existing->trashed()) {
+                $existing->changeLogs()->create([
+                    'old_score'  => $existing->score,
+                    'new_score'  => null,
+                    'changed_by' => auth()->id(),
+                ]);
                 $existing->delete();
             }
             return;

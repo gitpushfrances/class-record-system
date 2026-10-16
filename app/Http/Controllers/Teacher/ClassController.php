@@ -89,6 +89,8 @@ class ClassController extends Controller
         $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
         $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
 
+        $streaks = \App\Models\AttendanceRecord::streaksFor($subject->id, $enrollments->pluck('id'));
+
         $liveGrades        = [];
         $attendanceDisplay = [];
         $componentGrades   = [];
@@ -115,7 +117,7 @@ class ClassController extends Controller
 
         return view('teacher.classes.record', compact(
             'section', 'subject', 'currentTerm', 'config', 'matrix',
-            'enrollments', 'liveGrades', 'attendanceDisplay', 'componentGrades'
+            'enrollments', 'liveGrades', 'attendanceDisplay', 'componentGrades', 'streaks'
         ));
     }
 

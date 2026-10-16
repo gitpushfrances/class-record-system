@@ -209,6 +209,9 @@
                                 @if($ad['total'] > 0)
                                     <span class="font-medium text-gray-800">{{ $ad['present'] }}</span>
                                     <span class="text-xs text-gray-400">/{{ $ad['total'] }}</span>
+                                    @if(($streaks[$enrollment->id] ?? 0) >= \App\Models\AttendanceRecord::ABSENCE_WARNING)
+                                        <i class="ml-1 fa-solid fa-triangle-exclamation" style="color:#b45309;" title="{{ $streaks[$enrollment->id] }} absences in a row: guidance office permission slip needed"></i>
+                                    @endif
                                 @else
                                     <span class="text-gray-300">—</span>
                                 @endif

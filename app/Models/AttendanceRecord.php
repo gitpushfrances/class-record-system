@@ -39,6 +39,16 @@ class AttendanceRecord extends Model
         return $streak;
     }
 
+    /** Consecutive-absence streak per enrollment for one subject: [enrollment_id => streak]. */
+    public static function streaksFor(int $subjectId, $enrollmentIds)
+    {
+        return static::where('subject_id', $subjectId)
+            ->whereIn('enrollment_id', $enrollmentIds)
+            ->get()
+            ->groupBy('enrollment_id')
+            ->map(fn ($records) => static::consecutiveAbsences($records));
+    }
+
     // Relationships
     public function enrollment()
     {

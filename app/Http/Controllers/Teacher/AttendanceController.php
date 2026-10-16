@@ -28,7 +28,8 @@ class AttendanceController extends Controller
                 ->get();
         }
         $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
-        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date', 'session'));
+        $streaks = AttendanceRecord::streaksFor($subject->id, $enrollments->pluck('id'));
+        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date', 'session', 'streaks'));
     }
     public function store(Request $request, Section $section, Subject $subject)
     {
@@ -42,6 +43,9 @@ class AttendanceController extends Controller
             'attendance.*.status'        => 'required|in:present,absent',
         ]);
         $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
+
+        $classEnrollmentIds = $currentTerm->enrollments()->pluck('id');
+        abort_if(collect($request->attendance)->pluck('enrollment_id')->diff($classEnrollmentIds)->isNotEmpty(), 403);
 
         DB::transaction(function () use ($request, $subject, $session) {
             foreach ($request->attendance as $entry) {
@@ -60,8 +64,19 @@ class AttendanceController extends Controller
                 );
             }
         });
+        $absentIds = collect($request->attendance)->where('status', 'absent')->pluck('enrollment_id');
+        $flagged   = AttendanceRecord::streaksFor($subject->id, $absentIds)
+            ->filter(fn ($streak) => $streak >= AttendanceRecord::ABSENCE_WARNING)
+            ->keys();
+        $warning   = null;
+        if ($flagged->isNotEmpty()) {
+            $names   = $currentTerm->enrollments()->with('student')->whereIn('id', $flagged)->get()
+                ->map(fn ($e) => $e->student?->full_name)->filter()->implode(', ');
+            $warning = 'Attendance saved. Needs a guidance office permission slip (' . AttendanceRecord::ABSENCE_WARNING . '+ absences in a row): ' . $names . '.';
+        }
+
         return redirect()->route('teacher.classes.record', [$section, $subject])
-            ->with('success', 'Attendance saved.');
+            ->with($warning ? 'warning' : 'success', $warning ?? 'Attendance saved.');
     }
     public function summary(Section $section, Subject $subject)
     {

@@ -67,7 +67,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-6 py-3 font-mono text-xs text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
-                        <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}@if(($streaks[$enrollment->id] ?? 0) >= \App\Models\AttendanceRecord::ABSENCE_WARNING)<span class="px-2 py-1 ml-2 text-xs font-medium rounded-full" style="background:#fef3c7; color:#b45309;" title="Needs a guidance office permission slip before re-entering class">{{ $streaks[$enrollment->id] }} absences in a row</span>@endif</td>
                         <td class="px-6 py-3 text-center">
                             <input type="hidden" name="attendance[{{ $i }}][enrollment_id]" value="{{ $enrollment->id }}">
                             <div class="flex flex-wrap justify-center gap-2">
