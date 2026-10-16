@@ -16,8 +16,7 @@ class SubjectController extends Controller
         // Every subject belonging to a program in this Dean's department
         $subjects = Subject::with(['program', 'requester', 'sectionTerms'])
             ->whereHas('program', fn($q) => $q->where('department_id', $departmentId))
-            ->orderByDesc('created_at')
-            ->paginate(20);
+            ->get();
 
         // Subjects requested by Program Heads in this Dean's department, awaiting Dean approval
         $pendingFromProgramHeads = Subject::with(['program', 'requester'])

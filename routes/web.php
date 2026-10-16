@@ -212,6 +212,7 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::post('/subjects', [App\Http\Controllers\ProgramHead\SubjectController::class, 'store'])->name('subjects.store');
     Route::get('/subjects/{subject}/edit', [App\Http\Controllers\ProgramHead\SubjectController::class, 'edit'])->name('subjects.edit');
     Route::put('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'update'])->name('subjects.update');
+    Route::patch('/subjects/{subject}/placement', [App\Http\Controllers\ProgramHead\SubjectController::class, 'placement'])->name('subjects.placement');
     Route::delete('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'destroy'])->name('subjects.destroy');
 
     Route::get('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'index'])->name('sections.index');

@@ -17,8 +17,7 @@ class SubjectController extends Controller
 
         $approved = Subject::with(['requester', 'approver', 'program.department'])
             ->where('status', 'approved')
-            ->orderByDesc('approved_at')
-            ->paginate(20);
+            ->get();
 
         return view('admin.subjects.index', compact('pending', 'approved'));
     }

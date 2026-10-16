@@ -100,22 +100,28 @@
                     <tr>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Code</th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Name</th>
-                        <th class="px-4 py-3 font-semibold text-left text-gray-600">Department</th>
+                        <th class="px-4 py-3 font-semibold text-left text-gray-600">Program</th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Units</th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Requested By</th>
                         <th class="px-4 py-3 font-semibold text-left text-gray-600">Approved At</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    @forelse($approved as $subject)
+                    @forelse($approved->groupBy(fn ($s) => $s->program?->department?->name ?? 'No department')->sortKeys() as $departmentName => $departmentSubjects)
+                    <tr><td colspan="6" style="padding:10px 16px; font-size:13px; font-weight:700; color:#fff; background:#1c1814;">{{ $departmentName }}</td></tr>
+                    @foreach(\App\Models\Subject::byPlacement($departmentSubjects) as $placement => $group)
+                    <tr><td colspan="6" style="padding:6px 16px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#92400e' : '#1c1814' }}; background:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#fffbeb' : '#f3efe8' }};">{{ $placement }}</td></tr>
+                    @foreach($group as $subject)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                         <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
-                        <td class="px-4 py-3 text-gray-600">{{ $subject->program?->department?->name ?? $subject->department ?? 'N/A' }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $subject->program?->code ?? '—' }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->requester?->name ?? '—' }}</td>
                         <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->approved_at?->format('M d, Y h:i A') ?? '—' }}</td>
                     </tr>
+                    @endforeach
+                    @endforeach
                     @empty
                     <tr>
                         <td colspan="6" class="px-4 py-8 text-sm text-center text-gray-400">No approved subjects yet.</td>
@@ -124,7 +130,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">{{ $approved->links() }}</div>
     </div>
 </div>
 

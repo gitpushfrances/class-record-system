@@ -1247,6 +1247,14 @@ f
 - Shared `admin/partials/code-name-dialog.blade.php` reopens with the errors after a failed save; tests: `AdminDepartmentTest`
 
 
+### Subject year level and semester (Phase 6d1)
+- `subjects.year_level` (1st–5th Year) and `subjects.semester` (1st Semester / 2nd Semester / Summer), nullable; migration `2026_10_17_000300_add_year_level_and_semester_to_subjects`
+- Program Head: both required on Request / Edit; a Year / Semester selector on every row of the Subjects page (also for approved subjects) to fix existing data
+- Program Head Subjects lists every subject of the program (no pagination) grouped "1st Year · 1st Semester" … in curriculum order; unset subjects last with a warning
+- Dean Subjects: grouped by program, then year / semester; pending requests show the year / semester. Admin approved subjects: grouped by department, then year / semester, with a Program column
+- `Subject::byPlacement()`, `$subject->placement`; tests: `SubjectPlacementTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
