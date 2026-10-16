@@ -1198,6 +1198,14 @@ f
 - Tests: `RosterTest`
 
 
+### Teacher class list (Phase 5b)
+- New Class List page per subject (`teacher.classes.students`), opened from the **Students** button on the Class Record
+- Search all active students by number or name (min 3 characters, first 20 matches, any program) and add them to this subject only; new students are enrolled as `irregular` with a `subject_enrollments` row
+- Drop a student from this subject (records kept, "Dr" on the ROG) and restore them; students dropped from the whole section can only be re-enrolled by the Program Head or Dean
+- Only the assigned subject teacher can change the list; it is locked once grades are submitted (pending or verified)
+- New `Teacher\SubjectRosterController`; tests: `SubjectRosterTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.

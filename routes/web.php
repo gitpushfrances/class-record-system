@@ -165,6 +165,12 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     Route::get('/classes/{section}/subjects/{subject}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
     Route::get('/classes/{section}/subjects/{subject}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
     Route::get('/classes/{section}/subjects/{subject}/rog', [App\Http\Controllers\ReportOfGradesController::class, 'teacher'])->name('rog.show');
+
+    // Class list per subject
+    Route::get('/classes/{section}/subjects/{subject}/students', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'index'])->name('classes.students');
+    Route::post('/classes/{section}/subjects/{subject}/students', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'store'])->name('classes.students.store');
+    Route::delete('/classes/{section}/subjects/{subject}/students/{enrollment}', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'destroy'])->name('classes.students.destroy');
+    Route::patch('/classes/{section}/subjects/{subject}/students/{enrollment}/restore', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'restore'])->name('classes.students.restore');
 });
 
 /*
