@@ -10,6 +10,40 @@ use App\Models\User;
 
 class ProgramController extends Controller
 {
+    public function store(\Illuminate\Http\Request $request, Department $department)
+    {
+        $program = $department->programs()->create($this->validated($request) + [
+            'status'       => 'approved',
+            'requested_by' => auth()->id(),
+            'approved_by'  => auth()->id(),
+            'approved_at'  => now(),
+        ]);
+
+        return back()->with('success', "{$program->code} added to {$department->code}.");
+    }
+
+    public function update(\Illuminate\Http\Request $request, Department $department, Program $program)
+    {
+        abort_if($program->department_id !== $department->id, 404);
+
+        $program->update($this->validated($request, $program->id));
+
+        return back()->with('success', "{$program->code} updated.");
+    }
+
+    private function validated(\Illuminate\Http\Request $request, ?int $ignoreId = null): array
+    {
+        $request->merge(['code' => strtoupper(trim((string) $request->code)), 'name' => trim((string) $request->name)]);
+
+        return $request->validate([
+            'code' => ['required', 'max:20', 'regex:/^[A-Z0-9-]+$/', \Illuminate\Validation\Rule::unique('programs', 'code')->ignore($ignoreId)],
+            'name' => ['required', 'string', 'max:255'],
+        ], [
+            'code.regex'  => 'The code may only contain letters, numbers and dashes.',
+            'code.unique' => 'Another program already uses this code.',
+        ]);
+    }
+
     public function show(Department $department, Program $program)
     {
         abort_if($program->department_id !== $department->id, 404);

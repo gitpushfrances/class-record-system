@@ -80,7 +80,11 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
     Route::patch('/deans/{dean}/activate', [AdminUser::class, 'activate'])->name('deans.activate');
 
     Route::get('/departments', [AdminDepartment::class, 'index'])->name('departments.index');
+    Route::post('/departments', [AdminDepartment::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}', [AdminDepartment::class, 'show'])->name('departments.show');
+    Route::put('/departments/{department}', [AdminDepartment::class, 'update'])->name('departments.update');
+    Route::post('/departments/{department}/programs', [AdminProgram::class, 'store'])->name('programs.store');
+    Route::put('/departments/{department}/programs/{program}', [AdminProgram::class, 'update'])->name('programs.update');
     Route::get('/departments/{department}/programs/{program}', [AdminProgram::class, 'show'])->name('programs.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}', [AdminSection::class, 'show'])->name('sections.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}/students', [AdminSection::class, 'students'])->name('sections.students');

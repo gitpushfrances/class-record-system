@@ -1239,6 +1239,14 @@ f
 - New `Dean\FacultyController`; tests: `DeanFacultyTest`
 
 
+### Admin departments and programs (Phase 6c)
+- Admin → Departments: **Add Department**; department page: **Edit** and **Add Program**; program page: **Edit** (code + name, code stored uppercase, unique)
+- Programs created by the Admin are `approved` immediately and appear in every program dropdown (students, import, users, View As)
+- No delete: users, sections, students and subjects reference departments and programs
+- Every department / program field on forms is already a dropdown fed by these records, so S1 item 10 ("department field and program field") is covered
+- Shared `admin/partials/code-name-dialog.blade.php` reopens with the errors after a failed save; tests: `AdminDepartmentTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
