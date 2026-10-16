@@ -12,6 +12,7 @@ class Enrollment extends Model
     protected $fillable = [
         'student_id',
         'section_term_id',
+        'type',
         'status',
         'enrolled_at',
     ];
@@ -37,6 +38,41 @@ class Enrollment extends Model
                 strtolower($e->student?->first_name ?? ''),
             ])
             ->values();
+    }
+
+    public const TYPE_REGULAR    = 'regular';
+    public const TYPE_IRREGULAR  = 'irregular';
+    public const STATUS_ENROLLED = 'enrolled';
+    public const STATUS_DROPPED  = 'dropped';
+
+    public function subjectEnrollments()
+    {
+        return $this->hasMany(SubjectEnrollment::class);
+    }
+
+    /** Students taking a subject: section members not dropped from it, plus irregular students added to it. */
+    public function scopeInRoster($query, int $subjectId)
+    {
+        return $query->where('enrollments.status', '!=', self::STATUS_DROPPED)
+            ->where(function ($q) use ($subjectId) {
+                $q->where(fn ($regular) => $regular
+                        ->where('enrollments.type', self::TYPE_REGULAR)
+                        ->whereDoesntHave('subjectEnrollments', fn ($s) => $s->where('subject_id', $subjectId)->where('status', self::STATUS_DROPPED)))
+                  ->orWhere(fn ($irregular) => $irregular
+                        ->where('enrollments.type', self::TYPE_IRREGULAR)
+                        ->whereHas('subjectEnrollments', fn ($s) => $s->where('subject_id', $subjectId)->where('status', self::STATUS_ENROLLED)));
+            });
+    }
+
+    /** Students dropped from a subject, or from the whole section; printed as "Dr" on the Report of Grades. */
+    public function scopeDroppedFrom($query, int $subjectId)
+    {
+        return $query->where(function ($q) use ($subjectId) {
+            $q->where(fn ($section) => $section
+                    ->where('enrollments.type', self::TYPE_REGULAR)
+                    ->where('enrollments.status', self::STATUS_DROPPED))
+              ->orWhereHas('subjectEnrollments', fn ($s) => $s->where('subject_id', $subjectId)->where('status', self::STATUS_DROPPED));
+        });
     }
 
     public function student()

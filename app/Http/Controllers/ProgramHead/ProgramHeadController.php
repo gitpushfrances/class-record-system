@@ -29,7 +29,7 @@ class ProgramHeadController extends Controller
         ->whereHas('section', fn($q) => $q->where('program_id', $programId))
         ->get();
 
-        $enrollmentIds = $sectionTerms->pluck('enrollments')->flatten()->pluck('id');
+        $enrollmentIds = \App\Models\Enrollment::whereIn('section_term_id', $sectionTerms->pluck('id'))->pluck('id');
 
         $finalGrades = FinalGrade::whereIn('enrollment_id', $enrollmentIds)
             ->get()
@@ -79,7 +79,7 @@ class ProgramHeadController extends Controller
         $section = $sectionTerm->section;
         $section->gradeItemsFor($subject->id)->update(['is_locked' => false]);
 
-        $enrollmentIds = $sectionTerm->enrollments()->pluck('id');
+        $enrollmentIds = \App\Models\Enrollment::where('section_term_id', $sectionTerm->id)->pluck('id');
         FinalGrade::where('subject_id', $subject->id)
             ->whereIn('enrollment_id', $enrollmentIds)
             ->update(['is_locked' => false, 'locked_at' => null]);

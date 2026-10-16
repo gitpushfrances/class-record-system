@@ -59,28 +59,12 @@ class EnrollmentController extends Controller
         ]);
 
         $student = Student::findOrFail($request->student_id);
-        abort_if(
-            $student->program_id !== $sectionTerm->section->program_id,
-            403,
-            'This student does not belong to this section\'s program.'
-        );
 
-        $already = Enrollment::where('section_term_id', $sectionTerm->id)
-            ->where('student_id', $request->student_id)
-            ->exists();
-
-        if ($already) {
-            return back()->with('error', 'Student is already enrolled in this section for this term.');
+        if ($error = \App\Services\SectionEnrollment::enroll($sectionTerm, $student)) {
+            return back()->with('error', $error);
         }
 
-        Enrollment::create([
-            'student_id'      => $request->student_id,
-            'section_term_id' => $sectionTerm->id,
-            'status'          => 'enrolled',
-            'enrolled_at'     => now(),
-        ]);
-
-        return back()->with('success', 'Student enrolled successfully.');
+        return back()->with('success', "{$student->full_name} enrolled.");
     }
 
     public function destroy(SectionTerm $sectionTerm, Enrollment $enrollment)
@@ -92,7 +76,7 @@ class EnrollmentController extends Controller
         );
         abort_if($enrollment->section_term_id !== $sectionTerm->id, 404);
 
-        $enrollment->delete();
-        return back()->with('success', 'Student removed from enrollment.');
+        \App\Services\SectionEnrollment::drop($enrollment);
+        return back()->with('success', 'Student dropped from the section. Grades and attendance are kept.');
     }
 }

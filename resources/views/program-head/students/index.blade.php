@@ -5,12 +5,21 @@
             <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Student Master List</h1>
             <p class="mt-1 text-sm text-gray-500">Manage your program's student records.</p>
         </div>
-        <a href="{{ route('program-head.students.create') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
-           style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
-            <i class="text-xs fa-solid fa-plus"></i> Add Student
-        </a>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" onclick="document.getElementById('importStudentsDialog').showModal()"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
+                    style="background:#fff; border:1px solid #c8a97e; color:#1c1814;">
+                <i class="text-xs fa-solid fa-file-import"></i> Import
+            </button>
+            <a href="{{ route('program-head.students.create') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
+               style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
+                <i class="text-xs fa-solid fa-plus"></i> Add Student
+            </a>
+        </div>
     </div>
+
+    @include('partials.student-import', ['action' => route('program-head.students.import'), 'template' => route('program-head.students.template')])
 
     <style>
         .filter-select { height:38px; padding:0 2.25rem 0 .75rem; font-size:.875rem; border:1px solid #d1d5db; border-radius:.5rem; background-color:#fff; background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2020%2020%27%20fill=%27none%27%3E%3Cpath%20d=%27M6%208l4%204%204-4%27%20stroke=%27%236b7280%27%20stroke-width=%271.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3C/svg%3E); background-repeat:no-repeat; background-position:right .75rem center; background-size:1rem; -webkit-appearance:none; appearance:none; cursor:pointer; }

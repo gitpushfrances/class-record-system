@@ -27,6 +27,10 @@
         </div>
     </div>
     <div class="flex flex-wrap gap-2 mt-1 no-print">
+        <a href="{{ route('teacher.classes.students', [$section, $subject]) }}"
+           class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
+            <i class="fa-solid fa-users"></i> Students
+        </a>
         <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-sliders"></i> Config

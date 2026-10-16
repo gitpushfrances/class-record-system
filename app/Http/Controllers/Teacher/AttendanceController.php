@@ -17,7 +17,7 @@ class AttendanceController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         $enrollments = collect();
         if ($currentTerm) {
-            $enrollments = $currentTerm->enrollments()
+            $enrollments = $currentTerm->rosterFor($subject->id)
                 ->with([
                     'student',
                     'attendanceRecords' => fn($q) => $q
@@ -44,7 +44,7 @@ class AttendanceController extends Controller
         ]);
         $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
 
-        $classEnrollmentIds = $currentTerm->enrollments()->pluck('id');
+        $classEnrollmentIds = $currentTerm->rosterFor($subject->id)->pluck('id');
         abort_if(collect($request->attendance)->pluck('enrollment_id')->diff($classEnrollmentIds)->isNotEmpty(), 403);
 
         DB::transaction(function () use ($request, $subject, $session) {
@@ -70,7 +70,7 @@ class AttendanceController extends Controller
             ->keys();
         $warning   = null;
         if ($flagged->isNotEmpty()) {
-            $names   = $currentTerm->enrollments()->with('student')->whereIn('id', $flagged)->get()
+            $names   = $currentTerm->rosterFor($subject->id)->with('student')->whereIn('id', $flagged)->get()
                 ->map(fn ($e) => $e->student?->full_name)->filter()->implode(', ');
             $warning = 'Attendance saved. Needs a guidance office permission slip (' . AttendanceRecord::ABSENCE_WARNING . '+ absences in a row): ' . $names . '.';
         }
@@ -84,7 +84,7 @@ class AttendanceController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         $enrollments = collect();
         if ($currentTerm) {
-            $enrollments = $currentTerm->enrollments()
+            $enrollments = $currentTerm->rosterFor($subject->id)
                 ->with(['student', 'attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id)])
                 ->get()
                 ->pipe(fn ($c) => \App\Models\Enrollment::sortRoster($c))

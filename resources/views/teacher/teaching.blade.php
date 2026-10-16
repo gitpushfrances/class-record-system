@@ -35,7 +35,7 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <i class="w-4 text-xs fa-solid fa-users" style="color:#c8a97e;"></i>
-                            Students: <span class="font-medium text-gray-800">{{ $term->enrollments->count() }}</span>
+                            Students: <span class="font-medium text-gray-800">{{ $term->rosterFor($subject->id)->count() }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <i class="w-4 text-xs fa-solid fa-calendar" style="color:#c8a97e;"></i>

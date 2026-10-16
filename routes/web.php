@@ -100,6 +100,8 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
 
+    Route::get('/students/import-template', [DeanStudent::class, 'template'])->name('students.template');
+    Route::post('/students/import', [DeanStudent::class, 'import'])->name('students.import');
     Route::resource('students', DeanStudent::class)->except(['show']);
     Route::get('/subjects', [DeanSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [DeanSubject::class, 'approve'])->name('subjects.approve');
@@ -134,8 +136,6 @@ Route::middleware(['auth', 'status', 'role:teacher', 'no.cache'])->prefix('teach
 
     // Class overview
     Route::get('/classes/{section}', [ClassController::class, 'show'])->name('classes.show');
-Route::post('/classes/{section}/enroll', [ClassController::class, 'enrollStudent'])->name('classes.enroll');
-Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class, 'unenrollStudent'])->name('classes.unenroll');
 
     // Grade configuration
     Route::get('/classes/{section}/subjects/{subject}/grade-config', [GradeController::class, 'config'])->name('grades.config');
@@ -165,6 +165,12 @@ Route::delete('/classes/{section}/enroll/{enrollment}', [ClassController::class,
     Route::get('/classes/{section}/subjects/{subject}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
     Route::get('/classes/{section}/subjects/{subject}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
     Route::get('/classes/{section}/subjects/{subject}/rog', [App\Http\Controllers\ReportOfGradesController::class, 'teacher'])->name('rog.show');
+
+    // Class list per subject
+    Route::get('/classes/{section}/subjects/{subject}/students', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'index'])->name('classes.students');
+    Route::post('/classes/{section}/subjects/{subject}/students', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'store'])->name('classes.students.store');
+    Route::delete('/classes/{section}/subjects/{subject}/students/{enrollment}', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'destroy'])->name('classes.students.destroy');
+    Route::patch('/classes/{section}/subjects/{subject}/students/{enrollment}/restore', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'restore'])->name('classes.students.restore');
 });
 
 /*
@@ -181,6 +187,8 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'programHead'])->name('rog.show');
 
     Route::get('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'index'])->name('students.index');
+    Route::get('/students/import-template', [App\Http\Controllers\ProgramHead\StudentController::class, 'template'])->name('students.template');
+    Route::post('/students/import', [App\Http\Controllers\ProgramHead\StudentController::class, 'import'])->name('students.import');
     Route::get('/students/create', [App\Http\Controllers\ProgramHead\StudentController::class, 'create'])->name('students.create');
     Route::post('/students', [App\Http\Controllers\ProgramHead\StudentController::class, 'store'])->name('students.store');
     Route::get('/students/{student}/edit', [App\Http\Controllers\ProgramHead\StudentController::class, 'edit'])->name('students.edit');
@@ -204,6 +212,8 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::post('/sections/{section}/attach-subject', [App\Http\Controllers\ProgramHead\SectionController::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
     Route::post('/sections/{section}/change-adviser', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeAdviser'])->name('sections.change-adviser');
+    Route::post('/sections/{section}/enroll', [App\Http\Controllers\ProgramHead\SectionController::class, 'enrollStudent'])->name('sections.enroll');
+    Route::delete('/sections/{section}/enroll/{enrollment}', [App\Http\Controllers\ProgramHead\SectionController::class, 'dropStudent'])->name('sections.drop');
 });
 
 /*

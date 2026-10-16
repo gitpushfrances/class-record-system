@@ -9,7 +9,6 @@ use App\Models\Enrollment;
 use App\Models\FinalGrade;
 use App\Models\Section;
 use App\Models\SectionTerm;
-use App\Models\Student;
 use App\Models\Subject;
 use App\Services\GradeCalculator;
 use Illuminate\Http\Request;
@@ -50,17 +49,7 @@ class ClassController extends Controller
             }
         }
 
-        $enrolledIds = $currentTerm
-            ? $currentTerm->enrollments->pluck('student_id')->toArray()
-            : [];
-
-        $availableStudents = Student::where('status', 'active')
-            ->where('program_id', $section->program_id)
-            ->whereNotIn('id', $enrolledIds)
-            ->orderBy('last_name')
-            ->get();
-
-        return view('teacher.classes.show', compact('section', 'currentTerm', 'subjectsData', 'availableStudents'));
+        return view('teacher.classes.show', compact('section', 'currentTerm', 'subjectsData'));
     }
 
     public function record(Section $section, Subject $subject, Request $request)
@@ -74,7 +63,7 @@ class ClassController extends Controller
         }
 
         if ($currentTerm) {
-            $currentTerm->load([
+            $currentTerm->loadRoster($subject->id, [
                 'enrollments.student',
                 'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
                 'enrollments.studentGrades' => fn($q) => $q
@@ -133,7 +122,7 @@ class ClassController extends Controller
         }
 
         if ($currentTerm) {
-            $currentTerm->load([
+            $currentTerm->loadRoster($subject->id, [
                 'enrollments.student',
                 'enrollments.studentGrades' => fn($q) => $q
                     ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
@@ -160,55 +149,6 @@ class ClassController extends Controller
         $filename = $sectionLabel . '_' . $subject->code . '_' . $termLabel . '.xlsx';
 
         return Excel::download(new ClassRecordExport($section, $currentTerm, $subject, $matrix, $enrollments, $liveGrades, $request->gender), $filename);
-    }
-
-    public function enrollStudent(Request $request, Section $section)
-    {
-        $this->authorizeSection($section);
-
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-
-        abort_if(!$currentTerm, 403, 'No active term for this section.');
-
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-        ]);
-
-        $student = Student::findOrFail($request->student_id);
-
-        abort_if(
-            $student->program_id !== $section->program_id,
-            403,
-            'This student does not belong to this section\'s program.'
-        );
-
-        $alreadyEnrolled = Enrollment::where('section_term_id', $currentTerm->id)
-            ->where('student_id', $request->student_id)
-            ->exists();
-
-        if ($alreadyEnrolled) {
-            return back()->with('error', 'Student is already enrolled in this class.');
-        }
-
-        Enrollment::create([
-            'student_id'      => $request->student_id,
-            'section_term_id' => $currentTerm->id,
-            'status'          => 'enrolled',
-            'enrolled_at'     => now(),
-        ]);
-
-        return back()->with('success', 'Student enrolled successfully.');
-    }
-
-    public function unenrollStudent(Section $section, Enrollment $enrollment)
-    {
-        $this->authorizeSection($section);
-
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-        abort_if(!$currentTerm || (int) $enrollment->section_term_id !== (int) $currentTerm->id, 404);
-
-        $enrollment->delete();
-        return back()->with('success', 'Student removed from class.');
     }
 
     private function authorizeSection(Section $section): void
