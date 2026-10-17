@@ -124,6 +124,10 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'store'])->name('assignments.store');
     Route::delete('/assignments/{id}', [App\Http\Controllers\Dean\AssignmentController::class, 'destroy'])->name('assignments.destroy');
 
+    Route::get('/promotions', [App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
+    Route::get('/promotions/programs/{program}', [App\Http\Controllers\PromotionController::class, 'program'])->name('promotions.program');
+    Route::get('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'section'])->name('promotions.section');
+    Route::post('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
     Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
@@ -215,6 +219,10 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::patch('/subjects/{subject}/placement', [App\Http\Controllers\ProgramHead\SubjectController::class, 'placement'])->name('subjects.placement');
     Route::delete('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'destroy'])->name('subjects.destroy');
 
+    Route::get('/promotions', [App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
+    Route::get('/promotions/programs/{program}', [App\Http\Controllers\PromotionController::class, 'program'])->name('promotions.program');
+    Route::get('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'section'])->name('promotions.section');
+    Route::post('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     Route::get('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'index'])->name('sections.index');
     Route::get('/sections/create', [App\Http\Controllers\ProgramHead\SectionController::class, 'create'])->name('sections.create');
     Route::post('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'store'])->name('sections.store');

@@ -1270,6 +1270,14 @@ f
 - Tests: `TermRolloverTest`
 
 
+### Batch promotion (Phase 6e2)
+- Dean and Program Head → **Promotion**: program cards (Dean) → year → section cards → the students of the section's last closed term
+- Every checkbox starts unchecked; students with failed or INC final grades in that term are highlighted with the subject codes
+- Target: any active section of the program with a term in the active academic period; the same section carries students into the next semester, a higher-year section promotes them (student year level becomes the target section's)
+- One transaction through `SectionEnrollment::enroll()`; students already in the target are skipped and named; every run is logged in the new `promotions` table (who, from, to, year level, students, skipped) and listed on the section page
+- Migration `2026_10_17_000400_create_promotions_table`; `App\Services\BatchPromotion`, `App\Http\Controllers\PromotionController`, `promotions/*` views; tests: `BatchPromotionTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1314,6 +1322,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
 - [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
 - [ ] Set Term closes the old term even if some subjects were never submitted for verification; there is no warning yet
+- [ ] Promotion cannot be undone from the UI (drop the students from the target section; the year level must be corrected by editing the student)
 - [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
 - [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role

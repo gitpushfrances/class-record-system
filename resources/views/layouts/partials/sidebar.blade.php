@@ -216,6 +216,12 @@
                 'label'  => 'Enrollments',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.promotions.index'),
+                'active' => request()->routeIs('dean.promotions.*'),
+                'icon'   => 'fa-arrow-trend-up',
+                'label'  => 'Promotion',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.program-heads.index'),
                 'active' => request()->routeIs('dean.program-heads.*'),
                 'icon'   => 'fa-user-shield',
@@ -244,6 +250,12 @@
                 'active' => request()->routeIs('program-head.students.*'),
                 'icon'   => 'fa-users',
                 'label'  => 'Students',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('program-head.promotions.index'),
+                'active' => request()->routeIs('program-head.promotions.*'),
+                'icon'   => 'fa-arrow-trend-up',
+                'label'  => 'Promotion',
             ])
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('program-head.subjects.index'),
