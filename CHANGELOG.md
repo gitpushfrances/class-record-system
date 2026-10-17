@@ -6,47 +6,88 @@
 **PHP Version:** 8.4.11  
 **Node Version:** 18.20.8  
 **Started:** February 8, 2026  
+**Current Release:** v1.0-rc1 (October 17, 2026), client testing  
+**Automated Tests:** 176 passing  
 
 ---
 
-## SYSTEM FLOW — FINALIZED ROLE PERMISSIONS
+## SYSTEM FLOW — ROLES AND RULES (v1.0-rc1, October 17, 2026)
 
-### 👑 Super Admin
-- Create & manage Dean accounts
-- Review & approve / reject Subject requests from Deans (with timestamp)
-- Configure Academic Year & Semester
-- Archive old data
-- View system-wide stats (Deans, Active Teachers, Students, Subjects, Sections)
+This replaces the original February plan. It describes what the system does today.
 
-### 🎓 Dean
-- Approve / reject Teacher registrations (individual or bulk)
-- Manage all Faculty — view, deactivate
-- Create Sections & assign Teachers
-- Add & manage Students (master list owner)
-- Tag students as Regular or Irregular
-- Request new Subjects (pending until Super Admin approves)
-- Approve / reject Teacher grade config change requests
-- View faculty reports
+### Super Admin
+- Dashboard with system-wide counts
+- **View As**: open the system as the Dean of a department or the Program Head of a program, to see and act on their pages (banner shows "Viewing as"; Exit returns to Admin)
+- **Faculty**: create accounts for any role, approve or reject sign-up requests, activate / deactivate, change role
+- **Subjects**: all departments; approve or reject pending subject requests
+- **Departments**: add / edit departments and programs; drill down to sections and students
+- **Academic Period**: add a school year and semester with midterm and finals cutoff dates; set one period active
+- **Backup & Restore**: run a backup, download, delete, restore (`.sql` / `.txt` only)
+- **ROG Settings**: logos, form code, version, effectivity date, Registrar name
 
-### 📝 Teacher
-- Self-register (pending until Dean approves)
-- View assigned classes only
-- Enroll students from master list into their class
-- Configure grade weights per class (must = 100%, free on first setup)
-- Enter grades — Quizzes, Exams, Projects, Assessments
-- Enter attendance (date-based)
-- View auto-calculated final grades
-- Export grades to Excel / PDF
-- Lock grades after deadline
-- Request grade config change (Dean approval required if grades already entered)
+### Dean (own department only)
+- **Faculty**: department teachers, activate / deactivate, approve or reject pending teacher sign-ups
+- **Sections**: view sections, Set Term / Change Adviser, view the Report of Grades
+- **Students**: department master list; add, edit, import from Excel
+- **Subjects**: approve or reject Program Head subject requests
+- **Assignments**: assign a teacher and class schedule to a section's subject
+- **Enrollments**: enroll or drop students per section term
+- **Promotion**: move a section's students to the next year level and a target section
+- **Program Heads**: assign or remove the Program Head of each program
 
-### Key Rules
-- Students — Dean owns master list; Teachers only enroll into classes
-- Regular / Irregular — tagged by Dean, read-only label for Teacher
-- Grade Config — free on first setup; Dean approval required after grades are entered
-- Teacher accounts — self-register, pending until Dean approves
-- Dean accounts — created directly by Super Admin
-- Subjects — Dean requests per department, Super Admin approves with timestamp. Approved subjects are locked from editing.
+### Program Head (own program only)
+- **Grade Verification**: review submitted subjects; Verify, Reject (with a reason, sends it back to the teacher), Undo Verification; View Report of Grades
+- **Sections**: create / edit sections, assign subjects with teacher and schedule, enroll and drop students, Set Term / Change Adviser
+- **Students**: program master list; add, edit, import from Excel
+- **Promotion**: same as the Dean, own program only
+- **Subjects**: request new subjects with year level and semester (pending until the Dean approves); edit while pending
+
+### Teacher
+- Requests an account from the sign-in page; pending until the Dean or Admin approves
+- **Dashboard**, **My Advisory** (advisory section roster), **My Subjects**
+- Per subject: **Grade Config** (components, weights = 100%, conversion: standard table, major formula 5 − 4(S/TS), minor formula 4 − 3(S/TS)), **Class Record** (+ Add items, inline scores, Print, Export Excel), **Attendance** (present / absent; lecture and laboratory separately for lab subjects), **Students** (add irregular students, drop / restore per subject), **Final Grades**, **Submit for Verification**, **Report of Grades**
+
+### Key rules
+- Every role sees only its own department / program; other roles' pages return 403 (`RoleAccessTest`)
+- Each grade component belongs to Midterm or Finals (set in Grade Config). Attendance dated on or before the active period's midterm cutoff counts toward Midterm, later records toward Finals
+- A weighted component with no scores makes that period INC for every student (approved rule)
+- Submitting locks the subject: scores, attendance and the teacher's Class List can no longer change. The section class list (Program Head / Dean add or drop) is also locked while any subject of the term is pending or verified. To change anything, the Program Head rejects the submission (a verified one is first undone)
+- Dropping a student keeps all records; the Report of Grades prints "Dr"
+- Set Term in a new period closes the old term (records kept) and starts a new one; it warns first when subjects are not verified, because a closed term can no longer be submitted or verified
+- Promotion cannot be undone from the UI
+
+---
+
+## RELEASE v1.0-rc1 — October 17, 2026 (client testing)
+
+Tag `v1.0-rc1` on `main`. 176 automated tests passing. Client testing steps: `CLIENT-TESTING-GUIDE.txt`. Server install: `DEPLOY.md`.
+
+The phase numbers below are the October 2026 work. The older "PHASE 1–8" headings further down are the original February build plan.
+
+### What this release contains
+- **Phase 2 — Grading engine**: one-decimal grades, half-up rounding, INC rules at submit, `grades:recompute`
+- **Phase 3 — Class Record and attendance**: present / absent attendance with lecture / laboratory sessions, absence-streak warnings, inline score entry, "+ Add" items with server-assigned names
+- **Phase 4 — Report of Grades**: printable ESSU-ACAD-712.b (Long), class schedule on assignments, ROG Settings, rank and credentials on signatures
+- **Phase 5 — Roster and enrollment**: soft drop ("Dr" on the ROG), per-subject class list with irregular students, Program Head enrollment, Excel student import
+- **Phase 6 — Roles**: Admin View As, Dean faculty management, departments / programs CRUD, subject year level and semester, subject assignment rule, term rollover (no more relabeling of last semester), batch promotion with audit log
+- **Phase 7 — Polish**: ESSU green and gold with the ESSU seal, letterhead sign-in and request-account pages, light pages, 17 unused files removed, role-by-role access tests, `DEPLOY.md`
+- **Phase 8 — Record integrity**: section class list locked while grades are submitted or verified (8a); Set Term warning for unverified subjects (8b)
+
+### Required before go-live (client decisions — no code can settle these)
+1. **Sir Roger's written approval of the grade formulas.** Grades are computed with major 5 − 4(S/TS) and minor 4 − 3(S/TS). The printed ROG legend says 55–69% = Failed, but with the formulas 3.0 (passing) falls at 50% (major) and 33.3% (minor). Either the formulas or the legend must change, in writing, before real grades are entered; if the formula changes after real grades exist, every subject must be recomputed and re-verified
+2. **Registrar name** for the ROG signature block (Admin → ROG Settings; the sample form shows REGINA L. DOCENA, DBA)
+3. **Default Finals components**: the default configuration still includes "Security" (20%, Finals); confirm or replace
+4. **Teacher double-booking**: decide whether the same teacher in two sections at the same time must be blocked (today only subjects inside one section are checked)
+
+### Recommendations (ranked by risk)
+1. **8c — Server-side teacher check on assignment.** The teacher dropdown is filtered, but the server does not check that the teacher is an active teacher of the department; a hand-edited request can assign anyone
+2. **Backup path.** `config/database.php` hardcodes `C:/xampp/mysql/bin/` for `mysqldump`; backups fail on a Linux server or a different XAMPP folder. Move it to `.env` (`DB_DUMP_PATH`) before deploying
+3. **Backup restore.** Restore accepts only `.sql` / `.txt` and cannot restore the `.zip` files the system creates; scheduled backups are not set up (see `DEPLOY.md` §5)
+4. **8d — Undo the last promotion**, using the existing promotion audit log
+5. **Completed terms** are not browsable by teachers; add a term picker so old class records can be opened read-only
+6. **Seeded passwords.** Every sample account uses `password`; never run the sample seeders on the server
+7. **Performance.** Inline score save re-fetches the whole Class Record; fine for 40 students, slow for large classes
+8. **Duplicate grade logic in JavaScript** (Scores page live preview) can drift from the PHP formula if the formula changes after Sir Roger's decision
 
 ---
 
@@ -574,162 +615,6 @@ Sections restructured from tightly-coupled to a proper two-layer model:
 
 ---
 f
-## QA FIXES & PATCHES — August 17, 2026
-
-### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
-- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
-- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
-- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
-- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
-- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
-- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
-- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
-- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
-- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
-- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
-
-### Section Roster Page — Per-Subject Action Cards
-- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
-- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
-
-### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
-- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
-- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
-
-### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
-- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
-- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
-- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
-- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
-- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
-
-### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
-- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
-- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
-
-### SweetAlert2 Migration — Shared Layout Flash Messages
-- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
-- SweetAlert2 CDN script tag added to the shared layout `<head>`
-
----
-
-## QA FIXES & PATCHES — August 17, 2026
-
-### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
-- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
-- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
-- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
-- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
-- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
-- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
-- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
-- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
-- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
-- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
-
-### Section Roster Page — Per-Subject Action Cards
-- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
-- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
-
-### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
-- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
-- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
-
-### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
-- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
-- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
-- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
-- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
-- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
-
-### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
-- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
-- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
-
-### SweetAlert2 Migration — Shared Layout Flash Messages
-- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
-- SweetAlert2 CDN script tag added to the shared layout `<head>`
-
----
-
-## QA FIXES & PATCHES — August 17, 2026
-
-### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
-- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
-- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
-- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
-- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
-- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
-- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
-- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
-- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
-- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
-- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
-
-### Section Roster Page — Per-Subject Action Cards
-- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
-- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
-
-### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
-- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
-- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
-
-### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
-- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
-- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
-- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
-- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
-- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
-
-### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
-- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
-- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
-
-### SweetAlert2 Migration — Shared Layout Flash Messages
-- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
-- SweetAlert2 CDN script tag added to the shared layout `<head>`
-
----
-
-## QA FIXES & PATCHES — August 17, 2026
-
-### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
-- Root cause: grades (`grade_configurations`, `grade_items`, `final_grades`) were scoped only to `section_id`, but a section takes multiple subjects, often with different teachers — the schema had no way to keep one subject's grades separate from another's within the same section
-- Migrations added: `subject_id` added to `grade_configurations` (with new composite unique `[section_id, subject_id]`), `grade_items`, and `final_grades` (with new composite unique `[enrollment_id, subject_id]`, replacing the old single-column unique on `enrollment_id`)
-- `Section` model gained `gradeConfigurationFor($subjectId)`, `gradeItemsFor($subjectId)`, and `gradeConfigurations()` (hasMany); the old singular `gradeConfiguration()` (hasOne) relation kept in place but deprecated, in case anything else still calls it
-- `Teacher\GradeController` and `Teacher\ClassController` — every method (`config`, `storeConfig`, `items`, `storeItem`, `destroyItem`, `scores`, `storeScores`, `finalGrades`, `updateCutoff`, `computeGrades`, `lockGrades`, `record`, `export`) now takes `Subject $subject` alongside `Section $section`, with every query, redirect, and view scoped accordingly
-- All `teacher.grades.*` and `teacher.classes.record`/`export` routes updated to include `{subject}` in the URL
-- Access model tightened: being a section **adviser** no longer grants grade access on its own — only being the teacher actually assigned to that specific subject does (`authorizeSectionSubject()`, added to both controllers). Advisory is now roster-only.
-- Real bug fix riding along: `ClassController`'s attendance scoring was silently always 0 (never had cutoff-aware logic, unlike `GradeController`) — now computes correctly once a midterm cutoff date is set, consistent between both controllers
-- `GradeConfiguration::buildComponentMatrix()` added — single source of truth for component ordering, grade-item grouping, and stable per-component color assignment, consumed by both the live Class Record view and the Excel export so they can no longer drift out of sync with each other
-- `ClassRecordExport` rewritten to accept the shared matrix instead of rebuilding column logic independently
-- `resources/views/teacher/classes/record.blade.php` rebuilt from hardcoded quiz/exam/project/assessment/attendance columns to a dynamic matrix-driven table
-
-### Section Roster Page — Per-Subject Action Cards
-- `teacher/classes/show.blade.php` (adviser-facing roster page) previously gated all grade-related quick actions behind a single section-wide `$hasConfig` flag pointing at routes that no longer accept a bare `{section}` — now lists each subject taught in the section as its own card, showing "Configured" / "Not configured" / "Not your subject" state per subject, with action links only rendered for subjects the logged-in teacher actually teaches
-- `ClassController@show()` rewritten to build this per-subject data set instead of a single boolean
-
-### Teacher Sidebar — Split Dashboard into Advisory / Teaching Tabs
-- Combined "My Classes" dashboard split into three: `teacher.dashboard` (overview, unchanged), new `teacher.advisory` (sections where teacher is adviser), new `teacher.teaching` (subjects taught, across any section) — sidebar now shows all three as separate nav links
-- `DashboardController` refactored with shared private query builders (`advisoryQuery()`, `teachingQuery()`) reused by `index()` and the two new actions
-
-### Adviser Assignment — Missing One-Teacher-One-Section Rule (CRITICAL, client-reported: "may section nga di naka assign ha teacher pero nag appear ha iya dashboard")
-- Root cause, part 1: `Dean\SectionController@changeAdviser()` had no check preventing the same teacher from being set as adviser on more than one section at once — confirmed via direct query that one teacher held two simultaneous active advisories
-- Root cause, part 2: a soft-deleted `Section` still had an active `SectionTerm` row pointing at it with a live `adviser_id`; the teacher dashboard's `$term->section` relation returned null for it (respecting the soft-delete scope) and crashed the page outright (`Attempt to read property "program" on null"`) rather than silently misbehaving
-- Fixed: `changeAdviser()` now checks for an existing active advisory for the selected teacher (excluding the section's own current term) before saving, returning a validation error naming the conflicting section instead of overwriting silently
-- Fixed: `DashboardController`'s advisory query now excludes terms whose section no longer exists (`whereHas('section')`); `advisory.blade.php` additionally guards with `@continue(!$term->section)` as a second layer of defense against any future stale data
-- Bad historical data (duplicate advisory assignment, orphaned term against a deleted section) corrected directly via tinker; not left for the next person to rediscover
-
-### Dean Sections Page — Duplicate Error Banner + Uncaught Null Property Crash
-- `$errors->any()` was rendering twice — once from the shared `layouts/app.blade.php` (correct, app-wide), once from a redundant local copy in `dean/sections/index.blade.php` — same recurring duplicate-banner pattern as several earlier sessions; local copy removed
-- The adviser-conflict error message itself was crashing the page (`Attempt to read property "full_name" on null`) when the conflicting section had been soft-deleted, since eager-loading `->section` respects the soft-delete scope and returns null — fixed by fetching the conflicting section directly via `Section::find()` with a null-safe fallback label instead of relying on the eager-loaded relation
-
-### SweetAlert2 Migration — Shared Layout Flash Messages
-- All four flash/validation message blocks in `layouts/app.blade.php` (`success`, `warning`, `error`, `$errors`) converted from static colored `<div>` banners to `Swal.fire()` calls, applied app-wide in one pass
-- SweetAlert2 CDN script tag added to the shared layout `<head>`
-
----
-
 ## QA FIXES & PATCHES — August 17, 2026
 
 ### Grading System — Section-Level to Subject-Level Refactor (MAJOR)
@@ -1377,6 +1262,8 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 
 ### Backup
 - [ ] Restore accepts only `.sql` / `.txt` and runs the upload through `DB::unprepared`; it cannot restore the `.zip` backups the system creates
+- [ ] `mysqldump` path is hardcoded to `C:/xampp/mysql/bin/` in `config/database.php`; backups fail on a Linux server or another XAMPP folder. Move it to `.env` before deploying
+- [ ] Backups are not scheduled (see `DEPLOY.md` §5)
 
 ### UI and dead code
 - [x] Light-card conversion — done October 17, 2026 (Phase 7c)
@@ -1386,6 +1273,11 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [x] ESSU palette and the ESSU seal in place of the book icon — done October 17, 2026 (Phase 7a)
 - [x] Dead code removed — done October 17, 2026 (Phase 7d)
 
+### Client testing (v1.0-rc1)
+- [ ] Client runs `CLIENT-TESTING-GUIDE.txt` and returns the step marks and bug reports
+- [ ] Answers to decisions D1–D5 (guide PART 9) recorded under "Decisions and sign-offs"
+- [ ] INC rule confirmed with the client: a zero total in any weighted component (for example absent at every session) makes the period INC, not failed
+
 ### Before production
 - [ ] Change the default seeder passwords (on the server: never run the sample seeders; see DEPLOY.md)
 - [ ] Server: `php artisan migrate`, `php artisan storage:link` (once), `npm run build`, `php artisan view:clear`, then `grades:recompute --apply`; back up the database first
@@ -1393,33 +1285,29 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 
 ---
 
-## PHASE 9: REPORTING & ANALYTICS 📅 PLANNED
+## ROADMAP (after client testing)
 
+### Next — v1.0-rc2: fixes from client testing
+- Bugs reported through `CLIENT-TESTING-GUIDE.txt` (PART 10), sorted into bugs, client decisions and misunderstandings before any code changes
+- Client decisions D1–D5 (guide PART 9): grade formula vs. ROG legend, Registrar name, default Finals components, teacher double-booking, INC rule
+- 8c server-side teacher check on assignment, 8d undo last promotion, `mysqldump` path in `.env`
+
+### Phase 9: Reporting & Analytics (planned)
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
 - Dean: department-wide stats, teacher performance, section comparison, consolidated reports
 - Activity logs — grade changes, login history, export to Excel
 
----
+### Phase 10: UI/UX (partly done)
+- Done: SweetAlert2 confirmations with native fallbacks, inline score entry on the Class Record (Phase 3), gender filter and order toggle on the Class Record and My Advisory, ESSU palette and light pages (Phase 7)
+- Open: breadcrumbs, mobile audit, keyboard navigation (Tab / Enter / arrows) between score cells, reusable `<x-confirm-form>`
 
-## PHASE 10: UI/UX POLISH 📅 PLANNED
-
-- Toast notifications and confirmation modals
-- Breadcrumb navigation
-- Mobile responsiveness audit
-- Inline score editing, keyboard navigation (Tab/Enter/Arrow)
-- Filter and sort on class record view
+### Phase 11: Testing & Deployment (partly done)
+- Done: 176 automated tests (role access, grading and INC, Report of Grades, enrollment and class list lock, term rollover, promotion), separate `class_record_test` database, login rate limiting (5 attempts), `DEPLOY.md`
+- Open: production server with HTTPS, scheduled backups, real Admin account and no sample seeders on the server, `grades:recompute --apply` after deploy
 
 ---
 
-## PHASE 11: TESTING & DEPLOYMENT 📅 PLANNED
-
-- Feature tests — core workflows, grade calculation accuracy, permission checks
-- Production `.env` configuration, HTTPS, rate limiting on login
-- Change default seeder passwords before production
-
----
-
-**Last Updated:** October 16, 2026  
-**Next Milestone:** Phase 9 — Reporting & Analytics  
+**Last Updated:** October 17, 2026  
+**Current Release:** v1.0-rc1 (client testing)  
+**Next Milestone:** v1.0-rc2 — fixes from client testing  
 **Maintained By:** Frances Igop
-

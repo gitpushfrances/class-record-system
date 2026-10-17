@@ -1,0 +1,388 @@
+===============================================================================
+ FACULTY CLASS RECORD SYSTEM - CLIENT TESTING GUIDE
+ ESSU Guiuan Campus
+ Version under test: v1.0-rc1 (October 17, 2026)
+===============================================================================
+
+PURPOSE
+  Test every role from sign-in to the printed Report of Grades, using SAMPLE
+  DATA ONLY. Do not enter real student grades until the grade formula is
+  approved in writing (see PART 9).
+
+HOW TO USE THIS GUIDE
+  - Do the parts in order. Later parts use what earlier parts created.
+  - Every step has an EXPECTED result. If what you see is different, write a
+    bug report (PART 10) and continue with the next step if you can.
+  - Mark each step:  [P] passed   [F] failed   [S] skipped
+
+-------------------------------------------------------------------------------
+ PART 0. INSTALL OR UPDATE THE SYSTEM
+-------------------------------------------------------------------------------
+
+REQUIREMENTS (Windows)
+  - XAMPP with PHP 8.1 or newer (tested on PHP 8.4) and MySQL, installed in
+    C:\xampp  (backups only work from this folder in this version)
+  - In C:\xampp\php\php.ini these lines must NOT start with ";" :
+        extension=zip
+        extension=gd
+    Restart Apache after editing.
+  - Composer 2, Node.js 18 or newer, Git (Git Bash)
+  - Access to the GitHub repository (ask the developer to add your GitHub
+    account if the repository is private)
+
+FIRST-TIME INSTALL (Git Bash)
+  1. Start Apache and MySQL in the XAMPP Control Panel.
+  2. Open phpMyAdmin (http://localhost/phpmyadmin) and create an empty
+     database named:  class_record
+  3. Run, one line at a time:
+
+     cd ~/Desktop
+     git clone https://github.com/gitpushfrances/class-record-system.git
+     cd class-record-system
+     git checkout v1.0-rc1
+     composer install
+     npm ci
+     npm run build
+     cp .env.example .env
+     php artisan key:generate
+
+  4. Open the file .env in a text editor and set:
+        DB_DATABASE=class_record
+        DB_USERNAME=root
+        DB_PASSWORD=          (leave empty if your MySQL root has no password)
+  5. Run:
+
+     php artisan migrate:fresh --seed
+     php artisan storage:link
+     php artisan serve
+
+  6. Open http://127.0.0.1:8000 in the browser. Keep the Git Bash window open
+     while testing (closing it stops the system).
+
+UPDATE TO A NEW TEST VERSION (when the developer sends a new version name,
+for example v1.0-rc2)
+
+     cd ~/Desktop/class-record-system
+     git fetch --tags
+     git checkout v1.0-rc2
+     composer install
+     npm ci
+     npm run build
+     php artisan migrate
+     php artisan optimize:clear
+     php artisan serve
+
+START AGAIN WITH CLEAN SAMPLE DATA (erases everything in class_record)
+
+     php artisan migrate:fresh --seed
+
+SAMPLE ACCOUNTS (password for all: password)
+  Admin ........................ admin@classrecord.test
+  Dean (CCS) ................... dean@classrecord.test
+  Program Head (BSCS) .......... programhead@classrecord.test
+  Teacher (CCS) ................ teacher@classrecord.test
+  Pending teacher (not approved)  pending@classrecord.test
+  Dean (CBA) ................... dean.cba@classrecord.test
+  Program Head (CBA) ........... programhead.cba@classrecord.test
+  Teacher (CBA) ................ teacher.cba@classrecord.test
+
+SAMPLE DATA ALREADY IN THE SYSTEM
+  - Departments: CCS, CBA, COE. Programs: BSCS, BSIT, BSCpE, BSBA, BSCE
+  - Section BSCS 3-A, term 2024-2025 1st Semester, adviser Teacher Sample
+  - 5 BSCS students enrolled in BSCS 3-A (2021-00001 to 2021-00005)
+  - Subjects CS101, CS102, CS103, MATH101, ENG101 have NO program, so they
+    cannot be assigned to a section. PART 4 creates a subject that can.
+  - There is NO academic period yet. PART 2 creates it. Until then, grades
+    show INC.
+
+-------------------------------------------------------------------------------
+ PART 1. SIGN-IN AND ACCOUNTS (everyone)
+-------------------------------------------------------------------------------
+
+1.1  Open http://127.0.0.1:8000
+     EXPECTED: green ESSU sign-in page with the letterhead and "Sign In".
+
+1.2  Sign in with admin@classrecord.test and a WRONG password.
+     EXPECTED: error message; you stay on the sign-in page.
+
+1.3  Enter a wrong password 5 or more times quickly.
+     EXPECTED: "Too many login attempts" with a waiting time.
+     (Wait it out before continuing.)
+
+1.4  Sign in as pending@classrecord.test / password.
+     EXPECTED: not allowed in; "Your account is pending approval. Please wait
+     for admin/dean approval."
+
+1.5  On the sign-in page, open the request-account page and register a new
+     account: your own test name, an email such as newteacher@test.com and a
+     password.
+     EXPECTED: message that the request was submitted and must be approved.
+     Signing in with it is refused until the Admin approves it (step 2.4).
+
+1.6  Sign in as each sample account once, then click Logout.
+     EXPECTED: each lands on its own dashboard (Admin, Dean, Program Head,
+     Teacher). After Logout, the browser Back button does not show the
+     dashboard again.
+
+1.7  Any role: open Profile (bottom of the sidebar). Change the name, save.
+     EXPECTED: saved message; the new name appears in the sidebar.
+
+-------------------------------------------------------------------------------
+ PART 2. ADMIN  (admin@classrecord.test)
+-------------------------------------------------------------------------------
+
+2.1  Academic Period -> Add Period
+       School year: 2024-2025   Semester: 1st Semester
+       Midterm cutoff: today's date   Finals cutoff: a date after it
+     Then click Set Active on it.
+     EXPECTED: the period is listed as active.
+     NOTE: attendance dated on or before the midterm cutoff counts toward
+     Midterm; attendance after it counts toward Finals.
+
+2.2  Dashboard
+     EXPECTED: counts of deans, teachers, students, subjects, sections.
+
+2.3  Faculty -> create a new Dean account for department COE (any test name).
+     EXPECTED: account created and listed; you can sign in with it.
+
+2.4  Faculty -> sign-up requests -> Approve the account from 1.5 as a
+     Teacher of department CCS.
+     EXPECTED: approved; that teacher can now sign in.
+
+2.4b Faculty -> deactivate the COE Dean, then try to sign in as that Dean.
+     EXPECTED: sign-in refused. Activate it again afterwards.
+
+2.5  Departments -> Add Department (e.g. code TEST, name Test College), then
+     open it and add a program (e.g. BSTEST).
+     EXPECTED: both appear; editing the name works.
+
+2.6  Departments -> CCS -> BSCS -> section 3-A
+     EXPECTED: the section and its 5 students are listed.
+
+2.7  Subjects
+     EXPECTED: approved subjects are listed with their department. Pending
+     requests (none yet) would show Approve / Reject.
+
+2.8  ROG Settings -> set the Registrar name (test value), Save settings.
+     EXPECTED: saved; it prints on the Report of Grades in PART 6.
+
+2.9  Backup & Restore -> Run Backup Now, then Download the file.
+     EXPECTED: a backup file appears and downloads.
+     (If it fails, write down the exact error: backups need XAMPP in C:\xampp.)
+
+2.10 View As -> View as Dean (CCS). Open a few Dean pages, then click Exit.
+     Repeat with View as Program Head (BSCS).
+     EXPECTED: a "Viewing as" banner; you see exactly what that Dean / Program
+     Head sees; Exit returns you to the Admin dashboard.
+
+-------------------------------------------------------------------------------
+ PART 3. DEAN  (dean@classrecord.test)
+-------------------------------------------------------------------------------
+
+3.1  Dashboard and every sidebar page open without errors:
+     Faculty, Sections, Students, Subjects, Assignments, Enrollments,
+     Promotion, Program Heads.
+
+3.2  Students -> Add Student (BSCS, student number e.g. 2021-00006, gender
+     set, 3rd Year).
+     EXPECTED: added to the master list; search finds it by name or number.
+
+3.3  Students -> Import -> download the Template, fill 2 or 3 students, Import.
+     EXPECTED: a message with how many were imported / skipped; they appear
+     in the list. Importing the same file again skips the duplicates.
+
+3.4  Faculty -> pending teachers -> Approve "Pending Teacher"
+     (pending@classrecord.test, a CCS teacher waiting for the Dean).
+     EXPECTED: pending@classrecord.test can now sign in.
+
+3.5  Faculty -> Deactivate a teacher, check that the teacher cannot sign in,
+     then Reactivate.
+
+3.6  Program Heads
+     EXPECTED: Program Head Sample is assigned to BSCS.
+
+3.7  Isolation check: sign in as dean.cba@classrecord.test.
+     EXPECTED: no CCS / BSCS students, sections or teachers anywhere.
+
+(Subjects, Assignments, Enrollments and Promotion are tested in PART 4-7.)
+
+-------------------------------------------------------------------------------
+ PART 4. PROGRAM HEAD - SET UP A CLASS  (programhead@classrecord.test)
+-------------------------------------------------------------------------------
+
+4.1  Subjects -> Request Subject
+       Code: CS301   Name: Software Engineering   Units: 3
+       Year level: 3rd Year   Semester: 1st Semester
+       Has laboratory: tick it (so lecture and lab attendance are tested)
+     -> Review & Submit
+     EXPECTED: listed as pending (awaiting Dean approval); Edit is available
+     while pending.
+
+4.2  Sign in as the Dean -> Subjects -> Approve CS301.
+     EXPECTED: approved; the Program Head can no longer edit it.
+
+4.3  Program Head -> Sections -> open BSCS 3-A -> Assign subject:
+       Subject CS301, Teacher: Teacher Sample, schedule e.g. M W 10:30-12:00
+     EXPECTED: CS301 appears on the section with the teacher and schedule.
+
+4.4  Assign a second subject request (e.g. CS302, approve it as Dean) to
+     BSCS 3-A with an OVERLAPPING time on the same day.
+     EXPECTED: refused, naming the subject it conflicts with.
+
+4.5  Students -> Add Student and Import work as in 3.2 / 3.3 (own program only).
+
+4.6  BSCS 3-A -> Enroll the student added in 3.2.
+     EXPECTED: enrolled; listed in the section.
+
+4.7  Drop one student, then Re-enroll the same student.
+     EXPECTED: drop keeps the record ("Grades and attendance are kept");
+     Re-enroll restores the student.
+
+4.8  Isolation check: sign in as programhead.cba@classrecord.test.
+     EXPECTED: BSCS sections and students are not visible.
+
+-------------------------------------------------------------------------------
+ PART 5. TEACHER - GRADES  (teacher@classrecord.test)
+-------------------------------------------------------------------------------
+
+5.1  Dashboard, My Advisory, My Subjects open.
+     EXPECTED: My Advisory shows BSCS 3-A (male and female groups);
+     My Subjects shows CS301.
+
+5.2  Open CS301 -> Grade Config.
+     For a short test, set the weights like this (others 0):
+       Midterm: Quiz 40, Exam 40, Attendance 20        (total 100)
+       Finals:  Final Exam 40, Final Project 40, Attendance (F) 20 (total 100)
+     Pick the computation method (standard table, major formula, or minor
+     formula), Save Configuration.
+     EXPECTED: saved. A total other than 100 per period is refused.
+
+5.3  Class Record -> "+ Add" on Quiz (date, highest possible score 20).
+     Type scores in the cells. Add one Exam, one Final Exam and one Final
+     Project item the same way.
+     EXPECTED: names are given automatically (Quiz 1, Midterm Examination...);
+     totals and grades update after each cell; a blank cell clears the score.
+
+5.4  Attendance ("+ Take"):
+       - one date ON or BEFORE the midterm cutoff (Lecture and Laboratory)
+       - one date AFTER the midterm cutoff (Lecture and Laboratory)
+     Use All Present / All Absent, then Save Attendance.
+     EXPECTED: saved; View Summary shows the rates. Marking a student absent
+     3 times in a row shows an absence warning.
+
+5.5  Students (per-subject class list): search and Add one of the students
+     imported in 3.3 (not in the section, so added as irregular), Drop one
+     student from CS301 only, then Restore.
+     EXPECTED: the drop affects CS301 only; the student stays in the section.
+
+5.6  Final Grades
+     EXPECTED: midterm, finals and final grade per student. A student with
+     no score in a weighted component (or 0 total) is listed as INC.
+     This INC rule is the approved behavior.
+
+5.7  Class Record -> Export Excel and Print.
+     EXPECTED: an .xlsx downloads with the same grades; Print opens a
+     landscape print view without buttons or sidebar.
+
+5.8  Final Grades -> Submit for Verification -> confirm.
+     EXPECTED: submitted. Scores, attendance, + Add and the class list can no
+     longer be changed (locked).
+
+-------------------------------------------------------------------------------
+ PART 6. PROGRAM HEAD - VERIFICATION AND REPORT OF GRADES
+-------------------------------------------------------------------------------
+
+6.1  Teacher: Final Grades -> Report of Grades.
+     EXPECTED: printable ESSU-ACAD-712.b on Long paper: logos, course block,
+     schedule, MALE and FEMALE pages, signature block with the Registrar
+     name from 2.8, "Page x of y". Dropped students print "Dr", INC prints INC.
+
+6.2  Program Head: Grade Verification -> CS301 -> Reject with a reason.
+     EXPECTED: the teacher sees the reason, can edit scores again, and can
+     submit again.
+
+6.3  Teacher submits again. Program Head -> Verify.
+     EXPECTED: verified. Undo Verification returns it to pending.
+
+6.4  CLASS LIST LOCK: while CS301 is pending or verified, Program Head ->
+     BSCS 3-A -> Drop a student (also try as Dean -> Enrollments).
+     EXPECTED: refused with a message naming CS301. The student stays.
+     After Undo Verification + Reject, the drop works.
+
+6.5  Program Head: View Report of Grades. Dean: Sections -> BSCS 3-A ->
+     View ROG.
+     EXPECTED: the same report as 6.1.
+
+-------------------------------------------------------------------------------
+ PART 7. TERM CHANGE AND PROMOTION  (do this LAST - it closes the term)
+-------------------------------------------------------------------------------
+
+7.1  Admin -> Academic Period -> Add 2024-2025 2nd Semester -> Set Active.
+
+7.2  Program Head -> Sections -> Set Term on BSCS 3-A while a subject is NOT
+     verified.
+     EXPECTED: "Subjects Not Verified" dialog listing the subject and its
+     status. Cancel leaves the old term active.
+
+7.3  Set Term again -> Close Term Anyway.
+     EXPECTED: "New term started: 2nd Semester 2024-2025". The old term's
+     students and grades are kept; the new term has no students yet.
+
+7.4  Promotion (Program Head or Dean) -> BSCS -> section 3-A. The source is
+     3-A's closed 1st Semester term. The target is any BSCS section with a
+     term in the active period: 3-A's new 2nd Semester term (next semester)
+     or a 4th-year section (create one and Set Term on it first).
+     All students start UNCHECKED; tick some -> Promote selected.
+     EXPECTED: ticked students are enrolled in the target section with the
+     new year level; students with INC or failed grades are flagged in the
+     list. NOTE: promotion cannot be undone from the screen.
+
+-------------------------------------------------------------------------------
+ PART 8. SECURITY CHECKS (any role)
+-------------------------------------------------------------------------------
+
+8.1  As a Teacher, copy a Dean page address (e.g. /dean/faculty) into the
+     address bar.
+     EXPECTED: 403 Forbidden. Same for Teacher -> /admin/dashboard,
+     Program Head -> /dean/faculty, CBA accounts -> BSCS sections.
+
+8.2  Sign out, then open http://127.0.0.1:8000/admin/dashboard.
+     EXPECTED: sent to the sign-in page.
+
+-------------------------------------------------------------------------------
+ PART 9. DECISIONS NEEDED FROM THE CLIENT (please answer in writing)
+-------------------------------------------------------------------------------
+
+D1  GRADE FORMULA (Sir Roger). Grades use major 5 - 4(S/TS) and minor
+    4 - 3(S/TS). The printed ROG legend says 55-69% = Failed, but with these
+    formulas 3.0 (passing) is reached at 50% (major) and 33.3% (minor).
+    Which is correct: the formulas or the legend?   ______________________
+
+D2  REGISTRAR NAME to print on the ROG:            ______________________
+
+D3  DEFAULT FINALS COMPONENTS. The default Grade Config includes "Security"
+    (20%, Finals) and "Others" (10%). Keep, rename or remove?
+                                                    ______________________
+
+D4  TEACHER DOUBLE-BOOKING. Should the system refuse the same teacher in two
+    sections at the same day and time?  Yes / No   ______________________
+
+D5  INC RULE. A student with zero in any weighted component (for example
+    absent at every attendance session, or 0 on the only quiz) becomes INC,
+    not failed. Is that correct?  Yes / No         ______________________
+
+-------------------------------------------------------------------------------
+ PART 10. BUG REPORT FORM (one per problem)
+-------------------------------------------------------------------------------
+
+  Step number : ______  (for example 5.3)
+  Account     : ______  (for example teacher@classrecord.test)
+  Page        : ______  (copy the address from the browser)
+  What I did  : ____________________________________________
+  Expected    : ____________________________________________
+  What happened: ___________________________________________
+  Screenshot  : attached  yes / no
+  Happens every time? yes / no
+
+Send the reports together, with the step marks [P]/[F]/[S], to the developer.
+===============================================================================
