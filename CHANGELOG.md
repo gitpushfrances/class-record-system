@@ -1299,6 +1299,14 @@ f
 - Checked: `@extends('layouts.app')` pages and `<x-sidebar-layout>` pages render the same layout (it prints both `$slot` and `@yield('content')`), so no conversion is needed; tests: `LightPagesTest`
 
 
+### Dead code removed (Phase 7d)
+- Removed (no references left): `StudentNumberGenerator`, `NoActiveAcademicPeriodException`, `StudentNumberCounter` (+ migration `2026_10_17_000500_drop_student_number_counters_table`), `SidebarLink` component class and view, `layouts/navigation`, `layouts/teacher`, `welcome`, `dashboard`, Breeze `dropdown` / `dropdown-link` / `nav-link` / `responsive-nav-link` / `application-logo` components, unrouted `admin/subjects/create` and `edit` views
+- Removed the unlinked duplicate account flow: `admin.deans.create` / `admin.deans.store` routes, `UserController::create()` / `store()`, `admin/deans/create` view (accounts are created on `admin.users.create`)
+- Removed route `teacher.classes.record.print` (nothing linked to it; Print is a button on the Class Record)
+- Fixed: `RouteServiceProvider::HOME` was `/dashboard`, which does not exist (email verification and password confirmation ended on a 404); now `/`, which redirects each role to its dashboard
+- The patch checks every file for references before deleting it; tests: `DeadCodeTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1360,7 +1368,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Reusable `<x-confirm-form>` not built; the SweetAlert2 CDN fallback is still patched per file
 - [ ] My Advisory and Class Record always list males before females, even when ordered by Student No.
 - [x] ESSU palette and the ESSU seal in place of the book icon — done October 17, 2026 (Phase 7a)
-- [ ] Dead code to delete: `StudentNumberGenerator`, `NoActiveAcademicPeriodException`, `StudentNumberCounter` and the `student_number_counters` table; `UserController::create()` / `store()`; unrouted `admin/subjects/create` and `edit` (still validate units as integer); `components/sidebar-link.blade.php` (confirm unused); route `teacher.classes.record.print`
+- [x] Dead code removed — done October 17, 2026 (Phase 7d)
 
 ### Before production
 - [ ] Change the default seeder passwords
