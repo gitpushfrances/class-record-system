@@ -6,10 +6,10 @@
 <div class="max-w-xl mx-auto">
 
     <div class="mb-6">
-        <a href="{{ route('program-head.subjects.index') }}" class="text-sm" style="color:#c8a97e;">
+        <a href="{{ route('program-head.subjects.index') }}" class="text-sm" style="color:#d4af37;">
             <i class="mr-1 text-xs fas fa-arrow-left"></i> Back to Subjects
         </a>
-        <h1 class="mt-2 text-xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Edit Subject Request</h1>
+        <h1 class="mt-2 text-xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Edit Subject Request</h1>
         <p class="text-sm mt-0.5 text-gray-500">Only pending requests can be edited.</p>
     </div>
 
@@ -85,7 +85,7 @@
                    style="border-color:#d1d5db; color:#374151;">Cancel</a>
                 <button type="submit"
                         class="px-5 py-2 text-sm font-semibold transition rounded-xl"
-                        style="background:#1c1814; color:#f0dfc0;">Save Changes</button>
+                        style="background:#0b3d0b; color:#fbf3d0;">Save Changes</button>
             </div>
         </form>
     </div>

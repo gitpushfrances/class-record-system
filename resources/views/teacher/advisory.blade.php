@@ -1,13 +1,13 @@
 <x-sidebar-layout>
 <div class="mb-6">
-    <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">My Advisory</h1>
+    <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">My Advisory</h1>
     <p class="mt-1 text-sm text-gray-500">Sections where you are the adviser</p>
 </div>
 
 @if($advisoryTerms->isEmpty())
     <div class="p-12 text-center bg-white border border-gray-200 rounded-xl">
-        <div class="flex items-center justify-center mx-auto mb-4 rounded-full w-14 h-14" style="background:rgba(200,169,126,0.12);">
-            <i class="text-xl fa-solid fa-user-tie" style="color:#c8a97e;"></i>
+        <div class="flex items-center justify-center mx-auto mb-4 rounded-full w-14 h-14" style="background:rgba(212,175,55,0.12);">
+            <i class="text-xl fa-solid fa-user-tie" style="color:#d4af37;"></i>
         </div>
         <p class="text-sm font-medium text-gray-700">No advisory assigned yet</p>
         <p class="mt-1 text-sm text-gray-500">Contact your Dean to get assigned as an adviser.</p>
@@ -29,26 +29,26 @@
                 </div>
                 <div class="px-5 py-3 space-y-1.5 text-sm text-gray-600">
                     <div class="flex items-center gap-2">
-                        <i class="w-4 text-xs fa-solid fa-layer-group" style="color:#c8a97e;"></i>
+                        <i class="w-4 text-xs fa-solid fa-layer-group" style="color:#d4af37;"></i>
                         Year Level: <span class="font-medium text-gray-800">{{ $term->section->year_level }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <i class="w-4 text-xs fa-solid fa-building-columns" style="color:#c8a97e;"></i>
+                        <i class="w-4 text-xs fa-solid fa-building-columns" style="color:#d4af37;"></i>
                         Department: <span class="font-medium text-gray-800">{{ $term->section->program->department->name }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <i class="w-4 text-xs fa-solid fa-users" style="color:#c8a97e;"></i>
+                        <i class="w-4 text-xs fa-solid fa-users" style="color:#d4af37;"></i>
                         Students: <span class="font-medium text-gray-800">{{ $term->enrollments->count() }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <i class="w-4 text-xs fa-solid fa-calendar" style="color:#c8a97e;"></i>
+                        <i class="w-4 text-xs fa-solid fa-calendar" style="color:#d4af37;"></i>
                         {{ $term->semester }} &bull; {{ $term->academic_year }}
                     </div>
                 </div>
                 <div class="px-5 py-3 border-t border-gray-100">
                     <a href="{{ route('teacher.classes.show', $term->section) }}"
                        class="block w-full py-2 text-sm font-semibold text-center transition rounded-lg"
-                       style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;"
+                       style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;"
                        onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                         Open Class
                     </a>

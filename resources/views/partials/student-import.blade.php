@@ -50,10 +50,10 @@
         </ul>
 
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:18px;">
-            <a href="{{ $template }}" style="font-size:13px; font-weight:600; color:#4f46e5;"><i class="fa-solid fa-download"></i> Template</a>
+            <a href="{{ $template }}" style="font-size:13px; font-weight:600; color:#0a5b05;"><i class="fa-solid fa-download"></i> Template</a>
             <div style="display:flex; gap:8px;">
                 <button type="button" onclick="document.getElementById('importStudentsDialog').close()" style="padding:8px 14px; font-size:13px; font-weight:600; color:#374151; background:#fff; border:1px solid #d1d5db; border-radius:8px; cursor:pointer;">Cancel</button>
-                <button type="submit" style="padding:8px 14px; font-size:13px; font-weight:600; color:#fff; background:#4f46e5; border:none; border-radius:8px; cursor:pointer;">Import</button>
+                <button type="submit" style="padding:8px 14px; font-size:13px; font-weight:600; color:#fff; background:#0a5b05; border:none; border-radius:8px; cursor:pointer;">Import</button>
             </div>
         </div>
     </form>

@@ -1278,6 +1278,40 @@ f
 - Migration `2026_10_17_000400_create_promotions_table`; `App\Services\BatchPromotion`, `App\Http\Controllers\PromotionController`, `promotions/*` views; tests: `BatchPromotionTest`
 
 
+### ESSU palette and seal (Phase 7a)
+- Colours sampled from `public/images/rog/essu-seal.png`: ESSU green `#0a5b05` (dark `#0b3d0b`), gold `#d4af37` for text and borders (the seal's bright gold `#f3eb21` is kept as `--essu-gold-bright`, too light for text on white)
+- Every view: brown / tan tones mapped to green / gold, the indigo buttons from Phases 4–6 to ESSU green; the ROG form (`rog/*`) is untouched
+- ESSU seal replaces the book icon in the sidebar and on the sign-in page, and is the browser favicon
+- New `layouts/partials/brand.blade.php` (CSS variables, favicon, Tailwind `indigo-*` classes mapped to ESSU green without an `npm run build`), included in the app, guest and teacher layouts; tests: `BrandTest`
+
+
+### Sign-in and request-account pages (Phase 7b)
+- `layouts/guest.blade.php` rewritten (773 → ~150 lines): ESSU brand panel (seal, university, campus, system name, three feature lines) beside a light form panel; below 960px a compact seal header above the form
+- Removed the Lottie animation (and its CDN script), orbs, corner ornaments, background gradebook and card watermark, which rendered as stray boxes
+- Sign in: sentence-case labels, white inputs with green focus ring, readable placeholders, show / hide password with an accessible label, green primary button with loading spinner
+- Request an account: grouped "Your name" (last / first / middle in one row) and "Account" (email; password and confirm side by side), optional field marked, `autocomplete` name hints; one column on phones
+- Page scripts moved inside the layout (`@stack('scripts')`, `auth/partials/form-scripts.blade.php`); they were printed after `</html>` before; tests: `AuthPagesTest`
+
+
+### Light pages and test config (Phase 7c)
+- Backup & Restore, Create Account, Program Head Grade Verification and Grade Config converted from dark cards to light cards: white cards with `#e5e7eb` borders, `#1f2937` / `#6b7280` text, dark-green headings; red / green / amber status colours darkened for white backgrounds; gold buttons kept
+- `phpunit.xml`: `<coverage><include>` replaced by `<source><include>` (PHPUnit 10), which removes the "deprecated schema" warning
+- Checked: `@extends('layouts.app')` pages and `<x-sidebar-layout>` pages render the same layout (it prints both `$slot` and `@yield('content')`), so no conversion is needed; tests: `LightPagesTest`
+
+
+### Dead code removed (Phase 7d)
+- Removed (no references left): `StudentNumberGenerator`, `NoActiveAcademicPeriodException`, `StudentNumberCounter` (+ migration `2026_10_17_000500_drop_student_number_counters_table`), `SidebarLink` component class and view, `layouts/navigation`, `layouts/teacher`, `welcome`, `dashboard`, Breeze `dropdown` / `dropdown-link` / `nav-link` / `responsive-nav-link` / `application-logo` components, unrouted `admin/subjects/create` and `edit` views
+- Removed the unlinked duplicate account flow: `admin.deans.create` / `admin.deans.store` routes, `UserController::create()` / `store()`, `admin/deans/create` view (accounts are created on `admin.users.create`)
+- Removed route `teacher.classes.record.print` (nothing linked to it; Print is a button on the Class Record)
+- Fixed: `RouteServiceProvider::HOME` was `/dashboard`, which does not exist (email verification and password confirmation ended on a 404); now `/`, which redirects each role to its dashboard
+- The patch checks every file for references before deleting it; tests: `DeadCodeTest`
+
+
+### Role access tests and deploy guide (Phase 7e)
+- `RoleAccessTest`: every main page of every role opened by every role: the owner gets 200, other roles 403, the Admin is sent to View As for Dean / Program Head pages, guests are sent to sign in; every role can open Profile
+- New `DEPLOY.md`: server requirements, first install (roles seeder only, real Admin account, never the sample seeders), update steps, grade recompute, backup routine (backups are not scheduled), smoke test by role, rollback
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1334,15 +1368,15 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Restore accepts only `.sql` / `.txt` and runs the upload through `DB::unprepared`; it cannot restore the `.zip` backups the system creates
 
 ### UI and dead code
-- [ ] Light-card conversion incomplete: `admin/backup/index`, `admin/users/create`, `program-head/dashboard`, `teacher/grades/config`
-- [ ] `dean/subjects/index` and `admin/subjects/index` still use `@extends('layouts.app')` instead of `<x-sidebar-layout>`
+- [x] Light-card conversion — done October 17, 2026 (Phase 7c)
+- [x] `@extends('layouts.app')` vs `<x-sidebar-layout>` — no change needed: both render the same layout (Phase 7c)
 - [ ] Reusable `<x-confirm-form>` not built; the SweetAlert2 CDN fallback is still patched per file
 - [ ] My Advisory and Class Record always list males before females, even when ordered by Student No.
-- [ ] ESSU palette (white, green, gold) and the ESSU seal in place of the book icon (Phase 7; seal at `public/images/rog/essu-seal.png`)
-- [ ] Dead code to delete: `StudentNumberGenerator`, `NoActiveAcademicPeriodException`, `StudentNumberCounter` and the `student_number_counters` table; `UserController::create()` / `store()`; unrouted `admin/subjects/create` and `edit` (still validate units as integer); `components/sidebar-link.blade.php` (confirm unused); route `teacher.classes.record.print`
+- [x] ESSU palette and the ESSU seal in place of the book icon — done October 17, 2026 (Phase 7a)
+- [x] Dead code removed — done October 17, 2026 (Phase 7d)
 
 ### Before production
-- [ ] Change the default seeder passwords
+- [ ] Change the default seeder passwords (on the server: never run the sample seeders; see DEPLOY.md)
 - [ ] Server: `php artisan migrate`, `php artisan storage:link` (once), `npm run build`, `php artisan view:clear`, then `grades:recompute --apply`; back up the database first
 - [ ] Production `.env`: `APP_NAME`, `APP_ENV=production`, `APP_DEBUG=false`, HTTPS
 

@@ -60,7 +60,7 @@
 
 
                         <div class="flex gap-2">
-                            <button type="button" onclick="confirmSubmit()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Add Student</button>
+                            <button type="button" onclick="confirmSubmit()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">Add Student</button>
                             <a href="{{ route('program-head.students.index') }}" class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
                         </div>
                     </form>
@@ -90,7 +90,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Add',
                 cancelButtonText: 'Cancel',
-                confirmButtonColor: '#c8a97e',
+                confirmButtonColor: '#d4af37',
                 cancelButtonColor: '#6b7280',
             }).then((result) => {
                 if (result.isConfirmed) {

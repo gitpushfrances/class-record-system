@@ -20,7 +20,7 @@
         showCancelButton: true,
         confirmButtonText: 'Continue',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#0a5b05',
         cancelButtonColor: '#6b7280',
         allowOutsideClick: false,
     }).then(result => {

@@ -57,7 +57,7 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
     Route::post('/subjects/approve-selected', [AdminSubject::class, 'approveSelected'])->name('subjects.approve-selected');
     Route::post('/subjects/{subject}/reject', [AdminSubject::class, 'reject'])->name('subjects.reject');
 
-    Route::resource('deans', AdminUser::class)->except(['show', 'destroy'])->parameters(['deans' => 'dean']);
+    Route::resource('deans', AdminUser::class)->except(['show', 'destroy', 'create', 'store'])->parameters(['deans' => 'dean']);
 
     Route::get('/academic', [AdminAcademic::class, 'index'])->name('academic.index');
     Route::post('/academic', [AdminAcademic::class, 'store'])->name('academic.store');
@@ -178,7 +178,6 @@ Route::middleware(['auth', 'status', 'role:teacher', 'no.cache'])->prefix('teach
     Route::get('/classes/{section}/subjects/{subject}/attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
 
     Route::get('/classes/{section}/subjects/{subject}/record', [ClassController::class, 'record'])->name('classes.record');
-    Route::get('/classes/{section}/subjects/{subject}/record/print', [ClassController::class, 'record'])->name('classes.record.print');
     Route::get('/classes/{section}/subjects/{subject}/record/export', [ClassController::class, 'export'])->name('classes.record.export');
     Route::get('/classes/{section}/subjects/{subject}/rog', [App\Http\Controllers\ReportOfGradesController::class, 'teacher'])->name('rog.show');
 

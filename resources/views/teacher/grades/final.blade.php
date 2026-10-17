@@ -3,7 +3,7 @@
 <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <div>
         <x-back-button :href="route('teacher.classes.record', [$section, $subject])" label="Back to Class" />
-        <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Final Grades</h1>
+        <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Final Grades</h1>
         <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
 
@@ -73,7 +73,7 @@
     @else
         <form id="submitVerificationForm" method="POST" action="{{ route('teacher.grades.submit', [$section, $subject]) }}">
             @csrf
-            <button type="button" onclick="confirmSubmitVerification()" class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
+            <button type="button" onclick="confirmSubmitVerification()" class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
                 <i class="fa-solid fa-paper-plane"></i> Submit for Verification
             </button>
         </form>
@@ -95,7 +95,7 @@ function confirmSubmitVerification() {
         showCancelButton: true,
         confirmButtonText: 'Yes, submit',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#9a7a50',
+        confirmButtonColor: '#a8861a',
         cancelButtonColor: '#9ca3af',
     }).then((result) => {
         if (result.isConfirmed) {

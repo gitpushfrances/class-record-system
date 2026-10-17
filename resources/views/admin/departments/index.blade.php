@@ -2,7 +2,7 @@
 
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800">Departments</h2>
-        <button type="button" onclick="document.getElementById('addDepartment').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#fff; background:#4f46e5; border:none;"><i class="fa-solid fa-plus"></i> Add Department</button>
+        <button type="button" onclick="document.getElementById('addDepartment').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#fff; background:#0a5b05; border:none;"><i class="fa-solid fa-plus"></i> Add Department</button>
     </div>
 
     @include('admin.partials.code-name-dialog', ['id' => 'addDepartment', 'title' => 'Add Department', 'action' => route('admin.departments.store'), 'method' => 'POST', 'code' => '', 'name' => '', 'submit' => 'Create'])

@@ -7,14 +7,14 @@
 </style>
 
 <div class="mb-6">
-    <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">My Classes</h1>
+    <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">My Classes</h1>
     <p class="mt-1 text-sm text-gray-500">Welcome back, {{ auth()->user()->display_name }}</p>
 </div>
 
 @if($classes->isEmpty())
     <div class="p-12 text-center bg-white border border-gray-200 rounded-xl">
-        <div class="flex items-center justify-center mx-auto mb-4 rounded-full w-14 h-14" style="background:rgba(200,169,126,0.12);">
-            <i class="text-xl fa-solid fa-chalkboard-user" style="color:#c8a97e;"></i>
+        <div class="flex items-center justify-center mx-auto mb-4 rounded-full w-14 h-14" style="background:rgba(212,175,55,0.12);">
+            <i class="text-xl fa-solid fa-chalkboard-user" style="color:#d4af37;"></i>
         </div>
         <p class="text-sm font-medium text-gray-700">No subject classes assigned yet</p>
         <p class="mt-1 text-sm text-gray-500">Contact your Dean or Program Head to get assigned to a subject. Advisory classes are under My Advisory.</p>
@@ -37,7 +37,7 @@
                 <summary style="padding:16px 20px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                         <div style="display:flex; align-items:flex-start; gap:12px;">
-                            <i class="class-chevron fa-solid fa-chevron-right" style="margin-top:6px; font-size:12px; color:#c8a97e;"></i>
+                            <i class="class-chevron fa-solid fa-chevron-right" style="margin-top:6px; font-size:12px; color:#d4af37;"></i>
                             <div>
                                 <h3 class="font-bold text-gray-800" style="font-size:16px;">{{ $subject->code }} — {{ $subject->name }}</h3>
                                 <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:13px; color:#6b7280;">
@@ -50,7 +50,7 @@
                         </div>
                         <a href="{{ route('teacher.classes.record', [$section, $subject]) }}"
                            onclick="event.stopPropagation()"
-                           style="display:inline-block; padding:8px 16px; font-size:14px; font-weight:600; border-radius:8px; text-decoration:none; background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
+                           style="display:inline-block; padding:8px 16px; font-size:14px; font-weight:600; border-radius:8px; text-decoration:none; background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
                             Open Class
                         </a>
                     </div>

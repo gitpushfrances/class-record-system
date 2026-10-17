@@ -70,7 +70,7 @@
                             <td class="px-6 py-4 text-sm">
                                 {{ $subj->pivot->teacher_id ? \App\Models\User::find($subj->pivot->teacher_id)?->name : '—' }}
                                 @if(\App\Services\ReportOfGrades::isSubmitted($currentTerm, $subj))
-                                    <a href="{{ route('dean.rog.show', [$currentTerm, $subj]) }}" target="_blank" style="margin-left:6px; font-size:12px; font-weight:600; color:#4f46e5;">View ROG</a>
+                                    <a href="{{ route('dean.rog.show', [$currentTerm, $subj]) }}" target="_blank" style="margin-left:6px; font-size:12px; font-weight:600; color:#0a5b05;">View ROG</a>
                                 @endif
                             </td>
                             <td class="px-6 py-4">
@@ -113,7 +113,7 @@
                         </div>
                         @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null))
                         <div style="display:flex; justify-content:flex-end;">
-                            <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white rounded-lg" style="background:#1c1814;">Add subject</button>
+                            <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white rounded-lg" style="background:#0b3d0b;">Add subject</button>
                         </div>
                     @endif
                 </form>

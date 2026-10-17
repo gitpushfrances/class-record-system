@@ -73,19 +73,16 @@
 
 <aside id="sidebar"
        class="relative flex flex-col flex-shrink-0"
-       style="background: linear-gradient(180deg, #1c1814 0%, #211a12 100%); border-right: 1px solid rgba(200,169,126,0.1);">
+       style="background: linear-gradient(180deg, #0b3d0b 0%, #072a07 100%); border-right: 1px solid rgba(212,175,55,0.1);">
 
     {{-- ── Brand + Toggle ── --}}
     <div class="brand-area relative flex items-center gap-2.5 px-4 py-4 border-b flex-shrink-0"
-         style="border-color: rgba(200,169,126,0.1); min-height: 57px;">
+         style="border-color: rgba(212,175,55,0.1); min-height: 57px;">
         <a href="#" class="flex items-center gap-2.5 min-w-0">
-            <div class="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg"
-                 style="background: linear-gradient(135deg, #9a7a50, #c8a97e); box-shadow: 0 2px 8px rgba(200,169,126,0.25);">
-                <i class="text-xs fas fa-book-open" style="color: #1c1814;"></i>
-            </div>
+            <img src="{{ asset('images/rog/essu-seal.png') }}" alt="ESSU seal" class="flex-shrink-0" style="width:32px; height:32px; object-fit:contain;">
             <span class="text-sm font-bold leading-none brand-wordmark sidebar-label whitespace-nowrap"
-                  style="font-family: 'Fraunces', serif; color: #f0dfc0;">
-                Class <em class="not-italic font-light" style="color: #c8a97e;">Record</em>
+                  style="font-family: 'Fraunces', serif; color: #fbf3d0;">
+                Class <em class="not-italic font-light" style="color: #d4af37;">Record</em>
             </span>
         </a>
 
@@ -93,9 +90,9 @@
         <button id="sidebar-toggle"
                 onclick="toggleSidebar()"
                 class="absolute z-50 items-center justify-center hidden w-6 h-6 transition-all duration-150 -translate-y-1/2 rounded-full -right-3 top-1/2 lg:flex"
-                style="background: #2a2018; border: 1px solid rgba(200,169,126,0.25); color: #c8a97e; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"
-                onmouseover="this.style.background='rgba(200,169,126,0.2)'; this.style.borderColor='rgba(200,169,126,0.5)';"
-                onmouseout="this.style.background='#2a2018'; this.style.borderColor='rgba(200,169,126,0.25)';"
+                style="background: #0e4a0e; border: 1px solid rgba(212,175,55,0.25); color: #d4af37; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"
+                onmouseover="this.style.background='rgba(212,175,55,0.2)'; this.style.borderColor='rgba(212,175,55,0.5)';"
+                onmouseout="this.style.background='#0e4a0e'; this.style.borderColor='rgba(212,175,55,0.25)';"
                 title="Toggle sidebar">
             <i id="toggle-icon" class="text-xs transition-transform fas fa-chevron-left duration-220"></i>
         </button>
@@ -109,13 +106,13 @@
             $viewAs  = \App\Services\Scope::viewingAs();
         @endphp
         @if($viewAs)
-            <div class="sidebar-label" style="margin:0 0 8px; padding:10px 12px; background:rgba(200,169,126,.15); border:1px solid rgba(200,169,126,.35); border-radius:8px;">
-                <div style="font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:#c8a97e;">Viewing as</div>
-                <div style="font-size:13px; font-weight:600; color:#f5efe6;">{{ $viewAs['label'] }}</div>
+            <div class="sidebar-label" style="margin:0 0 8px; padding:10px 12px; background:rgba(212,175,55,.15); border:1px solid rgba(212,175,55,.35); border-radius:8px;">
+                <div style="font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:#d4af37;">Viewing as</div>
+                <div style="font-size:13px; font-weight:600; color:#f4f8f2;">{{ $viewAs['label'] }}</div>
                 <form method="POST" action="{{ route('admin.view-as.stop') }}" style="margin-top:6px;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" style="padding:0; font-size:12px; font-weight:600; color:#c8a97e; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Back to Admin</button>
+                    <button type="submit" style="padding:0; font-size:12px; font-weight:600; color:#d4af37; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Back to Admin</button>
                 </form>
             </div>
         @endif
@@ -304,34 +301,34 @@
 
     {{-- ── User Footer (Option A) ── --}}
     <div class="flex flex-col flex-shrink-0 gap-1 px-3 py-3 border-t user-footer"
-         style="border-color: rgba(200,169,126,0.1);">
+         style="border-color: rgba(212,175,55,0.1);">
 
         {{-- Avatar + name + email → clicks to profile --}}
         <a href="{{ route('profile.edit') }}"
            class="user-profile-link flex items-center gap-2.5 px-2 py-2 rounded-lg transition-all duration-150 group min-w-0"
-           onmouseover="this.style.background='rgba(200,169,126,0.08)';"
+           onmouseover="this.style.background='rgba(212,175,55,0.08)';"
            onmouseout="this.style.background='transparent';"
            title="My Profile">
 
             {{-- Avatar initial --}}
             <div class="flex items-center justify-center flex-shrink-0 w-8 h-8 text-xs font-bold rounded-full"
-                 style="background: rgba(200,169,126,0.15); color: #c8a97e; border: 1px solid rgba(200,169,126,0.25);">
+                 style="background: rgba(212,175,55,0.15); color: #d4af37; border: 1px solid rgba(212,175,55,0.25);">
                 {{ strtoupper(substr(auth()->user()->display_name, 0, 1)) }}
             </div>
 
             {{-- Name + email (hidden when collapsed) --}}
             <div class="flex-1 min-w-0 sidebar-user-info">
-                <div class="text-xs font-semibold truncate" style="color: #f0dfc0;">
+                <div class="text-xs font-semibold truncate" style="color: #fbf3d0;">
                     {{ auth()->user()->display_name }}
                 </div>
-                <div class="text-xs truncate" style="color: rgba(200,169,126,0.75);">
+                <div class="text-xs truncate" style="color: rgba(212,175,55,0.75);">
                     {{ auth()->user()->email }}
                 </div>
             </div>
 
             {{-- Subtle chevron hint on hover --}}
             <i class="flex-shrink-0 text-xs transition-opacity duration-150 opacity-0 sidebar-user-info fas fa-chevron-right group-hover:opacity-50"
-               style="color: #c8a97e;"></i>
+               style="color: #d4af37;"></i>
         </a>
 
         {{-- Logout --}}

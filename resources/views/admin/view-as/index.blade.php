@@ -11,12 +11,12 @@
 </div>
 
 @if($viewAs)
-    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:12px 16px; margin-bottom:20px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px;">
-        <span style="font-size:14px; color:#3730a3;"><i class="fa-solid fa-eye"></i> Currently viewing as <strong>{{ $viewAs['label'] }}</strong></span>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:12px 16px; margin-bottom:20px; background:#ecf7ea; border:1px solid #bfe3b8; border-radius:10px;">
+        <span style="font-size:14px; color:#0b3d0b;"><i class="fa-solid fa-eye"></i> Currently viewing as <strong>{{ $viewAs['label'] }}</strong></span>
         <form method="POST" action="{{ route('admin.view-as.stop') }}">
             @csrf
             @method('DELETE')
-            <button type="submit" style="{{ $btn }} color:#3730a3; background:#fff; border:1px solid #a5b4fc;">Exit</button>
+            <button type="submit" style="{{ $btn }} color:#0b3d0b; background:#fff; border:1px solid #86c47e;">Exit</button>
         </form>
     </div>
 @endif
@@ -33,7 +33,7 @@
                     @csrf
                     <input type="hidden" name="role" value="dean">
                     <input type="hidden" name="department_id" value="{{ $department->id }}">
-                    <button type="submit" style="{{ $btn }} color:#fff; background:#4f46e5; border:none;">View as Dean</button>
+                    <button type="submit" style="{{ $btn }} color:#fff; background:#0a5b05; border:none;">View as Dean</button>
                 </form>
             </div>
             @forelse($department->programs as $program)

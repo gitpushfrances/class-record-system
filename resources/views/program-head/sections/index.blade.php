@@ -29,7 +29,7 @@
                 const term = parts ? parts[2] : '';
                 return '<div style="display:flex;justify-content:space-between;align-items:center;' +
                        'padding:10px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;">' +
-                       '<span style="font-weight:600;color:#1c1814;">' + name + '</span>' +
+                       '<span style="font-weight:600;color:#0b3d0b;">' + name + '</span>' +
                        '<span style="font-size:12px;color:#6b7280;">' + term + '</span>' +
                        '</div>';
             }).join('');
@@ -41,7 +41,7 @@
                       '<div style="text-align:left;max-height:180px;overflow-y:auto;">' + rows + '</div>' +
                       '<p style="margin-top:14px;color:#374151;">Assign them to this section as well?</p>',
                 icon: 'warning',
-                confirmButtonColor: '#c8a97e',
+                confirmButtonColor: '#d4af37',
                 cancelButtonColor: '#6b7280',
                 showCancelButton: true,
                 confirmButtonText: 'Continue',
@@ -63,7 +63,7 @@
 
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800">Sections</h2>
-        <a href="{{ route('program-head.sections.create') }}" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">+ Create Section</a>
+        <a href="{{ route('program-head.sections.create') }}" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">+ Create Section</a>
     </div>
 
     @forelse($sections as $yearLevel => $sectionGroup)
@@ -223,7 +223,7 @@
                     </div>
                     <div class="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50">
                         <button type="button" onclick="closeAdviserModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm text-white rounded hover:opacity-90" style="background-color: #c8a97e;" {{ $activePeriod ? '' : 'disabled' }}>Save</button>
+                        <button type="submit" class="px-4 py-2 text-sm text-white rounded hover:opacity-90" style="background-color: #d4af37;" {{ $activePeriod ? '' : 'disabled' }}>Save</button>
                     </div>
                 </form>
             </div>

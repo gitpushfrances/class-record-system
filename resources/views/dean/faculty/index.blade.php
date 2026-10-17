@@ -4,7 +4,7 @@
     $th    = 'padding:10px 18px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#6b7280; text-align:left; background:#f9fafb; border-bottom:1px solid #e5e7eb;';
     $td    = 'padding:12px 18px; font-size:14px; color:#374151; border-bottom:1px solid #f3f4f6; vertical-align:middle;';
     $btn   = 'padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer; white-space:nowrap;';
-    $tab   = fn ($on) => 'padding:6px 14px; font-size:13px; font-weight:600; border-radius:8px; text-decoration:none; border:1px solid ' . ($on ? '#4f46e5; color:#fff; background:#4f46e5;' : '#d1d5db; color:#374151; background:#fff;');
+    $tab   = fn ($on) => 'padding:6px 14px; font-size:13px; font-weight:600; border-radius:8px; text-decoration:none; border:1px solid ' . ($on ? '#0a5b05; color:#fff; background:#0a5b05;' : '#d1d5db; color:#374151; background:#fff;');
     $pending = ($counts['pending'] ?? 0) + ($counts['pending_review'] ?? 0);
 @endphp
 
@@ -26,7 +26,7 @@
     <input type="hidden" name="status" value="{{ $status }}">
     <input type="search" name="search" value="{{ request('search') }}" placeholder="Search name or email…"
            style="flex:1 1 220px; max-width:320px; margin-left:auto; padding:8px 12px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;">
-    <button type="submit" style="{{ $btn }} padding:8px 14px; color:#fff; background:#4f46e5; border:none;">Search</button>
+    <button type="submit" style="{{ $btn }} padding:8px 14px; color:#fff; background:#0a5b05; border:none;">Search</button>
 </form>
 
 <div style="{{ $card }}">

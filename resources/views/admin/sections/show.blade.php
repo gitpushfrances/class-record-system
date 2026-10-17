@@ -16,7 +16,7 @@
             {{ $program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
         </h2>
         <a href="{{ route('admin.sections.students', [$department, $program, $section]) }}"
-           class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">
+           class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">
             View Students
         </a>
     </div>

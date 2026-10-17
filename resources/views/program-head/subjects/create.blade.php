@@ -3,10 +3,10 @@
 <div class="max-w-xl mx-auto">
 
     <div class="mb-6">
-        <a href="{{ route('program-head.subjects.index') }}" class="text-sm" style="color:#c8a97e;">
+        <a href="{{ route('program-head.subjects.index') }}" class="text-sm" style="color:#d4af37;">
             ← Back to Subjects
         </a>
-        <h1 class="mt-2 text-xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Request New Subject</h1>
+        <h1 class="mt-2 text-xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Request New Subject</h1>
         <p class="text-sm mt-0.5 text-gray-500">Submitted requests go to your Dean for approval.</p>
     </div>
 
@@ -88,7 +88,7 @@
                    style="border-color:#d1d5db; color:#374151;">Cancel</a>
                 <button type="button" id="preview-btn"
                         class="px-5 py-2 text-sm font-semibold transition rounded-xl"
-                        style="background:#1c1814; color:#f0dfc0;">
+                        style="background:#0b3d0b; color:#fbf3d0;">
                     Review & Submit
                 </button>
             </div>
@@ -123,7 +123,7 @@ document.getElementById('preview-btn').addEventListener('click', function () {
             </div>`,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#1c1814',
+        confirmButtonColor: '#0b3d0b',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Submit Request',
         cancelButtonText: 'Go Back',

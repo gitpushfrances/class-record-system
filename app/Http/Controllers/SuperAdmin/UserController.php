@@ -142,32 +142,6 @@ class UserController extends Controller
         return redirect()->route('admin.deans.index')->with('success', 'Request rejected.');
     }
 
-    public function create()
-    {
-        return view('admin.deans.create');
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            ...User::nameRules(),
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        User::create([
-            'last_name'   => $validated['last_name'],
-            'first_name'  => $validated['first_name'],
-            'middle_name' => $validated['middle_name'] ?? null,
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => 'dean',
-            'status'   => 'active',
-        ]);
-
-        return redirect()->route('admin.deans.index')->with('success', 'Dean account created successfully.');
-    }
-
     /**
      * Unified create form for any managed role.
      */

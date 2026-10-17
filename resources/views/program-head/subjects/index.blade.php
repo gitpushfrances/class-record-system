@@ -13,12 +13,12 @@
 
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Subjects</h1>
+            <h1 class="text-xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Subjects</h1>
             <p class="text-sm mt-0.5" style="color:#6b7280;">Your program's subjects by year level and semester. New subjects go to the Dean for approval.</p>
         </div>
         <a href="{{ route('program-head.subjects.create') }}"
            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-xl"
-           style="background:#1c1814; color:#f0dfc0;">
+           style="background:#0b3d0b; color:#fbf3d0;">
             <i class="text-xs fas fa-plus"></i> Request Subject
         </a>
     </div>
@@ -43,7 +43,7 @@
             </tr></thead>
             <tbody>
             @forelse(\App\Models\Subject::byPlacement($subjects) as $placement => $group)
-                <tr><td colspan="6" style="padding:8px 16px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#92400e' : '#1c1814' }}; background:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#fffbeb' : '#f3efe8' }};">{{ $placement }} <span style="font-weight:400; color:#6b7280;">({{ $group->count() }})</span></td></tr>
+                <tr><td colspan="6" style="padding:8px 16px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#92400e' : '#0b3d0b' }}; background:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#fffbeb' : '#eef5ec' }};">{{ $placement }} <span style="font-weight:400; color:#6b7280;">({{ $group->count() }})</span></td></tr>
                 @foreach($group as $subject)
                 <tr>
                     <td style="{{ $td }} font-family:monospace; font-weight:600; color:#1f2937;">{{ $subject->code }}</td>
@@ -93,7 +93,7 @@
             @empty
                 <tr>
                     <td colspan="6" style="padding:40px 16px; font-size:14px; text-align:center; color:#9ca3af;">
-                        No subjects yet. <a href="{{ route('program-head.subjects.create') }}" style="color:#c8a97e;">Request one.</a>
+                        No subjects yet. <a href="{{ route('program-head.subjects.create') }}" style="color:#d4af37;">Request one.</a>
                     </td>
                 </tr>
             @endforelse

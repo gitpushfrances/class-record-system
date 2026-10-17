@@ -24,7 +24,7 @@
 
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px;">
             <button type="button" onclick="document.getElementById('{{ $id }}').close()" style="padding:8px 14px; font-size:13px; font-weight:600; color:#374151; background:#fff; border:1px solid #d1d5db; border-radius:8px; cursor:pointer;">Cancel</button>
-            <button type="submit" style="padding:8px 14px; font-size:13px; font-weight:600; color:#fff; background:#4f46e5; border:none; border-radius:8px; cursor:pointer;">{{ $submit }}</button>
+            <button type="submit" style="padding:8px 14px; font-size:13px; font-weight:600; color:#fff; background:#0a5b05; border:none; border-radius:8px; cursor:pointer;">{{ $submit }}</button>
         </div>
     </form>
 </dialog>
