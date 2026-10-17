@@ -1312,6 +1312,17 @@ f
 - New `DEPLOY.md`: server requirements, first install (roles seeder only, real Admin account, never the sample seeders), update steps, grade recompute, backup routine (backups are not scheduled), smoke test by role, rollback
 
 
+### Class list locked after submission (Phase 8a)
+- Fixed: a Program Head or Dean could drop (or re-enroll) a student from the section after a subject was submitted, which changed that subject's ROG to "Dr"
+- `SectionEnrollment::enroll` / `drop` refuse while any subject of the term is pending or verified, and name the subjects; the Program Head rejects the submission first (unverify, then reject, for a verified one). Same rule as the teacher Class List
+- `ClassListLockTest`
+
+
+### Set Term warning (Phase 8b)
+- Set Term in a new period now lists the current term's subjects that are not verified (not submitted, awaiting verification, returned to the teacher) and closes the term only after "Close Term Anyway"; a closed term is no longer listed, so those subjects could not be finished afterwards
+- `TermRollover::unfinished`; Program Head and Dean Sections pages; `TermCloseWarningTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1346,7 +1357,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] No UI to change a student's status
 - [ ] `Dean\StudentController@store` soft-duplicate name check is not department-scoped
 - [x] Global student search, per-subject class roster and student import — done October 17, 2026 (Phase 5b–5d)
-- [ ] A Program Head or Dean can drop a student from the section after a subject was submitted, which changes that subject's ROG to "Dr" (teacher Class List is locked; section-level drops are not)
+- [x] Section-level drop after a subject was submitted — fixed October 17, 2026 (Phase 8a: class list locked while any subject is pending or verified)
 
 ### Roles and accounts
 - [x] Admin all-access, Dean faculty management, departments / programs CRUD, subject year level and semester — done October 17, 2026 (Phase 6a–6d)
@@ -1355,7 +1366,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Assigned teacher is not checked to be an active teacher of the department on attach-subject / Assignments (dropdown filters only)
 - [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
 - [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
-- [ ] Set Term closes the old term even if some subjects were never submitted for verification; there is no warning yet
+- [x] Set Term warning for unverified subjects — done October 17, 2026 (Phase 8b)
 - [ ] Promotion cannot be undone from the UI (drop the students from the target section; the year level must be corrected by editing the student)
 - [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)

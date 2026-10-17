@@ -254,7 +254,9 @@ class SectionController extends Controller
         $term = $this->activeTermOfMyProgram($section);
         abort_unless($term->enrollments()->whereKey($enrollment->id)->exists(), 404);
 
-        \App\Services\SectionEnrollment::drop($enrollment);
+        if ($error = \App\Services\SectionEnrollment::drop($enrollment)) {
+            return back()->with('error', $error);
+        }
 
         return back()->with('success', "{$enrollment->student->full_name} dropped from the section. Grades and attendance are kept.");
     }
@@ -306,6 +308,14 @@ class SectionController extends Controller
                     })->values()->all(),
                 ]);
             }
+        }
+
+        if (!$request->boolean('close_confirmed') && ($unfinished = \App\Services\TermRollover::unfinished($section, $activePeriod))) {
+            return back()->with('term_close_warning', [
+                'section_id' => $section->id,
+                'adviser_id' => $request->adviser_id,
+                'subjects'   => $unfinished,
+            ]);
         }
 
         [$term, $closed] = \App\Services\TermRollover::setTerm($section, (int) $request->adviser_id, $activePeriod);

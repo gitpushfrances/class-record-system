@@ -156,6 +156,14 @@ class SectionController extends Controller
             }
         }
 
+        if (!$request->boolean('close_confirmed') && ($unfinished = \App\Services\TermRollover::unfinished($section, $activePeriod))) {
+            return back()->with('term_close_warning', [
+                'section_id' => $section->id,
+                'adviser_id' => $request->adviser_id,
+                'subjects'   => $unfinished,
+            ]);
+        }
+
         [$term, $closed] = \App\Services\TermRollover::setTerm($section, (int) $request->adviser_id, $activePeriod);
 
         return redirect()->route('dean.sections.index')->with('success', \App\Services\TermRollover::message($term, $closed));
