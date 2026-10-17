@@ -48,6 +48,10 @@ Route::get('/', function () {
 Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
 
+    Route::get('/view-as', [App\Http\Controllers\SuperAdmin\ViewAsController::class, 'index'])->name('view-as.index');
+    Route::post('/view-as', [App\Http\Controllers\SuperAdmin\ViewAsController::class, 'start'])->name('view-as.start');
+    Route::delete('/view-as', [App\Http\Controllers\SuperAdmin\ViewAsController::class, 'stop'])->name('view-as.stop');
+
     Route::get('/subjects', [AdminSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [AdminSubject::class, 'approve'])->name('subjects.approve');
     Route::post('/subjects/approve-selected', [AdminSubject::class, 'approveSelected'])->name('subjects.approve-selected');
@@ -76,7 +80,11 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
     Route::patch('/deans/{dean}/activate', [AdminUser::class, 'activate'])->name('deans.activate');
 
     Route::get('/departments', [AdminDepartment::class, 'index'])->name('departments.index');
+    Route::post('/departments', [AdminDepartment::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}', [AdminDepartment::class, 'show'])->name('departments.show');
+    Route::put('/departments/{department}', [AdminDepartment::class, 'update'])->name('departments.update');
+    Route::post('/departments/{department}/programs', [AdminProgram::class, 'store'])->name('programs.store');
+    Route::put('/departments/{department}/programs/{program}', [AdminProgram::class, 'update'])->name('programs.update');
     Route::get('/departments/{department}/programs/{program}', [AdminProgram::class, 'show'])->name('programs.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}', [AdminSection::class, 'show'])->name('sections.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}/students', [AdminSection::class, 'students'])->name('sections.students');
@@ -95,7 +103,11 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/teachers/{user}/approve', [DeanTeacherApproval::class, 'approve'])->name('teachers.approve');
     Route::delete('/teachers/{user}/reject', [DeanTeacherApproval::class, 'reject'])->name('teachers.reject');
 
-    Route::resource('sections', DeanSection::class);
+    Route::get('/faculty', [App\Http\Controllers\Dean\FacultyController::class, 'index'])->name('faculty.index');
+    Route::patch('/faculty/{user}/deactivate', [App\Http\Controllers\Dean\FacultyController::class, 'deactivate'])->name('faculty.deactivate');
+    Route::patch('/faculty/{user}/activate', [App\Http\Controllers\Dean\FacultyController::class, 'activate'])->name('faculty.activate');
+
+    Route::resource('sections', DeanSection::class)->only(['index', 'show']);
     Route::post('/sections/{section}/change-adviser', [DeanSection::class, 'changeAdviser'])->name('sections.change-adviser');
     Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
@@ -112,6 +124,10 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/assignments', [App\Http\Controllers\Dean\AssignmentController::class, 'store'])->name('assignments.store');
     Route::delete('/assignments/{id}', [App\Http\Controllers\Dean\AssignmentController::class, 'destroy'])->name('assignments.destroy');
 
+    Route::get('/promotions', [App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
+    Route::get('/promotions/programs/{program}', [App\Http\Controllers\PromotionController::class, 'program'])->name('promotions.program');
+    Route::get('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'section'])->name('promotions.section');
+    Route::post('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
     Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
@@ -200,8 +216,13 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::post('/subjects', [App\Http\Controllers\ProgramHead\SubjectController::class, 'store'])->name('subjects.store');
     Route::get('/subjects/{subject}/edit', [App\Http\Controllers\ProgramHead\SubjectController::class, 'edit'])->name('subjects.edit');
     Route::put('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'update'])->name('subjects.update');
+    Route::patch('/subjects/{subject}/placement', [App\Http\Controllers\ProgramHead\SubjectController::class, 'placement'])->name('subjects.placement');
     Route::delete('/subjects/{subject}', [App\Http\Controllers\ProgramHead\SubjectController::class, 'destroy'])->name('subjects.destroy');
 
+    Route::get('/promotions', [App\Http\Controllers\PromotionController::class, 'index'])->name('promotions.index');
+    Route::get('/promotions/programs/{program}', [App\Http\Controllers\PromotionController::class, 'program'])->name('promotions.program');
+    Route::get('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'section'])->name('promotions.section');
+    Route::post('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     Route::get('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'index'])->name('sections.index');
     Route::get('/sections/create', [App\Http\Controllers\ProgramHead\SectionController::class, 'create'])->name('sections.create');
     Route::post('/sections', [App\Http\Controllers\ProgramHead\SectionController::class, 'store'])->name('sections.store');

@@ -26,11 +26,16 @@ class CheckRole
         // Map role strings to check methods
         $roleCheck = match($role) {
             'super_admin'  => $user->isSuperAdmin(),
-            'dean'         => $user->isDean(),
+            'dean'         => $user->isDean() || \App\Services\Scope::role() === 'dean',
             'teacher'      => $user->isTeacher(),
-            'program_head' => $user->isProgramHead(),
+            'program_head' => $user->isProgramHead() || \App\Services\Scope::role() === 'program_head',
             default        => false,
         };
+
+        if (!$roleCheck && $user->isSuperAdmin() && in_array($role, ['dean', 'program_head'], true)) {
+            return redirect()->route('admin.view-as.index')
+                ->with('error', 'Choose a department (Dean) or program (Program Head) to view as first.');
+        }
 
         if (!$roleCheck) {
             abort(403, 'Unauthorized access. You do not have permission to access this page.');

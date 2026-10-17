@@ -33,7 +33,7 @@
                 <div class="flex-1">
                     <div class="font-semibold text-gray-800">{{ $subject->code }} — {{ $subject->name }}</div>
                     <div class="mt-0.5 text-xs text-gray-500">
-                        {{ $subject->units }} units · Requested by {{ $subject->requester->name ?? 'Unknown' }} for {{ $subject->program->code ?? '—' }}
+                        {{ $subject->units }} units · {{ $subject->placement }} · Requested by {{ $subject->requester->name ?? 'Unknown' }} for {{ $subject->program->code ?? '—' }}
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -68,7 +68,11 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @forelse($subjects as $subject)
+                @forelse($subjects->groupBy(fn ($s) => $s->program->code ?? '—')->sortKeys() as $programCode => $programSubjects)
+                <tr><td colspan="7" style="padding:10px 16px; font-size:13px; font-weight:700; color:#fff; background:#1c1814;">{{ $programCode }} <span style="font-weight:400; color:#d6c7ad;">{{ $programSubjects->first()->program->name ?? '' }}</span></td></tr>
+                @foreach(\App\Models\Subject::byPlacement($programSubjects) as $placement => $group)
+                <tr><td colspan="7" style="padding:6px 16px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#92400e' : '#1c1814' }}; background:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#fffbeb' : '#f3efe8' }};">{{ $placement }}</td></tr>
+                @foreach($group as $subject)
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                     <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
@@ -94,6 +98,8 @@
                     </td>
                     <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->created_at->format('M d, Y') }}</td>
                 </tr>
+                @endforeach
+                @endforeach
                 @empty
                 <tr>
                     <td colspan="7" class="px-4 py-10 text-sm text-center text-gray-400">No subjects in your department yet.</td>
@@ -103,7 +109,6 @@
         </table>
     </div>
 
-    <div class="mt-4">{{ $subjects->links() }}</div>
 </div>
 
 <div id="rejectModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40">

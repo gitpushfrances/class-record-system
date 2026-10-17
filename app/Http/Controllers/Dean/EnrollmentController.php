@@ -13,7 +13,7 @@ class EnrollmentController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $sectionTerms = SectionTerm::with(['section.program.department', 'adviser', 'enrollments'])
             ->whereHas('section.program', fn($q) => $q->where('department_id', $departmentId))
@@ -27,7 +27,7 @@ class EnrollmentController extends Controller
     public function show(SectionTerm $sectionTerm)
     {
         abort_if(
-            $sectionTerm->section->program->department_id !== auth()->user()->department_id,
+            $sectionTerm->section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -49,7 +49,7 @@ class EnrollmentController extends Controller
     public function store(Request $request, SectionTerm $sectionTerm)
     {
         abort_if(
-            $sectionTerm->section->program->department_id !== auth()->user()->department_id,
+            $sectionTerm->section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -70,7 +70,7 @@ class EnrollmentController extends Controller
     public function destroy(SectionTerm $sectionTerm, Enrollment $enrollment)
     {
         abort_if(
-            $sectionTerm->section->program->department_id !== auth()->user()->department_id,
+            $sectionTerm->section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );

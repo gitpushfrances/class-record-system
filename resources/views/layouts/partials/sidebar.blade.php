@@ -104,12 +104,34 @@
     {{-- ── Nav links ── --}}
     <nav class="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
 
-        @if(auth()->user()->role === 'super_admin')
+        @php
+            $navRole = \App\Services\Scope::role();
+            $viewAs  = \App\Services\Scope::viewingAs();
+        @endphp
+        @if($viewAs)
+            <div class="sidebar-label" style="margin:0 0 8px; padding:10px 12px; background:rgba(200,169,126,.15); border:1px solid rgba(200,169,126,.35); border-radius:8px;">
+                <div style="font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:#c8a97e;">Viewing as</div>
+                <div style="font-size:13px; font-weight:600; color:#f5efe6;">{{ $viewAs['label'] }}</div>
+                <form method="POST" action="{{ route('admin.view-as.stop') }}" style="margin-top:6px;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" style="padding:0; font-size:12px; font-weight:600; color:#c8a97e; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Back to Admin</button>
+                </form>
+            </div>
+        @endif
+
+        @if($navRole === 'super_admin')
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('admin.dashboard'),
                 'active' => request()->routeIs('admin.dashboard'),
                 'icon'   => 'fa-gauge-high',
                 'label'  => 'Dashboard',
+            ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('admin.view-as.index'),
+                'active' => request()->routeIs('admin.view-as.*'),
+                'icon'   => 'fa-eye',
+                'label'  => 'View As',
             ])
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('admin.deans.index'),
@@ -149,7 +171,7 @@
             ])
         @endif
 
-        @if(auth()->user()->role === 'dean')
+        @if($navRole === 'dean')
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.dashboard'),
                 'active' => request()->routeIs('dean.dashboard'),
@@ -157,6 +179,12 @@
                 'label'  => 'Dashboard',
             ])
 
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.faculty.index'),
+                'active' => request()->routeIs('dean.faculty.*') || request()->routeIs('dean.teachers.*'),
+                'icon'   => 'fa-id-badge',
+                'label'  => 'Faculty',
+            ])
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.sections.index'),
                 'active' => request()->routeIs('dean.sections.*'),
@@ -188,6 +216,12 @@
                 'label'  => 'Enrollments',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.promotions.index'),
+                'active' => request()->routeIs('dean.promotions.*'),
+                'icon'   => 'fa-arrow-trend-up',
+                'label'  => 'Promotion',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.program-heads.index'),
                 'active' => request()->routeIs('dean.program-heads.*'),
                 'icon'   => 'fa-user-shield',
@@ -195,7 +229,7 @@
             ])
         @endif
 
-        @if(auth()->user()->role === 'program_head')
+        @if($navRole === 'program_head')
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('program-head.dashboard'),
                 'active' => request()->routeIs('program-head.dashboard')
@@ -218,6 +252,12 @@
                 'label'  => 'Students',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('program-head.promotions.index'),
+                'active' => request()->routeIs('program-head.promotions.*'),
+                'icon'   => 'fa-arrow-trend-up',
+                'label'  => 'Promotion',
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('program-head.subjects.index'),
                 'active' => request()->routeIs('program-head.subjects.*'),
                 'icon'   => 'fa-book',
@@ -225,7 +265,7 @@
             ])
         @endif
 
-        @if(auth()->user()->role === 'teacher')
+        @if($navRole === 'teacher')
             @php
                 $currentSection = request()->route('section');
                 $isAdviserHere = $currentSection instanceof \App\Models\Section

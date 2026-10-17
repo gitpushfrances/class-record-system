@@ -26,7 +26,7 @@ class ReportOfGradesController extends Controller
     public function programHead(SectionTerm $sectionTerm, Subject $subject)
     {
         $sectionTerm->loadMissing('section');
-        abort_if((int) $sectionTerm->section->program_id !== (int) auth()->user()->program_id, 403);
+        abort_if((int) $sectionTerm->section->program_id !== (int) \App\Services\Scope::programId(), 403);
 
         return $this->readOnly($sectionTerm, $subject, route('program-head.dashboard'));
     }
@@ -34,7 +34,7 @@ class ReportOfGradesController extends Controller
     public function dean(SectionTerm $sectionTerm, Subject $subject)
     {
         $sectionTerm->loadMissing('section.program');
-        abort_if((int) $sectionTerm->section->program?->department_id !== (int) auth()->user()->department_id, 403);
+        abort_if((int) $sectionTerm->section->program?->department_id !== (int) \App\Services\Scope::departmentId(), 403);
 
         return $this->readOnly($sectionTerm, $subject, route('dean.sections.show', $sectionTerm->section));
     }

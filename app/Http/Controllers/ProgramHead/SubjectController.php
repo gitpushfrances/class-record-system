@@ -13,27 +13,25 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $subjects = Subject::where('program_id', $programId)
-            ->where('requested_by', auth()->id())
-            ->orderByDesc('created_at')
-            ->paginate(20);
+            ->get();
 
         return view('program-head.subjects.index', compact('subjects'));
     }
 
     public function create()
     {
-        abort_if(!auth()->user()->program_id, 403, 'No program assigned to your account.');
+        abort_if(!\App\Services\Scope::programId(), 403, 'No program assigned to your account.');
 
         return view('program-head.subjects.create');
     }
 
     public function store(Request $request)
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $validated = $request->validate([
@@ -41,6 +39,8 @@ class SubjectController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
+            'year_level'  => 'required|in:' . implode(',', Subject::YEAR_LEVELS),
+            'semester'    => 'required|in:' . implode(',', Subject::SEMESTERS),
         ]);
 
         $validated['has_laboratory'] = $request->boolean('has_laboratory');
@@ -61,7 +61,7 @@ class SubjectController extends Controller
 
     public function edit(Subject $subject)
     {
-        abort_if($subject->requested_by !== auth()->id(), 403);
+        abort_if((int) $subject->program_id !== \App\Services\Scope::programId(), 403);
         abort_if($subject->status !== 'pending', 403, 'Only pending subjects can be edited.');
 
         return view('program-head.subjects.edit', compact('subject'));
@@ -69,7 +69,7 @@ class SubjectController extends Controller
 
     public function update(Request $request, Subject $subject)
     {
-        abort_if($subject->requested_by !== auth()->id(), 403);
+        abort_if((int) $subject->program_id !== \App\Services\Scope::programId(), 403);
         abort_if($subject->status !== 'pending', 403, 'Only pending subjects can be edited.');
 
         $validated = $request->validate([
@@ -77,6 +77,8 @@ class SubjectController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'units'       => 'required|numeric|decimal:0,1|min:0.5|max:10',
+            'year_level'  => 'required|in:' . implode(',', Subject::YEAR_LEVELS),
+            'semester'    => 'required|in:' . implode(',', Subject::SEMESTERS),
         ]);
 
         $validated['has_laboratory'] = $request->boolean('has_laboratory');
@@ -134,9 +136,22 @@ class SubjectController extends Controller
         ])->values()->all());
     }
 
+    /** Year level and semester can be set on any subject of the program, including approved ones. */
+    public function placement(Request $request, Subject $subject)
+    {
+        abort_if((int) $subject->program_id !== \App\Services\Scope::programId(), 403);
+
+        $subject->update($request->validate([
+            'year_level' => 'required|in:' . implode(',', Subject::YEAR_LEVELS),
+            'semester'   => 'required|in:' . implode(',', Subject::SEMESTERS),
+        ]));
+
+        return back()->with('success', "{$subject->code}: {$subject->placement}.");
+    }
+
     public function destroy(Subject $subject)
     {
-        abort_if($subject->requested_by !== auth()->id(), 403);
+        abort_if((int) $subject->program_id !== \App\Services\Scope::programId(), 403);
         abort_if($subject->status !== 'pending', 403, 'Only pending subjects can be deleted.');
 
         $subject->delete();

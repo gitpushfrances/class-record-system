@@ -92,21 +92,30 @@
                 </tbody>
             </table>
             <div class="px-6 py-4 border-t border-gray-100">
-                <form method="POST" action="{{ route('dean.sections.attach-subject', $section) }}" class="flex items-center gap-2">
+                <form method="POST" action="{{ route('dean.sections.attach-subject', $section) }}" style="display:flex; flex-direction:column; gap:12px;">
                     @csrf
-                    <select name="subject_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
-                        <option value="">— Select subject —</option>
-                        @foreach($availableSubjects as $s)
-                            <option value="{{ $s->id }}">{{ $s->code }} — {{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                    <select name="teacher_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
-                        <option value="">— Select teacher —</option>
-                        @foreach($teachers as $t)
-                            <option value="{{ $t->id }}">{{ $t->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white rounded-lg" style="background:#1c1814;">Add</button>
+                    @if($availableSubjects->isEmpty())
+                        <p class="text-sm text-gray-400">No subject left to assign: every approved subject of the program for this term's semester is already in this section.</p>
+                    @else
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                            <select name="subject_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg" style="min-width:220px;">
+                                <option value="">— Select subject —</option>
+                                @foreach($availableSubjects as $s)
+                                    <option value="{{ $s->id }}" @selected(old('subject_id') == $s->id)>{{ $s->code }} — {{ $s->name }} ({{ $s->placement }})</option>
+                                @endforeach
+                            </select>
+                            <select name="teacher_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg" style="min-width:180px;">
+                                <option value="">— Select teacher —</option>
+                                @foreach($teachers as $t)
+                                    <option value="{{ $t->id }}" @selected(old('teacher_id') == $t->id)>{{ $t->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null))
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white rounded-lg" style="background:#1c1814;">Add subject</button>
+                        </div>
+                    @endif
                 </form>
             </div>
         </div>

@@ -1223,6 +1223,61 @@ f
 - New `App\Services\StudentImport`, `partials/student-import.blade.php`; routes `program-head.students.import/template`, `dean.students.import/template`; tests: `StudentImportTest`
 
 
+### Scope layer and Admin View As (Phase 6a)
+- New `App\Services\Scope` (`departmentId()`, `programId()`, `role()`): Deans and Program Heads use their own assignment; an Admin uses the department or program picked in **View As**
+- All 68 hard-coded `auth()->user()->department_id` / `program_id` reads in the Dean, Program Head and ROG controllers now go through `Scope`
+- Admin → **View As**: work in any department as its Dean or any approved program as its Program Head; sidebar shows that role's menu with a "Viewing as" banner and **Back to Admin**; actions are recorded under the Admin account
+- `CheckRole`: an Admin passes `role:dean` / `role:program_head` only while viewing as that role; otherwise redirected to View As
+- Fixed: Program Head subjects were filtered by `requested_by` (a new Program Head could not see or edit the previous one's requests); now scoped by program
+- Tests: `ViewAsTest`
+
+
+### Dean faculty management (Phase 6b)
+- New Dean → **Faculty** page: active / inactive teachers of the department with search, this term's load (subjects taught, sections advised) and a link to pending approvals
+- **Deactivate** (status `inactive`, cannot sign in, records kept) and **Reactivate**; never deleted. Deactivation is refused while the teacher still has subjects or advisory sections in an active term
+- Dean sections are view-only (`index`, `show`): create / edit / delete routes, methods and views removed; the Program Head creates and edits sections. The Dean keeps subject / teacher / adviser assignment
+- New `Dean\FacultyController`; tests: `DeanFacultyTest`
+
+
+### Admin departments and programs (Phase 6c)
+- Admin → Departments: **Add Department**; department page: **Edit** and **Add Program**; program page: **Edit** (code + name, code stored uppercase, unique)
+- Programs created by the Admin are `approved` immediately and appear in every program dropdown (students, import, users, View As)
+- No delete: users, sections, students and subjects reference departments and programs
+- Every department / program field on forms is already a dropdown fed by these records, so S1 item 10 ("department field and program field") is covered
+- Shared `admin/partials/code-name-dialog.blade.php` reopens with the errors after a failed save; tests: `AdminDepartmentTest`
+
+
+### Subject year level and semester (Phase 6d1)
+- `subjects.year_level` (1st–5th Year) and `subjects.semester` (1st Semester / 2nd Semester / Summer), nullable; migration `2026_10_17_000300_add_year_level_and_semester_to_subjects`
+- Program Head: both required on Request / Edit; a Year / Semester selector on every row of the Subjects page (also for approved subjects) to fix existing data
+- Program Head Subjects lists every subject of the program (no pagination) grouped "1st Year · 1st Semester" … in curriculum order; unset subjects last with a warning
+- Dean Subjects: grouped by program, then year / semester; pending requests show the year / semester. Admin approved subjects: grouped by department, then year / semester, with a Program column
+- `Subject::byPlacement()`, `$subject->placement`; tests: `SubjectPlacementTest`
+
+
+### Subject assignment rule (Phase 6d2)
+- New `App\Services\SubjectOffering` (`forTerm()`, `refusal()`), used by the Program Head section page and modal, Dean section page and Dean Assignments
+- A subject can be added to a term only if it is approved, belongs to the section's program, and matches the term's semester; Summer terms accept any semester; subjects with no semester yet stay assignable
+- Dropdowns list same-semester and same-year-level subjects first and show "(3rd Year · 1st Semester)"
+- Fixed: Dean Assignments and Dean Sections listed and accepted subjects from every department
+- Fixed: Dean section page "Add subject" saved no schedule and ran no conflict check; it now has the day / time fields and the same conflict check as the Program Head
+- Tests: `SubjectOfferingTest`
+
+
+### Term rollover (Phase 6e1)
+- Fixed: "Set Term" (Program Head and Dean) overwrote the active term's school year and semester with the new academic period, so last semester's enrollments, scores, final grades and ROG were relabeled as the new semester
+- New `App\Services\TermRollover::setTerm()`: same period changes only the adviser; a new period closes the old term (`completed`, records kept) and starts a new active term, in one transaction
+- Tests: `TermRolloverTest`
+
+
+### Batch promotion (Phase 6e2)
+- Dean and Program Head → **Promotion**: program cards (Dean) → year → section cards → the students of the section's last closed term
+- Every checkbox starts unchecked; students with failed or INC final grades in that term are highlighted with the subject codes
+- Target: any active section of the program with a term in the active academic period; the same section carries students into the next semester, a higher-year section promotes them (student year level becomes the target section's)
+- One transaction through `SectionEnrollment::enroll()`; students already in the target are skipped and named; every run is logged in the new `promotions` table (who, from, to, year level, students, skipped) and listed on the section page
+- Migration `2026_10_17_000400_create_promotions_table`; `App\Services\BatchPromotion`, `App\Http\Controllers\PromotionController`, `promotions/*` views; tests: `BatchPromotionTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1260,7 +1315,15 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] A Program Head or Dean can drop a student from the section after a subject was submitted, which changes that subject's ROG to "Dr" (teacher Class List is locked; section-level drops are not)
 
 ### Roles and accounts
-- [ ] Admin all-access, Dean faculty management, Admin departments / programs CRUD, subject year level and semester with separators are not built (Phase 6)
+- [x] Admin all-access, Dean faculty management, departments / programs CRUD, subject year level and semester — done October 17, 2026 (Phase 6a–6d)
+- [ ] Subjects with no semester set are still assignable in any term; once every subject has a year level and semester, make `SubjectOffering` refuse unset ones
+- [ ] General-education subjects owned by one program cannot be assigned to another program's section (assignment is program-only)
+- [ ] Assigned teacher is not checked to be an active teacher of the department on attach-subject / Assignments (dropdown filters only)
+- [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
+- [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
+- [ ] Set Term closes the old term even if some subjects were never submitted for verification; there is no warning yet
+- [ ] Promotion cannot be undone from the UI (drop the students from the target section; the year level must be corrected by editing the student)
+- [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
 - [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role
 - [ ] Teacher `program_id` is stored but no query scoping by it has been verified

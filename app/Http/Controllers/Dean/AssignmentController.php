@@ -14,7 +14,7 @@ class AssignmentController extends Controller
 {
     public function index()
     {
-        $departmentId = auth()->user()->department_id;
+        $departmentId = \App\Services\Scope::departmentId();
 
         $assignments = DB::table('section_subject_teachers')
             ->join('section_terms', 'section_terms.id', '=', 'section_subject_teachers.section_term_id')
@@ -51,7 +51,11 @@ class AssignmentController extends Controller
             ->orderBy('year_level')
             ->get();
 
-        $subjects = Subject::where('status', 'approved')->orderBy('code')->get();
+        $subjects = Subject::with('program')
+            ->where('status', 'approved')
+            ->whereHas('program', fn ($q) => $q->where('department_id', $departmentId))
+            ->orderBy('code')
+            ->get();
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
             ->where('department_id', $departmentId)
@@ -72,7 +76,7 @@ class AssignmentController extends Controller
 
         $section = Section::with('program')->findOrFail($validated['section_id']);
         abort_if(
-            $section->program->department_id !== auth()->user()->department_id,
+            $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
@@ -84,6 +88,10 @@ class AssignmentController extends Controller
         if (!$currentTerm) {
             return redirect()->route('dean.assignments.index')
                 ->with('error', 'This section has no active term. Set one up on the Sections page first.');
+        }
+
+        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($validated['subject_id']))) {
+            return redirect()->route('dean.assignments.index')->with('error', $refusal)->withInput();
         }
 
         $exists = DB::table('section_subject_teachers')
@@ -125,7 +133,7 @@ class AssignmentController extends Controller
 
         abort_if(!$assignment, 404);
         abort_if(
-            $assignment->department_id !== auth()->user()->department_id,
+            $assignment->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This assignment does not belong to your department.'
         );

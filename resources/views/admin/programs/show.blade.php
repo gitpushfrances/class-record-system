@@ -14,7 +14,10 @@
             <h2 class="text-lg font-semibold text-gray-800">{{ $program->name }}</h2>
             <div class="text-xs text-gray-500">{{ $program->code }} &middot; Program Head: {{ $program->programHead?->name ?? '—' }}</div>
         </div>
+        <button type="button" onclick="document.getElementById('editProgram').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#374151; background:#fff; border:1px solid #d1d5db;"><i class="fa-solid fa-pen"></i> Edit</button>
     </div>
+
+    @include('admin.partials.code-name-dialog', ['id' => 'editProgram', 'title' => 'Edit Program', 'action' => route('admin.programs.update', [$department, $program]), 'method' => 'PUT', 'code' => $program->code, 'name' => $program->name, 'submit' => 'Save'])
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         @forelse($sections as $section)

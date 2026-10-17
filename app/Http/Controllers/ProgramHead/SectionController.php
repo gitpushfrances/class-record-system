@@ -14,7 +14,7 @@ class SectionController extends Controller
 {
     public function index()
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $sections = Section::with([
@@ -30,29 +30,25 @@ class SectionController extends Controller
 
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
-            ->where('department_id', auth()->user()->department_id)
+            ->where('department_id', \App\Services\Scope::departmentId())
             ->orderBy('name')
             ->get();
 
-        $allSubjects = Subject::where('status', 'approved')
-            ->where('program_id', $programId)
-            ->orderBy('name')
-            ->get();
         $activePeriod = AcademicPeriod::getActive();
 
-        return view('program-head.sections.index', compact('sections', 'teachers', 'allSubjects', 'activePeriod'));
+        return view('program-head.sections.index', compact('sections', 'teachers', 'activePeriod'));
     }
 
     public function create()
     {
-        abort_if(!auth()->user()->program_id, 403, 'No program assigned to your account.');
+        abort_if(!\App\Services\Scope::programId(), 403, 'No program assigned to your account.');
 
         return view('program-head.sections.create');
     }
 
     public function store(Request $request)
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
         abort_if(!$programId, 403, 'No program assigned to your account.');
 
         $validated = $request->validate([
@@ -80,7 +76,7 @@ class SectionController extends Controller
     public function show(Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -88,15 +84,11 @@ class SectionController extends Controller
         $section->load(['program', 'terms.adviser', 'terms.enrollments.student', 'terms.subjects.teachers']);
         $currentTerm = $section->terms->where('status', 'active')->first();
 
-        $availableSubjects = Subject::where('status', 'approved')
-            ->where('program_id', $section->program_id)
-            ->when($currentTerm, fn($q) => $q->whereNotIn('id', $currentTerm->subjects->pluck('id')))
-            ->orderBy('name')
-            ->get();
+        $availableSubjects = $currentTerm ? \App\Services\SubjectOffering::forTerm($currentTerm) : collect();
 
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
-            ->where('department_id', auth()->user()->department_id)
+            ->where('department_id', \App\Services\Scope::departmentId())
             ->orderBy('name')
             ->get();
 
@@ -122,7 +114,7 @@ class SectionController extends Controller
     public function edit(Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -133,7 +125,7 @@ class SectionController extends Controller
     public function update(Request $request, Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -163,7 +155,7 @@ class SectionController extends Controller
     public function destroy(Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -186,7 +178,7 @@ class SectionController extends Controller
     public function attachSubject(Request $request, Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -200,12 +192,9 @@ class SectionController extends Controller
             ...\App\Services\ClassSchedule::rules(),
         ], [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        $subject = Subject::findOrFail($request->subject_id);
-        abort_if(
-            $subject->program_id !== $section->program_id,
-            403,
-            'This subject does not belong to your program.'
-        );
+        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($request->subject_id))) {
+            return back()->withErrors(['subject_id' => $refusal])->withInput();
+        }
 
         $slot = \App\Services\ClassSchedule::fromRequest($request);
         if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
@@ -222,7 +211,7 @@ class SectionController extends Controller
     public function changeSubjectTeacher(Request $request, Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -272,7 +261,7 @@ class SectionController extends Controller
 
     private function activeTermOfMyProgram(Section $section): SectionTerm
     {
-        abort_if($section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+        abort_if($section->program_id !== \App\Services\Scope::programId(), 403, 'This section does not belong to your program.');
 
         $term = $section->terms()->where('status', 'active')->first();
         abort_if(!$term, 422, 'This section has no active term.');
@@ -283,7 +272,7 @@ class SectionController extends Controller
     public function changeAdviser(Request $request, Section $section)
     {
         abort_if(
-            $section->program_id !== auth()->user()->program_id,
+            $section->program_id !== \App\Services\Scope::programId(),
             403,
             'This section does not belong to your program.'
         );
@@ -319,22 +308,8 @@ class SectionController extends Controller
             }
         }
 
-        if ($currentTerm) {
-            $currentTerm->update([
-                'academic_year' => $activePeriod->school_year,
-                'semester'      => $activePeriod->semester,
-                'adviser_id'    => $request->adviser_id,
-            ]);
-        } else {
-            SectionTerm::create([
-                'section_id'    => $section->id,
-                'academic_year' => $activePeriod->school_year,
-                'semester'      => $activePeriod->semester,
-                'adviser_id'    => $request->adviser_id,
-                'status'        => 'active',
-            ]);
-        }
+        [$term, $closed] = \App\Services\TermRollover::setTerm($section, (int) $request->adviser_id, $activePeriod);
 
-        return redirect()->route('program-head.sections.index')->with('success', 'Term saved successfully.');
+        return redirect()->route('program-head.sections.index')->with('success', \App\Services\TermRollover::message($term, $closed));
     }
 }

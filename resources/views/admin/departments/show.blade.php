@@ -12,7 +12,14 @@
             <h2 class="text-lg font-semibold text-gray-800">{{ $department->name }}</h2>
             <div class="text-xs text-gray-500">{{ $department->code }} &middot; Dean: {{ $department->dean?->name ?? '—' }}</div>
         </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" onclick="document.getElementById('editDepartment').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#374151; background:#fff; border:1px solid #d1d5db;"><i class="fa-solid fa-pen"></i> Edit</button>
+            <button type="button" onclick="document.getElementById('addProgram').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#fff; background:#4f46e5; border:none;"><i class="fa-solid fa-plus"></i> Add Program</button>
+        </div>
     </div>
+
+    @include('admin.partials.code-name-dialog', ['id' => 'editDepartment', 'title' => 'Edit Department', 'action' => route('admin.departments.update', $department), 'method' => 'PUT', 'code' => $department->code, 'name' => $department->name, 'submit' => 'Save'])
+    @include('admin.partials.code-name-dialog', ['id' => 'addProgram', 'title' => 'Add Program to ' . $department->code, 'action' => route('admin.programs.store', $department), 'method' => 'POST', 'code' => '', 'name' => '', 'submit' => 'Add'])
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         @forelse($programs as $program)

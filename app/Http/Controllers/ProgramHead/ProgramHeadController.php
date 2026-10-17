@@ -14,7 +14,7 @@ class ProgramHeadController extends Controller
 {
     public function dashboard()
     {
-        $programId = auth()->user()->program_id;
+        $programId = \App\Services\Scope::programId();
 
         abort_if(!$programId, 403, 'You have not been assigned a program yet. Contact your Dean.');
 
@@ -44,7 +44,7 @@ class ProgramHeadController extends Controller
 
     public function verify(Request $request, SectionTerm $sectionTerm, Subject $subject)
     {
-        abort_if($sectionTerm->section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+        abort_if($sectionTerm->section->program_id !== \App\Services\Scope::programId(), 403, 'This section does not belong to your program.');
 
         $verification = $sectionTerm->verificationFor($subject->id);
         abort_if(!$verification || $verification->status !== 'pending', 404, 'No pending submission found for this subject.');
@@ -62,7 +62,7 @@ class ProgramHeadController extends Controller
 
     public function reject(Request $request, SectionTerm $sectionTerm, Subject $subject)
     {
-        abort_if($sectionTerm->section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+        abort_if($sectionTerm->section->program_id !== \App\Services\Scope::programId(), 403, 'This section does not belong to your program.');
 
         $request->validate(['reason' => 'required|string|max:500']);
 
@@ -89,7 +89,7 @@ class ProgramHeadController extends Controller
 
     public function unverify(SectionTerm $sectionTerm, Subject $subject)
     {
-        abort_if($sectionTerm->section->program_id !== auth()->user()->program_id, 403, 'This section does not belong to your program.');
+        abort_if($sectionTerm->section->program_id !== \App\Services\Scope::programId(), 403, 'This section does not belong to your program.');
 
         $verification = $sectionTerm->verificationFor($subject->id);
         abort_if(!$verification || $verification->status !== 'verified', 404, 'This subject is not currently verified.');

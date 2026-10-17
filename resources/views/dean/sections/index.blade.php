@@ -63,7 +63,7 @@
 
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800">Sections</h2>
-        <a href="{{ route('dean.sections.create') }}" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">+ Create Section</a>
+        <span class="text-xs text-gray-500">Sections are created and edited by the Program Head.</span>
     </div>
 
     @forelse($sections as $programCode => $sectionGroup)
@@ -82,7 +82,6 @@
                         $currentTerm = $section->terms->where('status', 'active')->first();
                         $enrolledCount = $currentTerm ? $currentTerm->enrollments->count() : 0;
                         $termSubjects = $currentTerm ? $currentTerm->subjects : collect();
-                        $availableSubjects = $allSubjects->whereNotIn('id', $termSubjects->pluck('id'));
                     @endphp
                     <div onclick="openSectionModal({{ $section->id }})"
                          class="overflow-hidden transition bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:shadow-md">
@@ -196,15 +195,7 @@
                                 </div>
 
                                 <div class="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ route('dean.sections.edit', $section) }}" class="text-sm text-gray-600 hover:text-gray-800">Edit</a>
-                                        <span class="text-gray-300">|</span>
-                                        <form action="{{ route('dean.sections.destroy', $section) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-sm text-red-600 hover:text-red-800" onclick="return confirm('Delete this section? This cannot be undone if students are enrolled.')">Delete</button>
-                                        </form>
-                                    </div>
+                                    <a href="{{ route('dean.sections.show', $section) }}" class="text-sm text-gray-600 hover:text-gray-800">Open section</a>
                                     <button onclick="closeSectionModal({{ $section->id }})" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Close</button>
                                 </div>
                             </div>
@@ -215,7 +206,7 @@
         </div>
     @empty
         <div class="py-12 text-center text-gray-500 bg-white rounded-lg shadow-sm">
-            No sections found. <a href="{{ route('dean.sections.create') }}" class="text-blue-600 hover:underline">Create one now.</a>
+            No sections found. Sections are created by the Program Head.
         </div>
     @endforelse
 
