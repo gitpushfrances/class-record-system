@@ -37,10 +37,13 @@ class LightPagesTest extends TestCase
             [$teacher, route('teacher.grades.config', [$term->section, $subject])],
         ];
 
+        // Only the page content is checked: the sidebar and mobile top bar are dark by design.
         foreach ($pages as [$user, $url]) {
             $html = $this->actingAs($user)->get($url)->assertOk()->getContent();
-            $this->assertStringNotContainsString('background:#072a07', str_replace(' ', '', $html), $url);
-            $this->assertStringNotContainsString('color:#fbf3d0', str_replace(' ', '', $html), $url);
+            $this->assertSame(1, preg_match('#<main\b.*?</main>#s', $html, $main), "$url has no <main> region");
+            $content = str_replace(' ', '', $main[0]);
+            $this->assertStringNotContainsString('background:#072a07', $content, $url);
+            $this->assertStringNotContainsString('color:#fbf3d0', $content, $url);
         }
     }
 }
