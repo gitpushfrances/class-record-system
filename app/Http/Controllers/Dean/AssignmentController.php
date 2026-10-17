@@ -51,7 +51,11 @@ class AssignmentController extends Controller
             ->orderBy('year_level')
             ->get();
 
-        $subjects = Subject::where('status', 'approved')->orderBy('code')->get();
+        $subjects = Subject::with('program')
+            ->where('status', 'approved')
+            ->whereHas('program', fn ($q) => $q->where('department_id', $departmentId))
+            ->orderBy('code')
+            ->get();
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
             ->where('department_id', $departmentId)
@@ -84,6 +88,10 @@ class AssignmentController extends Controller
         if (!$currentTerm) {
             return redirect()->route('dean.assignments.index')
                 ->with('error', 'This section has no active term. Set one up on the Sections page first.');
+        }
+
+        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($validated['subject_id']))) {
+            return redirect()->route('dean.assignments.index')->with('error', $refusal)->withInput();
         }
 
         $exists = DB::table('section_subject_teachers')

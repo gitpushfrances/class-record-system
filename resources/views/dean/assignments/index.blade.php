@@ -33,7 +33,7 @@
                     class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">Select Subject</option>
                 @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}">{{ $subject->code }} — {{ $subject->name }}</option>
+                    <option value="{{ $subject->id }}">{{ $subject->program?->code }} · {{ $subject->code }} — {{ $subject->name }} ({{ $subject->placement }})</option>
                 @endforeach
             </select>
         </div>

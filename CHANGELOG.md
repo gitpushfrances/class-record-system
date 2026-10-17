@@ -1255,6 +1255,15 @@ f
 - `Subject::byPlacement()`, `$subject->placement`; tests: `SubjectPlacementTest`
 
 
+### Subject assignment rule (Phase 6d2)
+- New `App\Services\SubjectOffering` (`forTerm()`, `refusal()`), used by the Program Head section page and modal, Dean section page and Dean Assignments
+- A subject can be added to a term only if it is approved, belongs to the section's program, and matches the term's semester; Summer terms accept any semester; subjects with no semester yet stay assignable
+- Dropdowns list same-semester and same-year-level subjects first and show "(3rd Year · 1st Semester)"
+- Fixed: Dean Assignments and Dean Sections listed and accepted subjects from every department
+- Fixed: Dean section page "Add subject" saved no schedule and ran no conflict check; it now has the day / time fields and the same conflict check as the Program Head
+- Tests: `SubjectOfferingTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1292,7 +1301,11 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] A Program Head or Dean can drop a student from the section after a subject was submitted, which changes that subject's ROG to "Dr" (teacher Class List is locked; section-level drops are not)
 
 ### Roles and accounts
-- [ ] Admin all-access, Dean faculty management, Admin departments / programs CRUD, subject year level and semester with separators are not built (Phase 6)
+- [x] Admin all-access, Dean faculty management, departments / programs CRUD, subject year level and semester — done October 17, 2026 (Phase 6a–6d)
+- [ ] Subjects with no semester set are still assignable in any term; once every subject has a year level and semester, make `SubjectOffering` refuse unset ones
+- [ ] General-education subjects owned by one program cannot be assigned to another program's section (assignment is program-only)
+- [ ] Assigned teacher is not checked to be an active teacher of the department on attach-subject / Assignments (dropdown filters only)
+- [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
 - [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
 - [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role

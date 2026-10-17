@@ -82,7 +82,6 @@
                         $currentTerm = $section->terms->where('status', 'active')->first();
                         $enrolledCount = $currentTerm ? $currentTerm->enrollments->count() : 0;
                         $termSubjects = $currentTerm ? $currentTerm->subjects : collect();
-                        $availableSubjects = $allSubjects->whereNotIn('id', $termSubjects->pluck('id'));
                     @endphp
                     <div onclick="openSectionModal({{ $section->id }})"
                          class="overflow-hidden transition bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:shadow-md">

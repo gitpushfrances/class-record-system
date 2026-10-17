@@ -34,13 +34,9 @@ class SectionController extends Controller
             ->orderBy('name')
             ->get();
 
-        $allSubjects = Subject::where('status', 'approved')
-            ->where('program_id', $programId)
-            ->orderBy('name')
-            ->get();
         $activePeriod = AcademicPeriod::getActive();
 
-        return view('program-head.sections.index', compact('sections', 'teachers', 'allSubjects', 'activePeriod'));
+        return view('program-head.sections.index', compact('sections', 'teachers', 'activePeriod'));
     }
 
     public function create()
@@ -88,11 +84,7 @@ class SectionController extends Controller
         $section->load(['program', 'terms.adviser', 'terms.enrollments.student', 'terms.subjects.teachers']);
         $currentTerm = $section->terms->where('status', 'active')->first();
 
-        $availableSubjects = Subject::where('status', 'approved')
-            ->where('program_id', $section->program_id)
-            ->when($currentTerm, fn($q) => $q->whereNotIn('id', $currentTerm->subjects->pluck('id')))
-            ->orderBy('name')
-            ->get();
+        $availableSubjects = $currentTerm ? \App\Services\SubjectOffering::forTerm($currentTerm) : collect();
 
         $teachers = User::where('role', 'teacher')
             ->where('status', 'active')
@@ -200,12 +192,9 @@ class SectionController extends Controller
             ...\App\Services\ClassSchedule::rules(),
         ], [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        $subject = Subject::findOrFail($request->subject_id);
-        abort_if(
-            $subject->program_id !== $section->program_id,
-            403,
-            'This subject does not belong to your program.'
-        );
+        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($request->subject_id))) {
+            return back()->withErrors(['subject_id' => $refusal])->withInput();
+        }
 
         $slot = \App\Services\ClassSchedule::fromRequest($request);
         if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {

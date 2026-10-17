@@ -70,7 +70,7 @@
     @csrf
     <div style="font-size:13px; font-weight:700; color:#1f2937;">Assign a subject</div>
     @if($availableSubjects->isEmpty())
-        <p class="sst-muted" style="margin:0; font-size:13px;">Every approved subject of the program is already assigned to this section.</p>
+        <p class="sst-muted" style="margin:0; font-size:13px;">No subject left to assign: every approved subject of the program for this term's semester is already in this section.</p>
     @else
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px;">
             <div>
@@ -78,7 +78,7 @@
                 <select id="sst-add-subject-{{ $section->id }}" name="subject_id" class="sst-input" required>
                     <option value="">Select subject</option>
                     @foreach($availableSubjects as $s)
-                        <option value="{{ $s->id }}" @selected(old('subject_id') == $s->id)>{{ $s->code }} — {{ $s->name }}</option>
+                        <option value="{{ $s->id }}" @selected(old('subject_id') == $s->id)>{{ $s->code }} — {{ $s->name }} ({{ $s->placement }})</option>
                     @endforeach
                 </select>
             </div>
