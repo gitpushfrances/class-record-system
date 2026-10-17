@@ -14,7 +14,7 @@
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button type="button" onclick="document.getElementById('editDepartment').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#374151; background:#fff; border:1px solid #d1d5db;"><i class="fa-solid fa-pen"></i> Edit</button>
-            <button type="button" onclick="document.getElementById('addProgram').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#fff; background:#4f46e5; border:none;"><i class="fa-solid fa-plus"></i> Add Program</button>
+            <button type="button" onclick="document.getElementById('addProgram').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#fff; background:#0a5b05; border:none;"><i class="fa-solid fa-plus"></i> Add Program</button>
         </div>
     </div>
 

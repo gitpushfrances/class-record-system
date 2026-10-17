@@ -66,7 +66,7 @@
             </div>
 
             <div style="display:flex; justify-content:flex-end; padding:16px 24px; background:#f9fafb; border-top:1px solid #f3f4f6;">
-                <button type="submit" style="padding:8px 18px; font-size:14px; font-weight:600; color:#fff; background:#4f46e5; border:none; border-radius:8px; cursor:pointer;">Save settings</button>
+                <button type="submit" style="padding:8px 18px; font-size:14px; font-weight:600; color:#fff; background:#0a5b05; border:none; border-radius:8px; cursor:pointer;">Save settings</button>
             </div>
         </form>
     </div>

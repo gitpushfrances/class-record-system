@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Save Changes</button>
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">Save Changes</button>
                         <a href="{{ route('program-head.sections.index') }}" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
                     </div>
                 </form>

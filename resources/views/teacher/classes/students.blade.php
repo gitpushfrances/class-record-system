@@ -32,7 +32,7 @@
             <input type="search" name="q" value="{{ $query }}" minlength="{{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }}" required autofocus
                    placeholder="Student number or name (at least {{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }} characters)"
                    style="flex:1; min-width:220px; padding:8px 12px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;">
-            <button type="submit" style="{{ $btn }} padding:8px 16px; color:#fff; background:#4f46e5; border:none;"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <button type="submit" style="{{ $btn }} padding:8px 16px; color:#fff; background:#0a5b05; border:none;"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
         </form>
 
         @if(mb_strlen($query) >= \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH)

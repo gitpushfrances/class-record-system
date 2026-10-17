@@ -8,7 +8,7 @@
     .sst-input { display: block; width: 100%; padding: 7px 10px; font-size: 13px; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; }
     .sst-btn { padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; white-space: nowrap; }
     .sst-btn-light { color: #374151; background: #fff; border: 1px solid #d1d5db; }
-    .sst-btn-dark { color: #fff; background: #1c1814; border: 1px solid #1c1814; }
+    .sst-btn-dark { color: #fff; background: #0b3d0b; border: 1px solid #0b3d0b; }
     .sst-panel { display: grid; gap: 14px; padding: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; }
 </style>
 @endonce

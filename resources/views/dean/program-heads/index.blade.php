@@ -11,7 +11,7 @@
     @endif
 
     <div class="mb-6">
-        <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Program Head Assignments</h1>
+        <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Program Head Assignments</h1>
         <p class="mt-1 text-sm text-gray-500">Assign or reassign the program each Program Head in your department manages.</p>
     </div>
 
@@ -48,7 +48,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <button type="submit" class="px-3 py-1 text-xs font-medium text-white rounded hover:opacity-90" style="background-color:#c8a97e;">
+                                    <button type="submit" class="px-3 py-1 text-xs font-medium text-white rounded hover:opacity-90" style="background-color:#d4af37;">
                                         Save
                                     </button>
                                 </form>

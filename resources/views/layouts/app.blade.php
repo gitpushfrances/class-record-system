@@ -12,9 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('layouts.partials.brand')
     <style>
         /* Native dropdown popups are always light: keep option text dark whatever the select's own color is. */
-        select option { color: #1c1814; background-color: #ffffff; }
+        select option { color: #0b3d0b; background-color: #ffffff; }
     </style>
 </head>
 <body class="font-sans antialiased bg-stone-100" style="font-family: 'DM Sans', sans-serif;">
@@ -34,20 +35,20 @@
 
             {{-- Mobile topbar --}}
             <header class="flex items-center justify-between flex-shrink-0 px-4 h-14 lg:hidden"
-                    style="background: #1c1814; border-bottom: 1px solid rgba(200,169,126,0.1);">
+                    style="background: #0b3d0b; border-bottom: 1px solid rgba(212,175,55,0.1);">
                 <div class="flex items-center gap-2.5">
                     <button onclick="openSidebar()"
                             class="flex items-center justify-center w-8 h-8 transition rounded-lg"
-                            style="color: #c8a97e;"
-                            onmouseover="this.style.background='rgba(200,169,126,0.1)';"
+                            style="color: #d4af37;"
+                            onmouseover="this.style.background='rgba(212,175,55,0.1)';"
                             onmouseout="this.style.background='transparent';">
                         <i class="text-sm fas fa-bars"></i>
                     </button>
-                    <span class="text-sm font-bold" style="font-family: 'Fraunces', serif; color: #f0dfc0;">
-                        Class <em class="not-italic font-light" style="color: #c8a97e;">Record</em>
+                    <span class="text-sm font-bold" style="font-family: 'Fraunces', serif; color: #fbf3d0;">
+                        Class <em class="not-italic font-light" style="color: #d4af37;">Record</em>
                     </span>
                 </div>
-                <div class="text-xs truncate max-w-[140px]" style="color: rgba(200,169,126,0.5);">
+                <div class="text-xs truncate max-w-[140px]" style="color: rgba(212,175,55,0.5);">
                     {{ auth()->user()->display_name }}
                 </div>
             </header>

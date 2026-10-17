@@ -1,126 +1,60 @@
 <x-guest-layout>
-
-    {{-- Session Status --}}
     @if (session('status'))
-        <div class="alert-ok">
-            <i class="fas fa-circle-check"></i>
-            {{ session('status') }}
-        </div>
+        <div class="alert-ok"><i class="fas fa-circle-check"></i> {{ session('status') }}</div>
     @endif
 
-    {{-- Header --}}
     <div class="form-header">
-        <div class="form-eyebrow">
-            <span class="form-eyebrow-line"></span>
-            Secure Access
-        </div>
+        <div class="form-eyebrow"><span class="form-eyebrow-line"></span> Secure access</div>
         <h1 class="form-title">Sign In</h1>
-        <p class="form-sub">Enter your credentials to continue.</p>
+        <p class="form-sub">Use your registered email address and password.</p>
     </div>
 
     <form method="POST" action="{{ route('login') }}" id="login-form">
         @csrf
 
-        {{-- Email --}}
-        <div class="field">
-            <label class="field-label" for="email">Email Address</label>
+        <div class="field @error('email') has-error @enderror">
+            <label class="field-label" for="email">Email address</label>
             <div class="field-wrap">
                 <i class="fas fa-envelope field-ico"></i>
-                <input
-                    id="email"
-                    class="field-input"
-                    type="email"
-                    name="email"
-                    value="{{ old('email') }}"
-                    placeholder="you@essu.edu.ph"
-                    required autofocus
-                    autocomplete="username"
-                />
+                <input id="email" class="field-input" type="email" name="email" value="{{ old('email') }}"
+                       placeholder="you@essu.edu.ph" required autofocus autocomplete="username">
             </div>
-            @error('email')
-                <div class="field-err">
-                    <i class="fas fa-circle-exclamation"></i> {{ $message }}
-                </div>
-            @enderror
+            @error('email')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
         </div>
 
-        {{-- Password --}}
-        <div class="field">
+        <div class="field @error('password') has-error @enderror">
             <label class="field-label" for="password">Password</label>
             <div class="field-wrap">
                 <i class="fas fa-lock field-ico"></i>
-                <input
-                    id="password"
-                    class="field-input"
-                    type="password"
-                    name="password"
-                    placeholder="••••••••••"
-                    required
-                    autocomplete="current-password"
-                    style="padding-right: 2.6rem;"
-                />
-                <button type="button" class="eye-btn" onclick="togglePwd()" title="Toggle password visibility">
-                    <i class="fas fa-eye" id="eyeIco"></i>
-                </button>
+                <input id="password" class="field-input has-eye" type="password" name="password"
+                       placeholder="Enter your password" required autocomplete="current-password">
+                <button type="button" class="eye-btn" data-toggle="password" aria-label="Show password"><i class="fas fa-eye"></i></button>
             </div>
-            @error('password')
-                <div class="field-err">
-                    <i class="fas fa-circle-exclamation"></i> {{ $message }}
-                </div>
-            @enderror
+            @error('password')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
         </div>
 
-        {{-- Remember + Forgot --}}
         <div class="form-row">
             <label class="check-label" for="remember_me">
-                <input type="checkbox" name="remember" id="remember_me" {{ old('remember') ? 'checked' : '' }}>
-                Remember me
+                <input type="checkbox" name="remember" id="remember_me" @checked(old('remember'))> Remember me
             </label>
             @if (Route::has('password.request'))
                 <a href="{{ route('password.request') }}" class="link-forgot">Forgot password?</a>
             @endif
         </div>
 
-        {{-- Submit --}}
         <button type="submit" class="btn-submit" id="submit-btn">
-            <span class="btn-label">
-                <span class="btn-label-ico">
-                    <i class="fas fa-arrow-right-to-bracket"></i>
-                </span>
-                Sign In to Portal
-            </span>
-            <span class="btn-spinner">
-                <span class="spinner-ring"></span>
-            </span>
+            <span class="btn-label"><i class="fas fa-arrow-right-to-bracket"></i> Sign In to Portal</span>
+            <span class="btn-spinner"><span class="spinner-ring"></span></span>
         </button>
-
     </form>
 
     @if (Route::has('register'))
-        <div style="text-align:center; margin-top:1rem;">
-            <a href="{{ route('register') }}" class="link-forgot">New faculty? Request an account</a>
-        </div>
+        <p class="form-alt">New faculty member? <a href="{{ route('register') }}" class="link-forgot">Request an account</a></p>
     @endif
 
-<div class="card-foot">
-        <i class="fas fa-shield-halved"></i>
-        Authorized faculty and staff only
-    </div>
+    <div class="card-foot"><i class="fas fa-shield-halved"></i> Authorized ESSU faculty and staff only</div>
 
+    @push('scripts')
+        @include('auth.partials.form-scripts', ['form' => 'login-form'])
+    @endpush
 </x-guest-layout>
-
-<script>
-function togglePwd() {
-    const inp = document.getElementById('password');
-    const ico = document.getElementById('eyeIco');
-    const hidden = inp.type === 'password';
-    inp.type = hidden ? 'text' : 'password';
-    ico.classList.toggle('fa-eye',       !hidden);
-    ico.classList.toggle('fa-eye-slash',  hidden);
-}
-
-document.getElementById('login-form').addEventListener('submit', function () {
-    const btn = document.getElementById('submit-btn');
-    btn.classList.add('loading');
-});
-</script>

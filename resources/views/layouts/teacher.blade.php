@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Class Record') — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('layouts.partials.brand')
 </head>
 <body class="min-h-screen font-sans bg-gray-100">
 

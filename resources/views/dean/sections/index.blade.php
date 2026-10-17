@@ -29,7 +29,7 @@
                 const term = parts ? parts[2] : '';
                 return '<div style="display:flex;justify-content:space-between;align-items:center;' +
                        'padding:10px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;">' +
-                       '<span style="font-weight:600;color:#1c1814;">' + name + '</span>' +
+                       '<span style="font-weight:600;color:#0b3d0b;">' + name + '</span>' +
                        '<span style="font-size:12px;color:#6b7280;">' + term + '</span>' +
                        '</div>';
             }).join('');
@@ -41,7 +41,7 @@
                       '<div style="text-align:left;max-height:180px;overflow-y:auto;">' + rows + '</div>' +
                       '<p style="margin-top:14px;color:#374151;">Assign them to this section as well?</p>',
                 icon: 'warning',
-                confirmButtonColor: '#c8a97e',
+                confirmButtonColor: '#d4af37',
                 cancelButtonColor: '#6b7280',
                 showCancelButton: true,
                 confirmButtonText: 'Continue',
@@ -68,7 +68,7 @@
 
     @forelse($sections as $programCode => $sectionGroup)
         <div class="mb-10">
-            <div class="flex items-center gap-3 pb-2 mb-4 border-b-2" style="border-color:#c8a97e;">
+            <div class="flex items-center gap-3 pb-2 mb-4 border-b-2" style="border-color:#d4af37;">
                 <h3 class="text-base font-bold text-gray-800">{{ $programCode }}</h3>
                 <span class="text-sm text-gray-500">{{ $sectionGroup->first()->program->name }}</span>
                 <span class="ml-auto text-xs text-gray-400">{{ $sectionGroup->count() }} {{ $sectionGroup->count() === 1 ? 'section' : 'sections' }}</span>
@@ -178,7 +178,7 @@
                                                     </tbody>
                                                 </table>
                                                 <div class="px-3 py-2.5 text-xs text-center text-gray-400 border-t border-gray-100 bg-gray-50">
-                                                    Manage subject/teacher assignments from the <a href="{{ route('dean.assignments.index') }}" class="font-medium" style="color:#c8a97e;">Assignments</a> tab.
+                                                    Manage subject/teacher assignments from the <a href="{{ route('dean.assignments.index') }}" class="font-medium" style="color:#d4af37;">Assignments</a> tab.
                                                 </div>
                                             </div>
                                         </div>
@@ -247,7 +247,7 @@
                     </div>
                     <div class="flex justify-end gap-2 px-6 py-4 border-t bg-gray-50">
                         <button type="button" onclick="closeAdviserModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="px-4 py-2 text-sm text-white rounded hover:opacity-90" style="background-color: #c8a97e;" {{ $activePeriod ? '' : 'disabled' }}>Save</button>
+                        <button type="submit" class="px-4 py-2 text-sm text-white rounded hover:opacity-90" style="background-color: #d4af37;" {{ $activePeriod ? '' : 'disabled' }}>Save</button>
                     </div>
                 </form>
             </div>

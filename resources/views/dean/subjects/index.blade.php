@@ -6,7 +6,7 @@
 <div class="max-w-5xl mx-auto">
 
     <div class="mb-6">
-        <h1 class="text-xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Subjects</h1>
+        <h1 class="text-xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Subjects</h1>
         <p class="text-sm mt-0.5" style="color:#6b7280;">Subject catalog for your department. New subjects are requested by Program Heads for your approval.</p>
     </div>
 
@@ -69,9 +69,9 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse($subjects->groupBy(fn ($s) => $s->program->code ?? '—')->sortKeys() as $programCode => $programSubjects)
-                <tr><td colspan="7" style="padding:10px 16px; font-size:13px; font-weight:700; color:#fff; background:#1c1814;">{{ $programCode }} <span style="font-weight:400; color:#d6c7ad;">{{ $programSubjects->first()->program->name ?? '' }}</span></td></tr>
+                <tr><td colspan="7" style="padding:10px 16px; font-size:13px; font-weight:700; color:#fff; background:#0b3d0b;">{{ $programCode }} <span style="font-weight:400; color:#e9d98f;">{{ $programSubjects->first()->program->name ?? '' }}</span></td></tr>
                 @foreach(\App\Models\Subject::byPlacement($programSubjects) as $placement => $group)
-                <tr><td colspan="7" style="padding:6px 16px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#92400e' : '#1c1814' }}; background:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#fffbeb' : '#f3efe8' }};">{{ $placement }}</td></tr>
+                <tr><td colspan="7" style="padding:6px 16px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#92400e' : '#0b3d0b' }}; background:{{ $placement === \App\Models\Subject::UNSPECIFIED ? '#fffbeb' : '#eef5ec' }};">{{ $placement }}</td></tr>
                 @foreach($group as $subject)
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>

@@ -54,7 +54,7 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="button" onclick="confirmCreate()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #c8a97e;">Create Section</button>
+                        <button type="button" onclick="confirmCreate()" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">Create Section</button>
                         <a href="{{ route('program-head.sections.index') }}" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Cancel</a>
                     </div>
                 </form>
@@ -83,7 +83,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Create',
                 cancelButtonText: 'Cancel',
-                confirmButtonColor: '#c8a97e',
+                confirmButtonColor: '#d4af37',
                 cancelButtonColor: '#6b7280',
             }).then((result) => { if (result.isConfirmed) form.submit(); });
         }

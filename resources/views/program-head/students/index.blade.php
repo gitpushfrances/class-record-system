@@ -2,18 +2,18 @@
 
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">Student Master List</h1>
+            <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Student Master List</h1>
             <p class="mt-1 text-sm text-gray-500">Manage your program's student records.</p>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button type="button" onclick="document.getElementById('importStudentsDialog').showModal()"
                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
-                    style="background:#fff; border:1px solid #c8a97e; color:#1c1814;">
+                    style="background:#fff; border:1px solid #d4af37; color:#0b3d0b;">
                 <i class="text-xs fa-solid fa-file-import"></i> Import
             </button>
             <a href="{{ route('program-head.students.create') }}"
                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
-               style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
+               style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
                 <i class="text-xs fa-solid fa-plus"></i> Add Student
             </a>
         </div>
@@ -23,8 +23,8 @@
 
     <style>
         .filter-select { height:38px; padding:0 2.25rem 0 .75rem; font-size:.875rem; border:1px solid #d1d5db; border-radius:.5rem; background-color:#fff; background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2020%2020%27%20fill=%27none%27%3E%3Cpath%20d=%27M6%208l4%204%204-4%27%20stroke=%27%236b7280%27%20stroke-width=%271.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3C/svg%3E); background-repeat:no-repeat; background-position:right .75rem center; background-size:1rem; -webkit-appearance:none; appearance:none; cursor:pointer; }
-        .filter-select.is-active { border-color:#c8a97e; background-color:#fbf6ee; font-weight:600; }
-        .filter-select:focus { outline:none; border-color:#c8a97e; box-shadow:0 0 0 2px rgba(200,169,126,.25); }
+        .filter-select.is-active { border-color:#d4af37; background-color:#fbf7e6; font-weight:600; }
+        .filter-select:focus { outline:none; border-color:#d4af37; box-shadow:0 0 0 2px rgba(212,175,55,.25); }
     </style>
     <form method="GET" class="mb-4" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;">
         <select name="year_level" onchange="this.form.submit()" class="filter-select {{ request()->filled('year_level') ? 'is-active' : '' }}">
@@ -45,7 +45,7 @@
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, ID, or email…" autocomplete="off"
                    class="text-sm border rounded-lg" style="width:100%; height:38px; padding:0 12px 0 34px; border-color:#d1d5db; background:#fff;">
         </div>
-        <button type="submit" class="text-sm font-semibold rounded-lg" style="height:38px; padding:0 16px; background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">Search</button>
+        <button type="submit" class="text-sm font-semibold rounded-lg" style="height:38px; padding:0 16px; background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">Search</button>
         @if(request()->filled('search') || request()->filled('year_level') || request()->filled('section_id'))
             <a href="{{ route('program-head.students.index') }}" class="text-sm text-gray-500 hover:text-gray-800" style="display:inline-flex; align-items:center; gap:4px;">
                 <i class="text-xs fa-solid fa-xmark"></i> Clear
@@ -106,7 +106,7 @@
                             <div class="flex items-center justify-center gap-3">
                                 <a href="{{ route('program-head.students.edit', $student) }}" title="Edit"
                                    class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
-                                   style="color:#8a6a3d; background:rgba(200,169,126,0.18); border:1px solid rgba(200,169,126,0.35);">
+                                   style="color:#8a6a3d; background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.35);">
                                     <i class="text-xs fa-solid fa-pen"></i>
                                 </a>
                                 <button type="button" title="Remove"

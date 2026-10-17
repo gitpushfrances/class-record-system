@@ -2,8 +2,8 @@
 
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h1 class="text-2xl font-bold" style="color:#f0dfc0;">Faculty</h1>
-        <p class="mt-1 text-sm" style="color:rgba(200,169,126,0.6);">Manage Deans, Program Heads, and Teachers.</p>
+        <h1 class="text-2xl font-bold" style="color:#fbf3d0;">Faculty</h1>
+        <p class="mt-1 text-sm" style="color:rgba(212,175,55,0.6);">Manage Deans, Program Heads, and Teachers.</p>
     </div>
     <a href="{{ route('admin.users.create') }}"
        class="inline-block px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700">

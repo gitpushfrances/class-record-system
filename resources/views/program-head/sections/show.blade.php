@@ -75,7 +75,7 @@
                         <option value="{{ $student->id }}">{{ $student->full_name }} — {{ $student->student_number }} ({{ $student->year_level }})</option>
                     @endforeach
                 </select>
-                <button type="submit" @disabled($availableStudents->isEmpty()) style="{{ $btn }} padding:8px 16px; color:#fff; background:#4f46e5; border:none;">
+                <button type="submit" @disabled($availableStudents->isEmpty()) style="{{ $btn }} padding:8px 16px; color:#fff; background:#0a5b05; border:none;">
                     <i class="fa-solid fa-user-plus"></i> Enroll
                 </button>
             </form>

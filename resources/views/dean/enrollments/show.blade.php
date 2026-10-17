@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <x-back-button :href="route('dean.enrollments.index')" label="Back to Enrollments" />
-                <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#1c1814;">
+                <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">
                     {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
                 </h1>
                 <p class="mt-1 text-sm text-gray-500">{{ $section->year_level }}</p>
@@ -53,7 +53,7 @@
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 text-sm font-semibold rounded-lg"
-                                    style="background:linear-gradient(135deg,#9a7a50,#c8a97e); color:#1c1814;">
+                                    style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
                                 Enroll Student
                             </button>
                         </form>
