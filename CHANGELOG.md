@@ -1307,6 +1307,11 @@ f
 - The patch checks every file for references before deleting it; tests: `DeadCodeTest`
 
 
+### Role access tests and deploy guide (Phase 7e)
+- `RoleAccessTest`: every main page of every role opened by every role: the owner gets 200, other roles 403, the Admin is sent to View As for Dean / Program Head pages, guests are sent to sign in; every role can open Profile
+- New `DEPLOY.md`: server requirements, first install (roles seeder only, real Admin account, never the sample seeders), update steps, grade recompute, backup routine (backups are not scheduled), smoke test by role, rollback
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1371,7 +1376,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [x] Dead code removed — done October 17, 2026 (Phase 7d)
 
 ### Before production
-- [ ] Change the default seeder passwords
+- [ ] Change the default seeder passwords (on the server: never run the sample seeders; see DEPLOY.md)
 - [ ] Server: `php artisan migrate`, `php artisan storage:link` (once), `npm run build`, `php artisan view:clear`, then `grades:recompute --apply`; back up the database first
 - [ ] Production `.env`: `APP_NAME`, `APP_ENV=production`, `APP_DEBUG=false`, HTTPS
 
