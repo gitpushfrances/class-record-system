@@ -1293,6 +1293,12 @@ f
 - Page scripts moved inside the layout (`@stack('scripts')`, `auth/partials/form-scripts.blade.php`); they were printed after `</html>` before; tests: `AuthPagesTest`
 
 
+### Light pages and test config (Phase 7c)
+- Backup & Restore, Create Account, Program Head Grade Verification and Grade Config converted from dark cards to light cards: white cards with `#e5e7eb` borders, `#1f2937` / `#6b7280` text, dark-green headings; red / green / amber status colours darkened for white backgrounds; gold buttons kept
+- `phpunit.xml`: `<coverage><include>` replaced by `<source><include>` (PHPUnit 10), which removes the "deprecated schema" warning
+- Checked: `@extends('layouts.app')` pages and `<x-sidebar-layout>` pages render the same layout (it prints both `$slot` and `@yield('content')`), so no conversion is needed; tests: `LightPagesTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1349,8 +1355,8 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Restore accepts only `.sql` / `.txt` and runs the upload through `DB::unprepared`; it cannot restore the `.zip` backups the system creates
 
 ### UI and dead code
-- [ ] Light-card conversion incomplete: `admin/backup/index`, `admin/users/create`, `program-head/dashboard`, `teacher/grades/config`
-- [ ] `dean/subjects/index` and `admin/subjects/index` still use `@extends('layouts.app')` instead of `<x-sidebar-layout>`
+- [x] Light-card conversion — done October 17, 2026 (Phase 7c)
+- [x] `@extends('layouts.app')` vs `<x-sidebar-layout>` — no change needed: both render the same layout (Phase 7c)
 - [ ] Reusable `<x-confirm-form>` not built; the SweetAlert2 CDN fallback is still patched per file
 - [ ] My Advisory and Class Record always list males before females, even when ordered by Student No.
 - [x] ESSU palette and the ESSU seal in place of the book icon — done October 17, 2026 (Phase 7a)
