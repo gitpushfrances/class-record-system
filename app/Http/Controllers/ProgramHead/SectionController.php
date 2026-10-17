@@ -308,22 +308,8 @@ class SectionController extends Controller
             }
         }
 
-        if ($currentTerm) {
-            $currentTerm->update([
-                'academic_year' => $activePeriod->school_year,
-                'semester'      => $activePeriod->semester,
-                'adviser_id'    => $request->adviser_id,
-            ]);
-        } else {
-            SectionTerm::create([
-                'section_id'    => $section->id,
-                'academic_year' => $activePeriod->school_year,
-                'semester'      => $activePeriod->semester,
-                'adviser_id'    => $request->adviser_id,
-                'status'        => 'active',
-            ]);
-        }
+        [$term, $closed] = \App\Services\TermRollover::setTerm($section, (int) $request->adviser_id, $activePeriod);
 
-        return redirect()->route('program-head.sections.index')->with('success', 'Term saved successfully.');
+        return redirect()->route('program-head.sections.index')->with('success', \App\Services\TermRollover::message($term, $closed));
     }
 }

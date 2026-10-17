@@ -1264,6 +1264,12 @@ f
 - Tests: `SubjectOfferingTest`
 
 
+### Term rollover (Phase 6e1)
+- Fixed: "Set Term" (Program Head and Dean) overwrote the active term's school year and semester with the new academic period, so last semester's enrollments, scores, final grades and ROG were relabeled as the new semester
+- New `App\Services\TermRollover::setTerm()`: same period changes only the adviser; a new period closes the old term (`completed`, records kept) and starts a new active term, in one transaction
+- Tests: `TermRolloverTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1306,6 +1312,8 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] General-education subjects owned by one program cannot be assigned to another program's section (assignment is program-only)
 - [ ] Assigned teacher is not checked to be an active teacher of the department on attach-subject / Assignments (dropdown filters only)
 - [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
+- [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
+- [ ] Set Term closes the old term even if some subjects were never submitted for verification; there is no warning yet
 - [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
 - [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role
