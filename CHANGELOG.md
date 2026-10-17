@@ -1318,6 +1318,11 @@ f
 - `ClassListLockTest`
 
 
+### Set Term warning (Phase 8b)
+- Set Term in a new period now lists the current term's subjects that are not verified (not submitted, awaiting verification, returned to the teacher) and closes the term only after "Close Term Anyway"; a closed term is no longer listed, so those subjects could not be finished afterwards
+- `TermRollover::unfinished`; Program Head and Dean Sections pages; `TermCloseWarningTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1361,7 +1366,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Assigned teacher is not checked to be an active teacher of the department on attach-subject / Assignments (dropdown filters only)
 - [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
 - [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
-- [ ] Set Term closes the old term even if some subjects were never submitted for verification; there is no warning yet
+- [x] Set Term warning for unverified subjects — done October 17, 2026 (Phase 8b)
 - [ ] Promotion cannot be undone from the UI (drop the students from the target section; the year level must be corrected by editing the student)
 - [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)

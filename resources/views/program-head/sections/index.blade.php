@@ -55,10 +55,55 @@
     </script>
     @endif
 
+    @if(session('term_close_warning'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const warning = @json(session('term_close_warning'));
+        const base    = @json(url('program-head/sections'));
+        const text    = 'Starting the new term closes the current one. These subjects are not verified, and they can no longer be submitted or verified once the term is closed:';
+
+        function proceed() {
+            const form = document.getElementById('confirmAdviserForm');
+            document.getElementById('confirmAdviserAdviserId').value = warning.adviser_id;
+            document.getElementById('confirmAdviserClose').value = '1';
+            form.action = base + '/' + warning.section_id + '/change-adviser';
+            form.submit();
+        }
+
+        if (typeof Swal === 'undefined') {
+            if (confirm(text + '\n - ' + warning.subjects.join('\n - ') + '\n\nClose the term anyway?')) proceed();
+            return;
+        }
+
+        const box  = document.createElement('div');
+        const intro = document.createElement('p');
+        const list = document.createElement('ul');
+        intro.textContent = text;
+        intro.style.cssText = 'color:#374151;text-align:left;';
+        list.style.cssText = 'margin:12px 0 0;padding-left:20px;list-style:disc;text-align:left;color:#0b3d0b;font-weight:600;';
+        warning.subjects.forEach(function (s) { const li = document.createElement('li'); li.textContent = s; list.appendChild(li); });
+        box.append(intro, list);
+
+        Swal.fire({
+            title: 'Subjects Not Verified',
+            html: box,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Close Term Anyway',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#b91c1c',
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true,
+        }).then(function (result) { if (result.isConfirmed) proceed(); });
+    });
+    </script>
+    @endif
+
     <form id="confirmAdviserForm" method="POST" class="hidden">
         @csrf
         <input type="hidden" name="confirmed" value="1">
         <input type="hidden" name="adviser_id" id="confirmAdviserAdviserId">
+        <input type="hidden" name="close_confirmed" id="confirmAdviserClose" value="0">
     </form>
 
     <div class="flex items-center justify-between mb-6">
