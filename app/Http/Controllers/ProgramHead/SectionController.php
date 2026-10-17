@@ -254,7 +254,9 @@ class SectionController extends Controller
         $term = $this->activeTermOfMyProgram($section);
         abort_unless($term->enrollments()->whereKey($enrollment->id)->exists(), 404);
 
-        \App\Services\SectionEnrollment::drop($enrollment);
+        if ($error = \App\Services\SectionEnrollment::drop($enrollment)) {
+            return back()->with('error', $error);
+        }
 
         return back()->with('success', "{$enrollment->student->full_name} dropped from the section. Grades and attendance are kept.");
     }

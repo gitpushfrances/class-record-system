@@ -76,7 +76,10 @@ class EnrollmentController extends Controller
         );
         abort_if($enrollment->section_term_id !== $sectionTerm->id, 404);
 
-        \App\Services\SectionEnrollment::drop($enrollment);
+        if ($error = \App\Services\SectionEnrollment::drop($enrollment)) {
+            return back()->with('error', $error);
+        }
+
         return back()->with('success', 'Student dropped from the section. Grades and attendance are kept.');
     }
 }

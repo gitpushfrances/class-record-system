@@ -1312,6 +1312,12 @@ f
 - New `DEPLOY.md`: server requirements, first install (roles seeder only, real Admin account, never the sample seeders), update steps, grade recompute, backup routine (backups are not scheduled), smoke test by role, rollback
 
 
+### Class list locked after submission (Phase 8a)
+- Fixed: a Program Head or Dean could drop (or re-enroll) a student from the section after a subject was submitted, which changed that subject's ROG to "Dr"
+- `SectionEnrollment::enroll` / `drop` refuse while any subject of the term is pending or verified, and name the subjects; the Program Head rejects the submission first (unverify, then reject, for a verified one). Same rule as the teacher Class List
+- `ClassListLockTest`
+
+
 ## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
@@ -1346,7 +1352,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] No UI to change a student's status
 - [ ] `Dean\StudentController@store` soft-duplicate name check is not department-scoped
 - [x] Global student search, per-subject class roster and student import — done October 17, 2026 (Phase 5b–5d)
-- [ ] A Program Head or Dean can drop a student from the section after a subject was submitted, which changes that subject's ROG to "Dr" (teacher Class List is locked; section-level drops are not)
+- [x] Section-level drop after a subject was submitted — fixed October 17, 2026 (Phase 8a: class list locked while any subject is pending or verified)
 
 ### Roles and accounts
 - [x] Admin all-access, Dean faculty management, departments / programs CRUD, subject year level and semester — done October 17, 2026 (Phase 6a–6d)
