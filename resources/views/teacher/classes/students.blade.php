@@ -8,7 +8,7 @@
     $badge = 'display:inline-block; margin-left:6px; padding:1px 8px; font-size:11px; font-weight:600; border-radius:9999px;';
 @endphp
 
-<div style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" /></div>
+<div style="margin-bottom:12px;"><x-back-button :href="\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" /></div>
 
 <div style="margin-bottom:20px;">
     <h1 style="margin:0; font-size:24px; font-weight:700; color:#1f2937;">Class List — {{ $subject->code }}</h1>
@@ -28,7 +28,8 @@
             <h2 style="margin:0; font-size:15px; font-weight:700; color:#111827;">Add a student</h2>
             <span style="font-size:12px; color:#6b7280;">Any program — for irregular students and retakes</span>
         </div>
-        <form method="GET" action="{{ route('teacher.classes.students', [$section, $subject]) }}" style="display:flex; flex-wrap:wrap; gap:8px; padding:14px 18px;">
+        <form method="GET" action="{{ \App\Services\TeacherNav::route('teacher.classes.students', [$section, $subject]) }}" style="display:flex; flex-wrap:wrap; gap:8px; padding:14px 18px;">
+            @include('teacher.partials.from-field')
             <input type="search" name="q" value="{{ $query }}" minlength="{{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }}" required autofocus
                    placeholder="Student number or name (at least {{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }} characters)"
                    style="flex:1; min-width:220px; padding:8px 12px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;">
@@ -52,7 +53,7 @@
                                 <td style="{{ $td }}">{{ $student->program?->code ?? '—' }}</td>
                                 <td style="{{ $td }}">{{ $student->year_level }}</td>
                                 <td style="{{ $td }} text-align:right;">
-                                    <form method="POST" action="{{ route('teacher.classes.students.store', [$section, $subject]) }}">
+                                    <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.classes.students.store', [$section, $subject]) }}">
                                         @csrf
                                         <input type="hidden" name="student_id" value="{{ $student->id }}">
                                         <button type="submit" style="{{ $btn }} color:#fff; background:#16a34a; border:none;"><i class="fa-solid fa-plus"></i> Add</button>
@@ -99,7 +100,7 @@
                         <td style="{{ $td }}">{{ $enrollment->student?->program?->code ?? '—' }}</td>
                         <td style="{{ $td }} text-align:right;">
                             @unless($locked)
-                                <form method="POST" action="{{ route('teacher.classes.students.destroy', [$section, $subject, $enrollment]) }}"
+                                <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.classes.students.destroy', [$section, $subject, $enrollment]) }}"
                                       onsubmit="return confirm('Drop this student from {{ $subject->code }}? Scores and attendance are kept, and the Report of Grades will show Dr.');">
                                     @csrf
                                     @method('DELETE')
@@ -137,7 +138,7 @@
                         </td>
                         <td style="{{ $td }} text-align:right;">
                             @if(!$locked && !$sectionDrop)
-                                <form method="POST" action="{{ route('teacher.classes.students.restore', [$section, $subject, $enrollment]) }}">
+                                <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.classes.students.restore', [$section, $subject, $enrollment]) }}">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Restore</button>

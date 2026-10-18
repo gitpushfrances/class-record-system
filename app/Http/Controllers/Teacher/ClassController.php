@@ -58,7 +58,7 @@ class ClassController extends Controller
 
         $config = $section->gradeConfigurationFor($subject->id);
         if (!$config) {
-            return redirect()->route('teacher.grades.config', [$section, $subject])
+            return redirect(\App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]))
                 ->with('warning', 'Set up grade configuration first.');
         }
 
@@ -117,7 +117,7 @@ class ClassController extends Controller
 
         $config = $section->gradeConfigurationFor($subject->id);
         if (!$config) {
-            return redirect()->route('teacher.grades.config', [$section, $subject])
+            return redirect(\App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]))
                 ->with('warning', 'Set up grade configuration before exporting.');
         }
 

@@ -10,5 +10,5 @@
             <input type="radio" name="has_laboratory" value="1" @checked($isLab)> Lecture and laboratory
         </label>
     </div>
-    <p class="mt-1 text-xs text-gray-500">Lecture and laboratory get separate schedules (they may be on the same day at different times) and separate attendance.</p>
+    <p class="mt-1 text-xs text-gray-500">Days and times are not set here. When you assign this subject to a section, you set the lecture schedule and the laboratory schedule separately, each with its own days and time. Attendance is also recorded separately.</p>
 </fieldset>

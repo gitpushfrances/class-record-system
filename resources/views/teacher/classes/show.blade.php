@@ -5,7 +5,8 @@
 
 {{-- Header --}}
 <div class="mb-6">
-    <x-back-button :href="route('teacher.dashboard')" label="Back to Dashboard" />
+    @php [$backUrl, $backLabel] = \App\Services\TeacherNav::sectionBack(); @endphp
+    <x-back-button :href="$backUrl" :label="$backLabel" />
     <h1 class="mt-1 text-2xl font-bold text-gray-800">
         {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
     </h1>
@@ -44,28 +45,28 @@
 
                 @if($row['isMine'])
                     <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-5">
-                        <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]) }}"
                            class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-gear"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Grade Config</div>
                         </a>
-                        <a href="{{ route('teacher.grades.items', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.items', [$section, $subject]) }}"
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-pen-to-square"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Grade Items</div>
                             <div class="text-xs text-gray-400 mt-0.5">{{ $row['itemCount'] }} item(s)</div>
                         </a>
-                        <a href="{{ route('teacher.grades.final', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.final', [$section, $subject]) }}"
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-graduation-cap"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Final Grades</div>
                         </a>
-                        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject]) }}"
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-chart-bar"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Class Record</div>
                         </a>
-                        <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]) }}"
                            class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-calendar-days"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Attendance</div>

@@ -48,7 +48,7 @@
                                 </div>
                             </div>
                         </div>
-                        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}"
+                        <a href="{{ route('teacher.classes.record', [$section, $subject, 'from' => 'dashboard']) }}"
                            onclick="event.stopPropagation()"
                            style="display:inline-block; padding:8px 16px; font-size:14px; font-weight:600; border-radius:8px; text-decoration:none; background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
                             Open Class

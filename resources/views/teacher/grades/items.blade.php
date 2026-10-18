@@ -1,7 +1,7 @@
 <x-sidebar-layout>
 
 <div class="mb-6">
-    <x-back-button :href="route('teacher.classes.record', [$section, $subject])" label="Back to Class" />
+    <x-back-button :href="\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" />
     <h1 class="mt-1 text-2xl font-bold text-gray-800">Grade Items</h1>
     <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
 </div>
@@ -17,7 +17,7 @@
     {{-- Add Item Form --}}
     <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
         <h2 class="mb-4 font-semibold text-gray-700">Add Grade Item</h2>
-        <form method="POST" action="{{ route('teacher.grades.items.store', [$section, $subject]) }}">
+        <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.grades.items.store', [$section, $subject]) }}">
             @csrf
             <div class="space-y-3">
 
@@ -116,11 +116,11 @@
                                                 {{ $item->date_given?->format('M d, Y') ?? '—' }}
                                             </td>
                                             <td class="px-5 py-2.5 text-center">
-                                                <a href="{{ route('teacher.grades.scores', [$section, $subject, $item]) }}"
+                                                <a href="{{ \App\Services\TeacherNav::route('teacher.grades.scores', [$section, $subject, $item]) }}"
                                                    class="mr-3 text-xs font-medium text-indigo-600 hover:underline">Enter Scores</a>
                                                 @if(!$item->is_locked)
                                                     <form method="POST"
-                                                          action="{{ route('teacher.grades.items.destroy', [$section, $subject, $item]) }}"
+                                                          action="{{ \App\Services\TeacherNav::route('teacher.grades.items.destroy', [$section, $subject, $item]) }}"
                                                           class="inline"
                                                           onsubmit="return confirm('Delete this item?')">
                                                         @csrf @method('DELETE')

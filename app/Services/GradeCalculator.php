@@ -135,6 +135,7 @@ class GradeCalculator
         }
 
         if ($missing) {
+            $result['incomplete_periods'] = array_keys($missing);
             $result['final_grade']       = null;
             $result['average_numerical'] = null;
             $result['numerical_grade']   = null;

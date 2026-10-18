@@ -31,6 +31,8 @@
                 const hasLab = !!option && option.dataset.lab === '1';
                 box.hidden = !hasLab;
                 box.querySelectorAll('input').forEach(function (input) { input.disabled = !hasLab; });
+                const title = select.form.querySelector('[data-schedule-title]');
+                if (title) title.textContent = hasLab ? 'Lecture schedule' : 'Class schedule';
             };
             select.addEventListener('change', sync);
             sync();
@@ -39,7 +41,7 @@
 </script>
 @endonce
 <div @if($prefix === 'lab') data-lab-schedule @endif>
-    @if($title)<div class="sched-title">{{ $title }}</div>@endif
+    @if($title)<div class="sched-title" @if($prefix === 'schedule') data-schedule-title @endif>{{ $title }}</div>@endif
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px;">
         <div>
             <span class="sched-label">{{ $prefix === 'lab' ? 'Laboratory days' : 'Class days' }}</span>

@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="px-5 py-3 border-t border-gray-100">
-                    <a href="{{ route('teacher.classes.show', $term->section) }}"
+                    <a href="{{ route('teacher.classes.show', [$term->section, 'from' => 'advisory']) }}"
                        class="block w-full py-2 text-sm font-semibold text-center transition rounded-lg"
                        style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;"
                        onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">

@@ -65,7 +65,7 @@ class GradeController extends Controller
             ['config_json' => $components, 'computation_method' => $request->input('computation_method'), 'status' => 'active']
         );
 
-        return redirect()->route('teacher.classes.record', [$section, $subject])
+        return redirect(\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject]))
             ->with('success', 'Grade configuration saved.');
     }
 
@@ -178,7 +178,7 @@ class GradeController extends Controller
             }
         });
 
-        return redirect()->route('teacher.grades.items', [$section, $subject])->with('success', 'Scores saved.');
+        return redirect(\App\Services\TeacherNav::route('teacher.grades.items', [$section, $subject]))->with('success', 'Scores saved.');
     }
 
     public function storeScore(Request $request, Section $section, Subject $subject, GradeItem $gradeItem)
@@ -343,7 +343,7 @@ class GradeController extends Controller
             ]
         );
 
-        return redirect()->route('teacher.grades.final', [$section, $subject])
+        return redirect(\App\Services\TeacherNav::route('teacher.grades.final', [$section, $subject]))
             ->with('success', 'Final grades submitted for verification.');
     }
 
@@ -388,7 +388,7 @@ class GradeController extends Controller
     private function requireConfig(Section $section, Subject $subject): void
     {
         if (!$section->gradeConfigurationFor($subject->id)) {
-            redirect()->route('teacher.grades.config', [$section, $subject])
+            redirect(\App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]))
                 ->with('warning', 'Set up grade configuration first.')
                 ->send();
             exit;
