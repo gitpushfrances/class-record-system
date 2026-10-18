@@ -94,6 +94,7 @@ class SectionController extends Controller
 
         $availableStudents = $currentTerm ? \App\Services\SectionEnrollment::availableStudents($currentTerm) : collect();
         $removableIds      = $currentTerm ? \App\Services\SectionEnrollment::removableIds($currentTerm, $currentTerm->enrollments) : [];
+        $lockedSubjects    = $currentTerm ? \App\Services\SectionEnrollment::lockedSubjects($currentTerm) : [];
 
         $droppedEnrollments = $currentTerm
             ? \App\Models\Enrollment::with('student')
@@ -103,7 +104,7 @@ class SectionController extends Controller
                 ->get()
             : collect();
 
-        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments', 'removableIds'));
+        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments', 'removableIds', 'lockedSubjects'));
     }
 
     public function edit(Section $section)

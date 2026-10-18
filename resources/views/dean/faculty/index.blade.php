@@ -20,13 +20,13 @@
     @endif
 </div>
 
-<form method="GET" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px;">
+<form method="GET" data-live-search style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px;">
     <a href="{{ route('dean.faculty.index') }}" style="{{ $tab($status === 'active') }}">Active ({{ $counts['active'] ?? 0 }})</a>
     <a href="{{ route('dean.faculty.index', ['status' => 'inactive']) }}" style="{{ $tab($status === 'inactive') }}">Inactive ({{ $counts['inactive'] ?? 0 }})</a>
     <input type="hidden" name="status" value="{{ $status }}">
-    <input type="search" name="search" value="{{ request('search') }}" placeholder="Search name or email…"
+    <input type="search" name="search" value="{{ request('search') }}" placeholder="Search name or email…" data-live-input
            style="flex:1 1 220px; max-width:320px; margin-left:auto; padding:8px 12px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;">
-    <button type="submit" style="{{ $btn }} padding:8px 14px; color:#fff; background:#0a5b05; border:none;">Search</button>
+    <button type="submit" data-live-button style="{{ $btn }} padding:8px 14px; color:#fff; background:#0a5b05; border:none;">Search</button>
 </form>
 
 <div style="{{ $card }}">

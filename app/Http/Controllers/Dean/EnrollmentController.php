@@ -39,6 +39,7 @@ class EnrollmentController extends Controller
             'currentTerm'        => $sectionTerm,
             'availableStudents'  => \App\Services\SectionEnrollment::availableStudents($sectionTerm),
             'removableIds'       => \App\Services\SectionEnrollment::removableIds($sectionTerm, $sectionTerm->enrollments),
+            'lockedSubjects'     => \App\Services\SectionEnrollment::lockedSubjects($sectionTerm),
             'droppedEnrollments' => Enrollment::with('student')
                 ->where('section_term_id', $sectionTerm->id)
                 ->where('type', Enrollment::TYPE_REGULAR)

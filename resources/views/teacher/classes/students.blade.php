@@ -28,12 +28,12 @@
             <h2 style="margin:0; font-size:15px; font-weight:700; color:#111827;">Add a student</h2>
             <span style="font-size:12px; color:#6b7280;">Any program — for irregular students and retakes</span>
         </div>
-        <form method="GET" action="{{ \App\Services\TeacherNav::route('teacher.classes.students', [$section, $subject]) }}" style="display:flex; flex-wrap:wrap; gap:8px; padding:14px 18px;">
+        <form method="GET" action="{{ \App\Services\TeacherNav::route('teacher.classes.students', [$section, $subject]) }}" data-live-search style="display:flex; flex-wrap:wrap; gap:8px; padding:14px 18px;">
             @include('teacher.partials.from-field')
-            <input type="search" name="q" value="{{ $query }}" minlength="{{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }}" required autofocus
+            <input type="search" name="q" value="{{ $query }}" minlength="{{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }}" required autofocus data-live-input
                    placeholder="Student number or name (at least {{ \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH }} characters)"
                    style="flex:1; min-width:220px; padding:8px 12px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;">
-            <button type="submit" style="{{ $btn }} padding:8px 16px; color:#fff; background:#0a5b05; border:none;"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <button type="submit" data-live-button style="{{ $btn }} padding:8px 16px; color:#fff; background:#0a5b05; border:none;"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
         </form>
 
         @if(mb_strlen($query) >= \App\Http\Controllers\Teacher\SubjectRosterController::MIN_SEARCH)

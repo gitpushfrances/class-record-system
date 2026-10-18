@@ -12,3 +12,5 @@
     .border-indigo-300, .border-indigo-400, .border-indigo-500, .border-indigo-600, .border-indigo-700 { border-color: #3f8f3a !important; }
     .focus\:ring-indigo-400:focus, .focus\:ring-indigo-500:focus { --tw-ring-color: rgba(10, 91, 5, .45) !important; }
 </style>
+{{-- SweetAlert2 dialogs use the ESSU green unless a dialog sets its own colors. --}}
+<script>if (window.Swal) { window.Swal = window.Swal.mixin({ confirmButtonColor: '#0a5b05', cancelButtonColor: '#6b7280' }); }</script>

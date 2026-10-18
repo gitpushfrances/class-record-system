@@ -112,5 +112,6 @@
         </div>
     </div>
 
+    @include('layouts.partials.live-search')
 </body>
 </html>

@@ -26,7 +26,7 @@
         .filter-select.is-active { border-color:#d4af37; background-color:#fbf7e6; font-weight:600; }
         .filter-select:focus { outline:none; border-color:#d4af37; box-shadow:0 0 0 2px rgba(212,175,55,.25); }
     </style>
-    <form method="GET" class="mb-4" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;">
+    <form method="GET" class="mb-4" data-live-search style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem;">
         <select name="year_level" onchange="this.form.submit()" class="filter-select {{ request()->filled('year_level') ? 'is-active' : '' }}">
             <option value="">All Years</option>
             @foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $level)
@@ -42,10 +42,10 @@
         </select>
         <div style="position:relative; flex:1 1 260px; max-width:360px;">
             <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:12px; color:#9ca3af; pointer-events:none;"></i>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, ID, or email…" autocomplete="off"
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, ID, or email…" autocomplete="off" data-live-input
                    class="text-sm border rounded-lg" style="width:100%; height:38px; padding:0 12px 0 34px; border-color:#d1d5db; background:#fff;">
         </div>
-        <button type="submit" class="text-sm font-semibold rounded-lg" style="height:38px; padding:0 16px; background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">Search</button>
+        <button type="submit" data-live-button class="text-sm font-semibold rounded-lg" style="height:38px; padding:0 16px; background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">Search</button>
         @if(request()->filled('search') || request()->filled('year_level') || request()->filled('section_id'))
             <a href="{{ route('program-head.students.index') }}" class="text-sm text-gray-500 hover:text-gray-800" style="display:inline-flex; align-items:center; gap:4px;">
                 <i class="text-xs fa-solid fa-xmark"></i> Clear
