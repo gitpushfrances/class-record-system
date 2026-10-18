@@ -6,12 +6,12 @@
 **PHP Version:** 8.4.11  
 **Node Version:** 18.20.8  
 **Started:** February 8, 2026  
-**Current Release:** v1.0-rc1 (October 17, 2026), client testing  
-**Automated Tests:** 176 passing  
+**Current Release:** v1.0-rc2 (October 19, 2026), client testing  
+**Automated Tests:** 214 passing  
 
 ---
 
-## SYSTEM FLOW — ROLES AND RULES (v1.0-rc1, October 17, 2026)
+## SYSTEM FLOW — ROLES AND RULES (v1.0-rc2, October 19, 2026)
 
 This replaces the original February plan. It describes what the system does today.
 
@@ -20,32 +20,33 @@ This replaces the original February plan. It describes what the system does toda
 - **View As**: open the system as the Dean of a department or the Program Head of a program, to see and act on their pages (banner shows "Viewing as"; Exit returns to Admin)
 - **Faculty**: create accounts for any role, approve or reject sign-up requests, activate / deactivate, change role
 - **Subjects**: all departments; approve or reject pending subject requests
-- **Departments**: add / edit departments and programs; drill down to sections and students
+- **Departments**: add / edit departments and programs, deactivate / activate or delete (delete only while unused); drill down to sections and students
 - **Academic Period**: add a school year and semester with midterm and finals cutoff dates; set one period active
 - **Backup & Restore**: run a backup, download, delete, restore (`.sql` / `.txt` only)
 - **ROG Settings**: logos, form code, version, effectivity date, Registrar name
 
 ### Dean (own department only)
 - **Faculty**: department teachers, activate / deactivate, approve or reject pending teacher sign-ups
-- **Sections**: view sections, Set Term / Change Adviser, view the Report of Grades
+- **Sections**: view sections, assign subjects with teacher and lecture / laboratory schedules (same panel as the Program Head), Set Term / Change Adviser, view the Report of Grades
 - **Students**: department master list; add, edit, import from Excel
 - **Subjects**: approve or reject Program Head subject requests
-- **Assignments**: assign a teacher and class schedule to a section's subject
-- **Enrollments**: enroll or drop students per section term
+- **Assignments**: assign a teacher with lecture and laboratory schedules to a section's subject; Schedule column; Edit opens the section page
+- **Enrollments**: enroll by search, drop, or remove a student enrolled by mistake; dropped list with Re-enroll
 - **Promotion**: move a section's students to the next year level and a target section
 - **Program Heads**: assign or remove the Program Head of each program
 
 ### Program Head (own program only)
 - **Grade Verification**: review submitted subjects; Verify, Reject (with a reason, sends it back to the teacher), Undo Verification; View Report of Grades
-- **Sections**: create / edit sections, assign subjects with teacher and schedule, enroll and drop students, Set Term / Change Adviser
+- **Sections**: create / edit sections, assign subjects with teacher and lecture / laboratory schedules, Set Term / Change Adviser; **Manage Students** on the section card: enroll by search, drop, remove a student enrolled by mistake, re-enroll
 - **Students**: program master list; add, edit, import from Excel
 - **Promotion**: same as the Dean, own program only
-- **Subjects**: request new subjects with year level and semester (pending until the Dean approves); edit while pending
+- **Subjects**: request new subjects with year level, semester and subject type (lecture only, or lecture and laboratory), pending until the Dean approves; edit while pending
 
 ### Teacher
 - Requests an account from the sign-in page; pending until the Dean or Admin approves
 - **Dashboard**, **My Advisory** (advisory section roster), **My Subjects**
-- Per subject: **Grade Config** (components, weights = 100%, conversion: standard table, major formula 5 − 4(S/TS), minor formula 4 − 3(S/TS)), **Class Record** (+ Add items, inline scores, Print, Export Excel), **Attendance** (present / absent; lecture and laboratory separately for lab subjects), **Students** (add irregular students, drop / restore per subject), **Final Grades**, **Submit for Verification**, **Report of Grades**
+- Per subject: **Grade Config** (components, weights = 100%, conversion: standard table, major formula 5 − 4(S/TS), minor formula 4 − 3(S/TS)), **Class Record** (+ Add items, inline scores, Midterm Grade and Finals Grade columns, Print, Export Excel), **Attendance** (present / absent; lecture and laboratory separately for lab subjects), **Students** (add irregular students, drop / restore per subject, remove one added by mistake), **Final Grades**, **Submit for Verification**, **Report of Grades**
+- Back buttons lead to where the class was opened from (My Subjects, My Advisory or Dashboard)
 
 ### Key rules
 - Every role sees only its own department / program; other roles' pages return 403 (`RoleAccessTest`)
@@ -55,8 +56,27 @@ This replaces the original February plan. It describes what the system does toda
 - Dropping a student keeps all records; the Report of Grades prints "Dr"
 - Set Term in a new period closes the old term (records kept) and starts a new one; it warns first when subjects are not verified, because a closed term can no longer be submitted or verified
 - Promotion cannot be undone from the UI
+- A student belongs to one regular section per semester; irregular students are added per subject by the subject teacher
+- Remove deletes an enrollment only while it has no scores, attendance or final grade and nothing is submitted; otherwise the student is dropped (records kept, "Dr" on the ROG)
+- A subject with a laboratory has a lecture schedule and a laboratory schedule on the same assignment (same day allowed at different times); both are checked for conflicts and both print on the ROG
+- Search boxes search while typing; each typed word must match the start of a name or of a student-number part, and an e-mail is searched only when the word contains "@"; the matched letters are highlighted
 
 ---
+
+## RELEASE v1.0-rc2 — October 19, 2026 (client testing, round 2)
+
+Tag `v1.0-rc2` on `main`. 214 automated tests passing. Client testing steps: the v1.0-rc2 Client Testing Guide (Word / PDF, sent to the client; not in the repository). Server install: `DEPLOY.md`.
+
+### What this release contains (Phase 9: the client's round-2 issues)
+- **9a — Lecture and laboratory**: subject type on Request Subject; one assignment holds a lecture and a laboratory schedule (same day allowed); conflicts checked on both; ROG prints both; one assignment service (`SubjectAssignment`) for the Program Head, the Dean's section page and Dean Assignments, with an active-teacher check; "Lec + Lab" on the subject lists
+- **9b — Class Record**: Midterm Grade and Finals Grade columns (also in the Excel export); back buttons follow `?from=` (My Subjects, My Advisory, Dashboard)
+- **9c — Enrollment**: one regular section per student per semester; enroll by search; Remove for a student enrolled by mistake (no records yet); Dean Enrollments with separate Drop / Remove and a Dropped list; "Manage Students" link on the Program Head section card
+- **9e — Search and locks**: every search box searches while typing; names and student numbers match from the start of a word and are highlighted; a locked class list shows a notice instead of enrollment controls; ESSU-green dialog buttons
+- **9f1 — Departments and programs**: errors shown once (inside the dialog); program examples; deactivate / activate and delete (delete only while unused, removed for good so the code can be reused); `mysqldump` folder from `.env` (`DB_DUMP_PATH`)
+
+### Waiting for the client (guide Part 9)
+- **D1 / D6 (Sir Roger)**: formula vs. printed legend, and component grade = total ÷ total (current) or average of item percentages. They decide every grade; get them in writing before real grades are entered
+- **D7** teachers from other departments (any subject, or GE only) · **D8** programs with majors · **D9** lecture / laboratory units · **D10** absence warning at 3 or 4 · **D11** the exact Backup error, if it still fails
 
 ## RELEASE v1.0-rc1 — October 17, 2026 (client testing)
 
@@ -1208,7 +1228,45 @@ f
 - `TermRollover::unfinished`; Program Head and Dean Sections pages; `TermCloseWarningTest`
 
 
-## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 17, 2026)
+## QA FIXES & PATCHES — October 18–19, 2026 (client round 2)
+
+### Lecture and laboratory schedules (Phase 9a)
+- Client: a subject with lecture and laboratory on different days and times, same teacher, could not be assigned ("A teacher is already assigned to that subject"); one assignment had one schedule only
+- `section_subject_teachers.lab_days / lab_start / lab_end` (migration `2026_10_18_000100`); `ClassSchedule` checks the lecture against its laboratory and both against every other subject's schedules; `ClassSchedule::summary` prints "Lec …; Lab …"
+- `SubjectAssignment` service used by the Program Head section page, the Dean section page and Dean Assignments (before: three copies; the Dean section page could not change the schedule); refuses an inactive teacher; "already assigned … Use Edit"
+- Subject type radio (lecture only / lecture and laboratory) on Request / Edit Subject; "Lec + Lab" badge on Program Head, Dean and Admin subject lists
+- Tests: `LabScheduleTest`
+
+### Class Record grades and back buttons (Phase 9b)
+- Midterm Grade and Finals Grade columns after each period's components, live-updated, INC per period (`GradeCalculator::applyInc` adds `incomplete_periods` when a period is INC); same columns in the Excel export
+- `TeacherNav`: `?from=teaching|advisory|dashboard` carried through the class pages and redirects; Grade Config, Attendance, Students, Final Grades and Items lead back to the Class Record; Class Record back to its origin; unknown values fall back to My Subjects
+- Tests: `ClassRecordNavigationTest`
+
+### Enrollment (Phase 9c)
+- One regular section per student per semester (`SectionEnrollment::otherSection`); the enroll list offers only students without a section this semester (`availableStudents`)
+- Enroll by search (`partials/student-picker`); Remove for an enrollment made by mistake (`SectionEnrollment::remove`, `removableIds`; teacher: irregular students of that subject only), refused once there are scores, attendance or final grades
+- Found: the Dean's "Remove" icon actually dropped the student; now separate Drop and Remove, plus a Dropped list with Re-enroll
+- Found: no link led to the Program Head section page (enrollment); "Manage Students" added to the section card
+- Tests: `EnrollmentRulesTest`, `SectionEnrollmentTest`
+
+### Search and locked class list (Phase 9e)
+- Search while typing (`layouts/partials/live-search`, debounce 400 ms; minlength respected); Search buttons hidden
+- `NameSearch` (server) and `EssuSearch` (browser), one rule: every typed word must start a word of the last / first name or a student-number part; e-mail only with "@"; matches highlighted. Before, "de" matched every "student.test" e-mail
+- Locked class list: notice instead of enroll / drop / remove / re-enroll while a subject is submitted or verified
+- SweetAlert2 buttons in ESSU green by default
+- Tests: `LiveSearchAndLockNoticeTest`, `SearchRuleTest`, `NameSearchTest`
+
+### Departments and programs (Phase 9f1)
+- Errors of the code / name dialogs shown once, inside the dialog (the layout popup is skipped for dialog forms)
+- Program dialogs show program examples (BSIT / Bachelor of Science in Information Technology)
+- Deactivate / Activate (programs.status gains `inactive`, migration `2026_10_19_000100`) and Delete (only while unused; `forceDelete`, since a soft-deleted row kept the code taken)
+- `DB_DUMP_PATH` in `.env` for the `mysqldump` folder (default `C:/xampp/mysql/bin/`)
+- Tests: `AdminDepartmentStatusTest`
+
+### Test safety
+- If tests fail with database errors and 0 assertions, recreate the test database: `DROP DATABASE class_record_test; CREATE DATABASE class_record_test …` (an interrupted run left foreign-key leftovers in it, October 18)
+
+## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 19, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
 
@@ -1217,6 +1275,11 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Confirm the Registrar name on Admin → ROG Settings (sample form: REGINA L. DOCENA, DBA)
 - [ ] Default grade-configuration components still include "Security" (20%, Finals) in `teacher/grades/config.blade.php`; confirm the default Finals components with the client
 - [ ] Teacher double-booking (same teacher, two sections, same time) is not checked; only subjects inside the same section are (`ClassSchedule::conflict`)
+- [ ] Component grade: total ÷ total (current, DepEd style) or average of item percentages (client's wording) — Sir Roger (guide D6); blocks 9d
+- [ ] Teachers from other departments (e.g. GE subjects): any subject or GE only (guide D7)
+- [ ] Programs with majors (BSED English / Filipino): Major field or duplicate codes (guide D8); blocks 9f2
+- [ ] Lecture and laboratory units shown separately? (guide D9)
+- [ ] Consecutive-absence warning at 3 or 4 (guide D10; currently 3)
 
 ### Grading (Phase 2)
 - [ ] Run `php artisan grades:recompute` then `--apply` on the client server after deploy; stored `final_grades` keep old values until then
@@ -1228,11 +1291,11 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] The old Grade Items and Scores pages still exist alongside "+ Add" and inline entry in the Class Record
 - [ ] Inline score save re-fetches the whole Class Record page for every cell (slow on large classes)
 - [ ] Attendance migration `down()` fails when a student has lecture and laboratory records on the same date; converted late / excused marks cannot be restored
-- [ ] The Dean's subject approval pages do not show the "Has laboratory" flag
+- [x] The Dean's subject approval pages show the subject type — done October 18, 2026 (Phase 9a)
 
 ### Report of Grades (Phase 4)
 - [x] "Dr" (dropped) does not print — fixed October 17, 2026 (Phase 5a soft drop)
-- [ ] Dean → Assignments can set a schedule only when assigning; changing it later means remove and re-assign (the Program Head can edit it)
+- [x] Dean → Assignments schedule can be changed — done October 18, 2026 (Phase 9a: Edit opens the Dean's section page, same panel as the Program Head)
 - [ ] Faculty without structured names (last / first name) print their old single `name` on the ROG signature block
 - [ ] Students with no gender set print on an extra "GENDER NOT SET" page
 
@@ -1248,7 +1311,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [x] Admin all-access, Dean faculty management, departments / programs CRUD, subject year level and semester — done October 17, 2026 (Phase 6a–6d)
 - [ ] Subjects with no semester set are still assignable in any term; once every subject has a year level and semester, make `SubjectOffering` refuse unset ones
 - [ ] General-education subjects owned by one program cannot be assigned to another program's section (assignment is program-only)
-- [ ] Assigned teacher is not checked to be an active teacher of the department on attach-subject / Assignments (dropdown filters only)
+- [ ] Assigned teacher's department is not checked on the server — active-teacher check done October 18, 2026 (Phase 9a, `SubjectAssignment`); the department rule waits for D7 (teachers from other departments)
 - [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
 - [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
 - [x] Set Term warning for unverified subjects — done October 17, 2026 (Phase 8b)
@@ -1257,12 +1320,13 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] Rejected sign-ups see the "deactivated" message and cannot re-register with the same email (`unique:users,email`)
 - [ ] `UserController@storeAccount` assigns the Spatie role only for `program_head`; `update()` and approval sync every role
 - [ ] Teacher `program_id` is stored but no query scoping by it has been verified
-- [ ] `Dean\SectionController@attachSubject` / `@changeSubjectTeacher` duplicate the Assignments page; decide which one stays
+- [x] Dean section page and Assignments duplicated the assignment rules — both use `SubjectAssignment` since October 18, 2026 (Phase 9a)
 - [ ] Sweep Phases 1–8 for `nullable` combined with `required_if` and for `$fillable` gaps (not started)
 
 ### Backup
 - [ ] Restore accepts only `.sql` / `.txt` and runs the upload through `DB::unprepared`; it cannot restore the `.zip` backups the system creates
-- [ ] `mysqldump` path is hardcoded to `C:/xampp/mysql/bin/` in `config/database.php`; backups fail on a Linux server or another XAMPP folder. Move it to `.env` before deploying
+- [x] `mysqldump` path from `.env` (`DB_DUMP_PATH`) — done October 19, 2026 (Phase 9f1)
+- [ ] The client reported "Run Backup not working"; waiting for the exact error message (guide D11)
 - [ ] Backups are not scheduled (see `DEPLOY.md` §5)
 
 ### UI and dead code
@@ -1273,9 +1337,9 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [x] ESSU palette and the ESSU seal in place of the book icon — done October 17, 2026 (Phase 7a)
 - [x] Dead code removed — done October 17, 2026 (Phase 7d)
 
-### Client testing (v1.0-rc1)
-- [ ] Client runs `CLIENT-TESTING-GUIDE.txt` and returns the step marks and bug reports
-- [ ] Answers to decisions D1–D5 (guide PART 9) recorded under "Decisions and sign-offs"
+### Client testing (v1.0-rc2)
+- [ ] Client runs the v1.0-rc2 Client Testing Guide (Word / PDF) and returns the step marks and bug reports
+- [ ] Answers to decisions D1–D11 (guide Part 9) recorded under "Decisions and sign-offs"
 - [ ] INC rule confirmed with the client: a zero total in any weighted component (for example absent at every session) makes the period INC, not failed
 
 ### Before production
@@ -1287,27 +1351,27 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 
 ## ROADMAP (after client testing)
 
-### Next — v1.0-rc2: fixes from client testing
-- Bugs reported through `CLIENT-TESTING-GUIDE.txt` (PART 10), sorted into bugs, client decisions and misunderstandings before any code changes
-- Client decisions D1–D5 (guide PART 9): grade formula vs. ROG legend, Registrar name, default Finals components, teacher double-booking, INC rule
-- 8c server-side teacher check on assignment, 8d undo last promotion, `mysqldump` path in `.env`
+### Next — v1.0-rc3: client decisions and round-3 reports
+- 9d component grade computation (after D6), 9f2 programs with majors (after D8), teachers from other departments (after D7), lecture / laboratory units (after D9)
+- Bugs reported through the Client Testing Guide (Part 10), sorted into bugs, client decisions and misunderstandings before any code changes
+- 8d undo last promotion; completed terms browsable by teachers
 
-### Phase 9: Reporting & Analytics (planned)
+### Later: Reporting & Analytics (planned)
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
 - Dean: department-wide stats, teacher performance, section comparison, consolidated reports
 - Activity logs — grade changes, login history, export to Excel
 
-### Phase 10: UI/UX (partly done)
+### UI/UX (partly done)
 - Done: SweetAlert2 confirmations with native fallbacks, inline score entry on the Class Record (Phase 3), gender filter and order toggle on the Class Record and My Advisory, ESSU palette and light pages (Phase 7)
 - Open: breadcrumbs, mobile audit, keyboard navigation (Tab / Enter / arrows) between score cells, reusable `<x-confirm-form>`
 
-### Phase 11: Testing & Deployment (partly done)
-- Done: 176 automated tests (role access, grading and INC, Report of Grades, enrollment and class list lock, term rollover, promotion), separate `class_record_test` database, login rate limiting (5 attempts), `DEPLOY.md`
+### Testing & Deployment (partly done)
+- Done: 214 automated tests (role access, grading and INC, Report of Grades, enrollment rules and class list lock, lecture and laboratory schedules, search, term rollover, promotion), separate `class_record_test` database, login rate limiting (5 attempts), `DEPLOY.md`
 - Open: production server with HTTPS, scheduled backups, real Admin account and no sample seeders on the server, `grades:recompute --apply` after deploy
 
 ---
 
-**Last Updated:** October 17, 2026  
-**Current Release:** v1.0-rc1 (client testing)  
-**Next Milestone:** v1.0-rc2 — fixes from client testing  
+**Last Updated:** October 19, 2026  
+**Current Release:** v1.0-rc2 (client testing)  
+**Next Milestone:** v1.0-rc3 — client decisions (D1–D11) and round-3 reports  
 **Maintained By:** Frances Igop
