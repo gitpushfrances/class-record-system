@@ -92,13 +92,8 @@ class SectionController extends Controller
             ->orderBy('name')
             ->get();
 
-        $availableStudents = $currentTerm
-            ? \App\Models\Student::where('program_id', $section->program_id)
-                ->where('status', 'active')
-                ->whereNotIn('id', $currentTerm->enrollments->pluck('student_id'))
-                ->orderBy('last_name')->orderBy('first_name')
-                ->get()
-            : collect();
+        $availableStudents = $currentTerm ? \App\Services\SectionEnrollment::availableStudents($currentTerm) : collect();
+        $removableIds      = $currentTerm ? \App\Services\SectionEnrollment::removableIds($currentTerm, $currentTerm->enrollments) : [];
 
         $droppedEnrollments = $currentTerm
             ? \App\Models\Enrollment::with('student')
@@ -108,7 +103,7 @@ class SectionController extends Controller
                 ->get()
             : collect();
 
-        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments'));
+        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments', 'removableIds'));
     }
 
     public function edit(Section $section)
@@ -239,6 +234,19 @@ class SectionController extends Controller
         }
 
         return back()->with('success', "{$enrollment->student->full_name} dropped from the section. Grades and attendance are kept.");
+    }
+
+    public function removeStudent(Section $section, \App\Models\Enrollment $enrollment)
+    {
+        $term = $this->activeTermOfMyProgram($section);
+        abort_unless($term->enrollments()->whereKey($enrollment->id)->exists(), 404);
+
+        $name = $enrollment->student->full_name;
+        if ($error = \App\Services\SectionEnrollment::remove($enrollment)) {
+            return back()->with('error', $error);
+        }
+
+        return back()->with('success', "{$name} removed from the section.");
     }
 
     private function activeTermOfMyProgram(Section $section): SectionTerm

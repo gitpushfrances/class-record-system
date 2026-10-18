@@ -67,18 +67,13 @@
                 <span style="font-size:12px; color:#6b7280;">{{ $currentTerm->enrollments->count() }} {{ \Illuminate\Support\Str::plural('student', $currentTerm->enrollments->count()) }}</span>
             </div>
 
-            <form method="POST" action="{{ route('program-head.sections.enroll', $section) }}" style="display:flex; flex-wrap:wrap; gap:8px; padding:16px 24px; border-bottom:1px solid #f3f4f6;">
-                @csrf
-                <select name="student_id" required style="flex:1; min-width:220px; padding:8px 12px; font-size:14px; border:1px solid #d1d5db; border-radius:8px;">
-                    <option value="">{{ $availableStudents->isEmpty() ? 'All active students in this program are enrolled' : 'Select a student to enroll…' }}</option>
-                    @foreach($availableStudents as $student)
-                        <option value="{{ $student->id }}">{{ $student->full_name }} — {{ $student->student_number }} ({{ $student->year_level }})</option>
-                    @endforeach
-                </select>
-                <button type="submit" @disabled($availableStudents->isEmpty()) style="{{ $btn }} padding:8px 16px; color:#fff; background:#0a5b05; border:none;">
-                    <i class="fa-solid fa-user-plus"></i> Enroll
-                </button>
-            </form>
+            <div style="padding:16px 24px; border-bottom:1px solid #f3f4f6;">
+                @include('partials.student-picker', [
+                    'action'    => route('program-head.sections.enroll', $section),
+                    'students'  => $availableStudents,
+                    'emptyText' => 'Every active student of this program is already in a section this semester.',
+                ])
+            </div>
 
             @if($currentTerm->enrollments->isEmpty())
                 <p style="margin:0; padding:16px 24px; font-size:14px; color:#9ca3af;">No students enrolled yet.</p>
@@ -93,8 +88,16 @@
                             <tr>
                                 <td style="{{ $td }} font-family:monospace;">{{ $enrollment->student?->student_number }}</td>
                                 <td style="{{ $td }}">{{ $enrollment->student?->full_name }}</td>
-                                <td style="{{ $td }} text-align:right;">
-                                    <form method="POST" action="{{ route('program-head.sections.drop', [$section, $enrollment]) }}"
+                                <td style="{{ $td }} text-align:right; white-space:nowrap;">
+                                    @if(in_array($enrollment->id, $removableIds, true))
+                                        <form method="POST" action="{{ route('program-head.sections.remove', [$section, $enrollment]) }}" style="display:inline;"
+                                              onsubmit="return confirm('Remove this student from the section? Use this only for a student added by mistake: the enrollment is deleted.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Remove</button>
+                                        </form>
+                                    @endif
+                                    <form method="POST" action="{{ route('program-head.sections.drop', [$section, $enrollment]) }}" style="display:inline;"
                                           onsubmit="return confirm('Drop this student from the section? Grades and attendance are kept, and the Report of Grades will show Dr.');">
                                         @csrf
                                         @method('DELETE')

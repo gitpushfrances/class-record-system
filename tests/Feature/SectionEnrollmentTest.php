@@ -93,6 +93,14 @@ class SectionEnrollmentTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_sections_page_links_to_the_section_page(): void
+    {
+        $this->actingAs($this->programHead)->get(route('program-head.sections.index'))
+            ->assertOk()
+            ->assertSee('Manage Students')
+            ->assertSee(route('program-head.sections.show', $this->section), false);
+    }
+
     public function test_teacher_section_level_enrollment_is_retired(): void
     {
         $this->assertFalse(Route::has('teacher.classes.enroll'));

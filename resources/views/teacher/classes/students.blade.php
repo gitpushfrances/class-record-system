@@ -99,8 +99,16 @@
                         </td>
                         <td style="{{ $td }}">{{ $enrollment->student?->program?->code ?? '—' }}</td>
                         <td style="{{ $td }} text-align:right;">
+                            @if(in_array($enrollment->id, $removable, true))
+                                <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.classes.students.remove', [$section, $subject, $enrollment]) }}" style="display:inline;"
+                                      onsubmit="return confirm('Remove this student from {{ $subject->code }}? Use this only for a student added by mistake.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Remove</button>
+                                </form>
+                            @endif
                             @unless($locked)
-                                <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.classes.students.destroy', [$section, $subject, $enrollment]) }}"
+                                <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.classes.students.destroy', [$section, $subject, $enrollment]) }}" style="display:inline;"
                                       onsubmit="return confirm('Drop this student from {{ $subject->code }}? Scores and attendance are kept, and the Report of Grades will show Dr.');">
                                     @csrf
                                     @method('DELETE')

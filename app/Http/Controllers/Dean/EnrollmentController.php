@@ -33,16 +33,17 @@ class EnrollmentController extends Controller
         );
 
         $sectionTerm->load(['section.program', 'enrollments.student']);
-        $enrolledStudentIds = $sectionTerm->enrollments->pluck('student_id');
-        $availableStudents = Student::where('program_id', $sectionTerm->section->program_id)
-            ->whereNotIn('id', $enrolledStudentIds)
-            ->orderBy('student_number')
-            ->get();
 
         return view('dean.enrollments.show', [
             'section'            => $sectionTerm->section,
             'currentTerm'        => $sectionTerm,
-            'availableStudents'  => $availableStudents,
+            'availableStudents'  => \App\Services\SectionEnrollment::availableStudents($sectionTerm),
+            'removableIds'       => \App\Services\SectionEnrollment::removableIds($sectionTerm, $sectionTerm->enrollments),
+            'droppedEnrollments' => Enrollment::with('student')
+                ->where('section_term_id', $sectionTerm->id)
+                ->where('type', Enrollment::TYPE_REGULAR)
+                ->where('status', Enrollment::STATUS_DROPPED)
+                ->get(),
         ]);
     }
 
@@ -81,5 +82,22 @@ class EnrollmentController extends Controller
         }
 
         return back()->with('success', 'Student dropped from the section. Grades and attendance are kept.');
+    }
+
+    public function remove(SectionTerm $sectionTerm, Enrollment $enrollment)
+    {
+        abort_if(
+            $sectionTerm->section->program->department_id !== \App\Services\Scope::departmentId(),
+            403,
+            'This section does not belong to your department.'
+        );
+        abort_unless($sectionTerm->enrollments()->whereKey($enrollment->id)->exists(), 404);
+
+        $name = $enrollment->student->full_name;
+        if ($error = \App\Services\SectionEnrollment::remove($enrollment)) {
+            return back()->with('error', $error);
+        }
+
+        return back()->with('success', "{$name} removed from the section.");
     }
 }

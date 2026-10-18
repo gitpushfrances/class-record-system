@@ -218,7 +218,12 @@
                                             <button type="submit" class="text-sm text-red-600 hover:text-red-800" onclick="return confirm('Delete this section? This cannot be undone if students are enrolled.')">Delete</button>
                                         </form>
                                     </div>
-                                    <button onclick="closeSectionModal({{ $section->id }})" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Close</button>
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('program-head.sections.show', $section) }}" class="px-4 py-2 text-sm font-semibold text-white rounded hover:opacity-90" style="background:#0a5b05;">
+                                            <i class="fa-solid fa-users"></i> Manage Students
+                                        </a>
+                                        <button onclick="closeSectionModal({{ $section->id }})" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">Close</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
