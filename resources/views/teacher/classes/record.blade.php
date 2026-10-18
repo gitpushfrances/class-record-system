@@ -1,5 +1,6 @@
 <x-sidebar-layout>
-<div class="no-print" style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.show', $section)" label="Back to Class" /></div>
+@php [$backUrl, $backLabel] = \App\Services\TeacherNav::recordBack($section); @endphp
+<div class="no-print" style="margin-bottom:12px;"><x-back-button :href="$backUrl" :label="$backLabel" /></div>
 
 {{-- Header --}}
 @php
@@ -7,7 +8,9 @@
     $failedCount = collect($liveGrades)->where('remarks', 'failed')->count();
     $gender = in_array(request('gender'), ['male', 'female'], true) ? request('gender') : 'all';
     $order = request('order') === 'id' ? 'id' : 'name';
-    $totalCols = 6 + collect($matrix)->sum(fn($c) => $c['type'] === 'attendance' ? 2 : $c['items']->count() + 1);
+    // Last component of each period: its Midterm Grade / Finals Grade column comes right after it.
+    $lastOfPeriod = collect($matrix)->groupBy('period')->map(fn ($c) => $c->last()['key'])->all();
+    $totalCols = 6 + count($lastOfPeriod) + collect($matrix)->sum(fn($c) => $c['type'] === 'attendance' ? 2 : $c['items']->count() + 1);
 @endphp
 <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
     <div>
@@ -27,27 +30,27 @@
         </div>
     </div>
     <div class="flex flex-wrap gap-2 mt-1 no-print">
-        <a href="{{ route('teacher.classes.students', [$section, $subject]) }}"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.classes.students', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-users"></i> Students
         </a>
-        <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-sliders"></i> Config
         </a>
-        <a href="{{ route('teacher.grades.items', [$section, $subject]) }}"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.items', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-list-check"></i> Items
         </a>
-        <a href="{{ route('teacher.grades.final', [$section, $subject]) }}"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.final', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-graduation-cap"></i> Final Grades
         </a>
-        <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-clipboard-check"></i> Attendance
         </a>
-        <a href="{{ route('teacher.classes.record.export', ['section' => $section, 'subject' => $subject, 'gender' => $gender, 'order' => $order]) }}"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.classes.record.export', ['section' => $section, 'subject' => $subject, 'gender' => $gender, 'order' => $order]) }}"
            class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             <i class="fa-solid fa-file-excel"></i> Export Excel
         </a>
@@ -115,10 +118,10 @@
                 <th rowspan="3" class="sticky left-[40px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[80px]">Stud. No.</th>
                 <th rowspan="3" class="sticky left-[120px] z-20 px-4 py-3 text-left text-gray-500 bg-gray-50 border border-gray-200 min-w-[180px]">Student Name</th>
                 @if($midCols > 0)
-                    <th colspan="{{ $midCols }}" style="padding:8px; text-align:center; letter-spacing:.1em; background:#111827; border:1px solid #374151;">Midterm</th>
+                    <th colspan="{{ $midCols + 1 }}" style="padding:8px; text-align:center; letter-spacing:.1em; background:#111827; border:1px solid #374151;">Midterm</th>
                 @endif
                 @if($finCols > 0)
-                    <th colspan="{{ $finCols }}" style="padding:8px; text-align:center; letter-spacing:.1em; background:#111827; border:1px solid #374151; border-left:4px solid #9ca3af;">Finals</th>
+                    <th colspan="{{ $finCols + 1 }}" style="padding:8px; text-align:center; letter-spacing:.1em; background:#111827; border:1px solid #374151; border-left:4px solid #9ca3af;">Finals</th>
                 @endif
                 <th colspan="3" rowspan="2" class="px-4 py-3 text-center bg-gray-700 border border-gray-600">Summary</th>
             </tr>
@@ -131,7 +134,7 @@
                         {{ $comp['label'] }} ({{ $comp['weight'] }}%)
                         @unless($locked)
                             @if($comp['type'] === 'attendance')
-                                <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}" class="no-print" style="{{ $addBtn }}">+ Take</a>
+                                <a href="{{ \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]) }}" class="no-print" style="{{ $addBtn }}">+ Take</a>
                             @else
                                 @php $nextName = \App\Models\GradeItem::autoName($comp['items'], $comp['key'], $comp['label'], $comp['period']); @endphp
                                 @if($nextName)
@@ -140,6 +143,9 @@
                             @endif
                         @endunless
                     </th>
+                    @if(($lastOfPeriod[$comp['period']] ?? null) === $comp['key'])
+                        <th rowspan="2" style="padding:8px 10px; min-width:84px; text-align:center; color:#fff; background:#0b3d0b; border:1px solid #0a5b05;">{{ $comp['period'] === 'midterm' ? 'Midterm' : 'Finals' }}<br>Grade</th>
+                    @endif
                 @endforeach
             </tr>
 
@@ -195,10 +201,10 @@
                 <tr class="hover:bg-gray-50 student-row" data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
                     <td class="sticky left-0 z-10 px-4 py-3 text-center text-gray-400 bg-white border border-gray-100">{{ $n }}</td>
                     <td class="sticky left-[40px] z-10 px-4 py-3 font-mono text-xs text-gray-500 bg-white border border-gray-100">
-                        {{ $enrollment->student?->student_number ?? '—' }}
+                        <span data-hl>{{ $enrollment->student?->student_number ?? '—' }}</span>
                     </td>
                     <td class="sticky left-[120px] z-10 px-4 py-3 font-medium text-gray-800 bg-white border border-gray-100">
-                        {{ $enrollment->student?->full_name ?? 'N/A' }}
+                        <span data-hl>{{ $enrollment->student?->full_name ?? 'N/A' }}</span>
                         @if($fg && $fg->is_locked)
                             <span class="ml-1 text-xs text-gray-400"><i class="fa-solid fa-lock"></i></span>
                         @endif
@@ -220,7 +226,7 @@
                                     @else
                                         <input type="number" step="any" min="0" max="{{ $item->max_score + 0 }}"
                                                value="{{ $shown }}" data-original="{{ $shown }}"
-                                               data-save="{{ route('teacher.grades.score.cell', [$section, $subject, $item]) }}"
+                                               data-save="{{ \App\Services\TeacherNav::route('teacher.grades.score.cell', [$section, $subject, $item]) }}"
                                                data-enrollment="{{ $enrollment->id }}"
                                                class="score-input" style="width:64px; padding:4px; text-align:center; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
                                     @endif
@@ -247,6 +253,9 @@
                                 @php $cg = $componentGrades[$enrollment->id][$comp['key']] ?? null; @endphp
                                 {{ $cg !== null ? \App\Services\GradeCalculator::formatGrade($cg, $config->computation_method ?? 'standard') : '—' }}
                             </td>
+                        @endif
+                        @if(($lastOfPeriod[$comp['period']] ?? null) === $comp['key'])
+                            @include('teacher.classes.partials.period-grade', ['period' => $comp['period'], 'enrollmentId' => $enrollment->id, 'method' => $config->computation_method ?? 'standard'])
                         @endif
                     @endforeach
 
@@ -296,6 +305,10 @@
                             {{ $classAvg !== null ? \App\Services\GradeCalculator::formatGrade($classAvg, $config->computation_method ?? 'standard') : '—' }}
                         </td>
                     @endif
+                    @if(($lastOfPeriod[$comp['period']] ?? null) === $comp['key'])
+                        @php $periodAvg = collect($liveGrades)->pluck($comp['period'] . '_numerical')->filter(fn ($v) => $v !== null)->avg(); @endphp
+                        <td style="padding:12px; text-align:center; font-weight:700; color:#0b3d0b; background:#dcefd8; border:1px solid #c7e3c1;">{{ $periodAvg !== null ? \App\Services\GradeCalculator::formatGrade($periodAvg, $config->computation_method ?? 'standard') : '—' }}</td>
+                    @endif
                 @endforeach
 
                 <td class="px-3 py-3 font-bold text-center text-gray-800 bg-gray-200 border border-gray-300">
@@ -324,10 +337,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var rows  = document.querySelectorAll('tr.student-row');
     var label = document.getElementById('recordCount');
     input.addEventListener('input', function () {
-        var q = input.value.trim().toLowerCase(), shown = 0;
+        var q = input.value.trim().toLowerCase(), shown = 0, terms = EssuSearch.terms(q);
         rows.forEach(function (r) {
-            var match = q === '' || r.dataset.search.indexOf(q) !== -1;
+            var match = q === '' || EssuSearch.matches(r.dataset.search, terms);
             r.style.display = match ? '' : 'none';
+            r.querySelectorAll('[data-hl]').forEach(function (el) { EssuSearch.highlight(el, terms); });
             if (match) shown++;
         });
         label.textContent = q === '' ? '' : 'Showing ' + shown + ' of ' + rows.length;
@@ -344,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <dialog id="addItemDialog" style="padding:0; border:none; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,.25); width:min(92vw,360px);">
-    <form method="POST" action="{{ route('teacher.grades.items.store', [$section, $subject]) }}" style="padding:20px;">
+    <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.grades.items.store', [$section, $subject]) }}" style="padding:20px;">
         @csrf
         <input type="hidden" name="component_type" id="addItemKey">
         <h3 id="addItemTitle" style="margin:0 0 14px; font-size:16px; font-weight:700; color:#111827;"></h3>

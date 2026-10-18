@@ -25,10 +25,7 @@ class FacultyController extends Controller
         $teachers = User::where('role', 'teacher')
             ->where('department_id', $departmentId)
             ->where('status', $status)
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $term = '%' . trim($request->get('search')) . '%';
-                $q->where(fn ($q2) => $q2->where('name', 'like', $term)->orWhere('email', 'like', $term));
-            })
+            ->when($request->filled('search'), fn ($q) => \App\Services\NameSearch::apply($q, $request->get('search'), ['last_name', 'first_name', 'name'], null, 'email'))
             ->orderBy('name')
             ->paginate(25)
             ->appends($request->query());

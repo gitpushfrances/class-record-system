@@ -33,7 +33,7 @@
                 <div class="flex-1">
                     <div class="font-semibold text-gray-800">{{ $subject->code }} — {{ $subject->name }}</div>
                     <div class="mt-0.5 text-xs text-gray-500">
-                        {{ $subject->units }} units · {{ $subject->placement }} · Requested by {{ $subject->requester->name ?? 'Unknown' }} for {{ $subject->program->code ?? '—' }}
+                        {{ $subject->units }} units · {{ $subject->has_laboratory ? 'Lecture and laboratory ·' : 'Lecture only ·' }} {{ $subject->placement }} · Requested by {{ $subject->requester->name ?? 'Unknown' }} for {{ $subject->program->code ?? '—' }}
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -77,7 +77,7 @@
                     <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                     <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $subject->program->code ?? '—' }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ $subject->units }}@if($subject->has_laboratory)<span style="margin-left:6px; padding:1px 7px; font-size:10px; font-weight:700; color:#0a5b05; background:#eef7ec; border-radius:9999px; white-space:nowrap;">Lec + Lab</span>@endif</td>
                     <td class="px-4 py-3">
                         @if($subject->sectionTerms->isNotEmpty())
                             <div class="text-sm text-gray-700">

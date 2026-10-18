@@ -1,4 +1,13 @@
-{{-- Subjects & Teachers of a section's active term. Expects $section, $subjects (with pivot), $availableSubjects, $teachers. --}}
+{{--
+    Subjects & Teachers of a section's active term (Program Head and Dean section pages).
+    Expects $section, $subjects (with pivot), $availableSubjects, $teachers.
+    Optional: $attachRoute, $updateRoute (route names; Program Head routes by default), $rogRoute + $term (adds "View ROG" once submitted).
+--}}
+@php
+    $attachRoute = $attachRoute ?? 'program-head.sections.attach-subject';
+    $updateRoute = $updateRoute ?? 'program-head.sections.change-subject-teacher';
+    $rogRoute    = $rogRoute ?? null;
+@endphp
 @once
 <style>
     .sst-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -10,6 +19,7 @@
     .sst-btn-light { color: #374151; background: #fff; border: 1px solid #d1d5db; }
     .sst-btn-dark { color: #fff; background: #0b3d0b; border: 1px solid #0b3d0b; }
     .sst-panel { display: grid; gap: 14px; padding: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; }
+    .sst-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 10px; font-weight: 700; color: #0a5b05; background: #eef7ec; border-radius: 9999px; white-space: nowrap; }
 </style>
 @endonce
 
@@ -22,15 +32,20 @@
             @forelse($subjects as $subj)
                 @php
                     $rowId = 'sst-' . $section->id . '-' . $subj->id;
-                    $label = \App\Services\ClassSchedule::label($subj->pivot->schedule_days, $subj->pivot->schedule_start, $subj->pivot->schedule_end);
+                    $label = \App\Services\ClassSchedule::summary($subj->pivot, (bool) $subj->has_laboratory);
                 @endphp
                 <tr>
                     <td>
-                        <div style="font-weight:600;">{{ $subj->code }}</div>
+                        <div style="font-weight:600;">{{ $subj->code }}@if($subj->has_laboratory)<span class="sst-badge">Lec + Lab</span>@endif</div>
                         <div class="sst-muted" style="font-size:12px;">{{ $subj->name }}</div>
                     </td>
-                    <td>{{ $teachers->firstWhere('id', $subj->pivot->teacher_id)?->name ?? '—' }}</td>
-                    <td style="white-space:nowrap;">
+                    <td>
+                        {{ $teachers->firstWhere('id', $subj->pivot->teacher_id)?->name ?? \App\Models\User::find($subj->pivot->teacher_id)?->name ?? '—' }}
+                        @if($rogRoute && isset($term) && \App\Services\ReportOfGrades::isSubmitted($term, $subj))
+                            <a href="{{ route($rogRoute, [$term, $subj]) }}" target="_blank" style="margin-left:6px; font-size:12px; font-weight:600; color:#0a5b05;">View ROG</a>
+                        @endif
+                    </td>
+                    <td>
                         @if($label) {{ $label }} @else <span class="sst-muted">Not set</span> @endif
                     </td>
                     <td style="text-align:right;">
@@ -40,7 +55,7 @@
                 </tr>
                 <tr id="{{ $rowId }}" hidden>
                     <td colspan="4" style="background:#f9fafb;">
-                        <form method="POST" action="{{ route('program-head.sections.change-subject-teacher', $section) }}" class="sst-panel" style="background:#fff;">
+                        <form method="POST" action="{{ route($updateRoute, $section) }}" class="sst-panel" style="background:#fff;">
                             @csrf
                             <input type="hidden" name="subject_id" value="{{ $subj->id }}">
                             <div>
@@ -51,7 +66,10 @@
                                     @endforeach
                                 </select>
                             </div>
-                            @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues($subj->pivot))
+                            @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues($subj->pivot) + ['title' => $subj->has_laboratory ? 'Lecture schedule' : null])
+                            @if($subj->has_laboratory)
+                                @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues($subj->pivot, 'lab') + ['title' => 'Laboratory schedule'])
+                            @endif
                             <div style="display:flex; justify-content:flex-end; gap:8px;">
                                 <button type="button" class="sst-btn sst-btn-light" onclick="document.getElementById('{{ $rowId }}').hidden = true;">Cancel</button>
                                 <button type="submit" class="sst-btn sst-btn-dark">Save changes</button>
@@ -66,7 +84,7 @@
     </table>
 </div>
 
-<form method="POST" action="{{ route('program-head.sections.attach-subject', $section) }}" class="sst-panel" style="margin-top:16px;">
+<form method="POST" action="{{ route($attachRoute, $section) }}" class="sst-panel" style="margin-top:16px;">
     @csrf
     <div style="font-size:13px; font-weight:700; color:#1f2937;">Assign a subject</div>
     @if($availableSubjects->isEmpty())
@@ -75,10 +93,10 @@
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px;">
             <div>
                 <label class="sched-label" for="sst-add-subject-{{ $section->id }}">Subject</label>
-                <select id="sst-add-subject-{{ $section->id }}" name="subject_id" class="sst-input" required>
+                <select id="sst-add-subject-{{ $section->id }}" name="subject_id" class="sst-input" required data-lab-toggle>
                     <option value="">Select subject</option>
                     @foreach($availableSubjects as $s)
-                        <option value="{{ $s->id }}" @selected(old('subject_id') == $s->id)>{{ $s->code }} — {{ $s->name }} ({{ $s->placement }})</option>
+                        <option value="{{ $s->id }}" data-lab="{{ $s->has_laboratory ? 1 : 0 }}" @selected(old('subject_id') == $s->id)>{{ $s->code }} — {{ $s->name }} ({{ $s->placement }}){{ $s->has_laboratory ? ' · Lec + Lab' : '' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -92,7 +110,8 @@
                 </select>
             </div>
         </div>
-        @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null))
+        @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null) + ['title' => 'Class schedule'])
+        @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null, 'lab') + ['title' => 'Laboratory schedule'])
         <div style="display:flex; justify-content:flex-end;">
             <button type="submit" class="sst-btn sst-btn-dark">Assign subject</button>
         </div>

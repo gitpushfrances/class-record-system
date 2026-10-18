@@ -92,13 +92,9 @@ class SectionController extends Controller
             ->orderBy('name')
             ->get();
 
-        $availableStudents = $currentTerm
-            ? \App\Models\Student::where('program_id', $section->program_id)
-                ->where('status', 'active')
-                ->whereNotIn('id', $currentTerm->enrollments->pluck('student_id'))
-                ->orderBy('last_name')->orderBy('first_name')
-                ->get()
-            : collect();
+        $availableStudents = $currentTerm ? \App\Services\SectionEnrollment::availableStudents($currentTerm) : collect();
+        $removableIds      = $currentTerm ? \App\Services\SectionEnrollment::removableIds($currentTerm, $currentTerm->enrollments) : [];
+        $lockedSubjects    = $currentTerm ? \App\Services\SectionEnrollment::lockedSubjects($currentTerm) : [];
 
         $droppedEnrollments = $currentTerm
             ? \App\Models\Enrollment::with('student')
@@ -108,7 +104,7 @@ class SectionController extends Controller
                 ->get()
             : collect();
 
-        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments'));
+        return view('program-head.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers', 'availableStudents', 'droppedEnrollments', 'removableIds', 'lockedSubjects'));
     }
 
     public function edit(Section $section)
@@ -186,24 +182,11 @@ class SectionController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         abort_if(!$currentTerm, 422, 'This section has no active term.');
 
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'required|exists:users,id',
-            ...\App\Services\ClassSchedule::rules(),
-        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
+        $request->validate(\App\Services\SubjectAssignment::rules(), [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($request->subject_id))) {
-            return back()->withErrors(['subject_id' => $refusal])->withInput();
+        if ($error = \App\Services\SubjectAssignment::attach($currentTerm, $request)) {
+            return back()->withErrors($error)->withInput();
         }
-
-        $slot = \App\Services\ClassSchedule::fromRequest($request);
-        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
-            return back()->withErrors(['schedule_days' => $conflict])->withInput();
-        }
-
-        $currentTerm->subjects()->syncWithoutDetaching([
-            $request->subject_id => ['teacher_id' => $request->teacher_id] + $slot,
-        ]);
 
         return redirect()->route('program-head.sections.show', $section)->with('success', 'Subject added and teacher assigned.');
     }
@@ -219,18 +202,11 @@ class SectionController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         abort_if(!$currentTerm, 422, 'This section has no active term.');
 
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'required|exists:users,id',
-            ...\App\Services\ClassSchedule::rules(),
-        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
+        $request->validate(\App\Services\SubjectAssignment::rules(), [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        $slot = \App\Services\ClassSchedule::fromRequest($request);
-        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
-            return back()->withErrors(['schedule_days' => $conflict])->withInput();
+        if ($error = \App\Services\SubjectAssignment::update($currentTerm, $request)) {
+            return back()->withErrors($error)->withInput();
         }
-
-        $currentTerm->subjects()->updateExistingPivot($request->subject_id, ['teacher_id' => $request->teacher_id] + $slot);
 
         return redirect()->route('program-head.sections.show', $section)->with('success', 'Teacher and schedule updated.');
     }
@@ -259,6 +235,19 @@ class SectionController extends Controller
         }
 
         return back()->with('success', "{$enrollment->student->full_name} dropped from the section. Grades and attendance are kept.");
+    }
+
+    public function removeStudent(Section $section, \App\Models\Enrollment $enrollment)
+    {
+        $term = $this->activeTermOfMyProgram($section);
+        abort_unless($term->enrollments()->whereKey($enrollment->id)->exists(), 404);
+
+        $name = $enrollment->student->full_name;
+        if ($error = \App\Services\SectionEnrollment::remove($enrollment)) {
+            return back()->with('error', $error);
+        }
+
+        return back()->with('success', "{$name} removed from the section.");
     }
 
     private function activeTermOfMyProgram(Section $section): SectionTerm

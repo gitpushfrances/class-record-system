@@ -5,11 +5,11 @@
 
 <div class="flex items-start justify-between mb-6">
     <div>
-        <x-back-button :href="route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" />
+        <x-back-button :href="\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" />
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Attendance</h1>
         <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
-    <a href="{{ route('teacher.attendance.summary', [$section, $subject]) }}"
+    <a href="{{ \App\Services\TeacherNav::route('teacher.attendance.summary', [$section, $subject]) }}"
        class="px-4 py-2 mt-1 text-sm font-medium text-indigo-600 transition border border-indigo-300 rounded-lg hover:bg-indigo-50">
         View Summary
     </a>
@@ -19,7 +19,8 @@
 
     {{-- Date Selector --}}
     <div class="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
-        <form method="GET" action="{{ route('teacher.attendance.index', [$section, $subject]) }}" class="flex items-center gap-3">
+        <form method="GET" action="{{ \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]) }}" class="flex items-center gap-3">
+            @include('teacher.partials.from-field')
             <label class="text-sm font-medium text-gray-600">Date:</label>
             <input type="date" name="date" value="{{ $date }}"
                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -34,7 +35,7 @@
         </form>
     </div>
 
-    <form method="POST" action="{{ route('teacher.attendance.store', [$section, $subject]) }}" id="attendanceForm">
+    <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.attendance.store', [$section, $subject]) }}" id="attendanceForm">
         @csrf
         <input type="hidden" name="date" value="{{ $date }}">
         <input type="hidden" name="session" value="{{ $session }}">

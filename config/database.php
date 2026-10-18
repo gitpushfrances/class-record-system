@@ -58,7 +58,8 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'dump' => ['dump_binary_path' => 'C:/xampp/mysql/bin/'],
+            // Folder of mysqldump, used by Backup & Restore. XAMPP on Windows by default; on Linux usually /usr/bin/.
+            'dump' => ['dump_binary_path' => env('DB_DUMP_PATH', 'C:/xampp/mysql/bin/')],
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

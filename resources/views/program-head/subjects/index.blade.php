@@ -48,7 +48,7 @@
                 <tr>
                     <td style="{{ $td }} font-family:monospace; font-weight:600; color:#1f2937;">{{ $subject->code }}</td>
                     <td style="{{ $td }} color:#374151;">{{ $subject->name }}</td>
-                    <td style="{{ $td }} color:#4b5563;">{{ $subject->units }}</td>
+                    <td style="{{ $td }} color:#4b5563;">{{ $subject->units }}@if($subject->has_laboratory)<span style="margin-left:6px; padding:1px 7px; font-size:10px; font-weight:700; color:#0a5b05; background:#eef7ec; border-radius:9999px; white-space:nowrap;">Lec + Lab</span>@endif</td>
                     <td style="{{ $td }}">
                         @if($subject->status === 'pending')
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#fef3c7; color:#92400e;">Pending</span>

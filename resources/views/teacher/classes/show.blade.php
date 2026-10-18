@@ -5,7 +5,8 @@
 
 {{-- Header --}}
 <div class="mb-6">
-    <x-back-button :href="route('teacher.dashboard')" label="Back to Dashboard" />
+    @php [$backUrl, $backLabel] = \App\Services\TeacherNav::sectionBack(); @endphp
+    <x-back-button :href="$backUrl" :label="$backLabel" />
     <h1 class="mt-1 text-2xl font-bold text-gray-800">
         {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}
     </h1>
@@ -44,28 +45,28 @@
 
                 @if($row['isMine'])
                     <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-5">
-                        <a href="{{ route('teacher.grades.config', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]) }}"
                            class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-gear"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Grade Config</div>
                         </a>
-                        <a href="{{ route('teacher.grades.items', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.items', [$section, $subject]) }}"
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-pen-to-square"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Grade Items</div>
                             <div class="text-xs text-gray-400 mt-0.5">{{ $row['itemCount'] }} item(s)</div>
                         </a>
-                        <a href="{{ route('teacher.grades.final', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.grades.final', [$section, $subject]) }}"
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-graduation-cap"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Final Grades</div>
                         </a>
-                        <a href="{{ route('teacher.classes.record', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject]) }}"
                            class="{{ !$row['hasConfig'] ? 'pointer-events-none opacity-50' : '' }} p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-chart-bar"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Class Record</div>
                         </a>
-                        <a href="{{ route('teacher.attendance.index', [$section, $subject]) }}"
+                        <a href="{{ \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]) }}"
                            class="p-3 text-center transition border border-gray-200 rounded-lg hover:border-indigo-400 hover:shadow-sm group">
                             <div class="mb-1 text-xl text-indigo-500"><i class="fa-solid fa-calendar-days"></i></div>
                             <div class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">Attendance</div>
@@ -139,8 +140,8 @@
                     <tr class="roster-row hover:bg-gray-50" data-group="{{ $group }}"
                         data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
                         <td class="px-6 py-3 text-gray-400">{{ $n }}</td>
-                        <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
-                        <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-3 font-mono text-gray-600"><span data-hl>{{ $enrollment->student?->student_number ?? 'N/A' }}</span></td>
+                        <td class="px-6 py-3 font-medium text-gray-800"><span data-hl>{{ $enrollment->student?->full_name ?? 'N/A' }}</span></td>
                     </tr>
                 @empty
                     <tr><td colspan="3" class="px-6 py-10 text-sm text-center text-gray-400">No {{ $gender }} students enrolled.</td></tr>
@@ -157,10 +158,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var rosterRows  = document.querySelectorAll('tr.roster-row');
         var rosterCount = document.getElementById('rosterCount');
         rosterSearch.addEventListener('input', function () {
-            var q = rosterSearch.value.trim().toLowerCase(), shown = 0;
+            var q = rosterSearch.value.trim().toLowerCase(), shown = 0, terms = EssuSearch.terms(q);
             rosterRows.forEach(function (r) {
-                var match = q === '' || r.dataset.search.indexOf(q) !== -1;
+                var match = q === '' || EssuSearch.matches(r.dataset.search, terms);
                 r.style.display = match ? '' : 'none';
+                r.querySelectorAll('[data-hl]').forEach(function (el) { EssuSearch.highlight(el, terms); });
                 if (match) shown++;
             });
             document.querySelectorAll('tr.roster-divider').forEach(function (d) {

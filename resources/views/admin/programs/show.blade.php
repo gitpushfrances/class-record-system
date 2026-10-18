@@ -12,12 +12,15 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-lg font-semibold text-gray-800">{{ $program->name }}</h2>
-            <div class="text-xs text-gray-500">{{ $program->code }} &middot; Program Head: {{ $program->programHead?->name ?? '—' }}</div>
+            <div class="text-xs text-gray-500">{{ $program->code }} @if($program->status === 'inactive')<span style="margin-left:6px; padding:1px 8px; font-size:11px; font-weight:600; color:#6b7280; background:#f3f4f6; border-radius:9999px;">Inactive</span>@endif &middot; Program Head: {{ $program->programHead?->name ?? '—' }}</div>
         </div>
-        <button type="button" onclick="document.getElementById('editProgram').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#374151; background:#fff; border:1px solid #d1d5db;"><i class="fa-solid fa-pen"></i> Edit</button>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" onclick="document.getElementById('editProgram').showModal()" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px; font-weight:600; border-radius:8px; cursor:pointer; color:#374151; background:#fff; border:1px solid #d1d5db;"><i class="fa-solid fa-pen"></i> Edit</button>
+            @include('admin.partials.status-actions', ['active' => $program->status !== 'inactive', 'statusAction' => route('admin.programs.status', [$department, $program]), 'deleteAction' => route('admin.programs.destroy', [$department, $program]), 'label' => $program->code])
+        </div>
     </div>
 
-    @include('admin.partials.code-name-dialog', ['id' => 'editProgram', 'title' => 'Edit Program', 'action' => route('admin.programs.update', [$department, $program]), 'method' => 'PUT', 'code' => $program->code, 'name' => $program->name, 'submit' => 'Save'])
+    @include('admin.partials.code-name-dialog', ['id' => 'editProgram', 'title' => 'Edit Program', 'action' => route('admin.programs.update', [$department, $program]), 'method' => 'PUT', 'code' => $program->code, 'name' => $program->name, 'submit' => 'Save', 'codeHint' => 'BSIT', 'nameHint' => 'Bachelor of Science in Information Technology'])
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         @forelse($sections as $section)

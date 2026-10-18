@@ -2,7 +2,7 @@
 
 <div class="flex items-start justify-between mb-6">
     <div>
-        <x-back-button :href="route('teacher.attendance.index', [$section, $subject])" label="Back to Attendance" />
+        <x-back-button :href="\App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject])" label="Back to Attendance" />
         <h1 class="mt-1 text-2xl font-bold text-gray-800">Attendance Summary</h1>
         <p class="mt-1 text-sm text-gray-500">
             {{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}

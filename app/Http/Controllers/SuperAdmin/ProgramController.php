@@ -31,6 +31,39 @@ class ProgramController extends Controller
         return back()->with('success', "{$program->code} updated.");
     }
 
+    /** Deactivate or activate. An inactive program is hidden from every program list for new records; its records stay. */
+    public function toggleStatus(Department $department, Program $program)
+    {
+        abort_if($program->department_id !== $department->id, 404);
+
+        $program->update(['status' => $program->status === 'inactive' ? 'approved' : 'inactive']);
+
+        return back()->with('success', $program->status === 'inactive'
+            ? "{$program->code} deactivated. Its records are kept."
+            : "{$program->code} activated.");
+    }
+
+    /** Delete a program added by mistake: only while it has no sections, students, subjects or Program Head. */
+    public function destroy(Department $department, Program $program)
+    {
+        abort_if($program->department_id !== $department->id, 404);
+
+        $inUse = $program->sections()->exists()
+            || \App\Models\Student::where('program_id', $program->id)->exists()
+            || \App\Models\Subject::where('program_id', $program->id)->exists()
+            || User::where('program_id', $program->id)->exists();
+
+        if ($inUse) {
+            return back()->with('error', "{$program->code} already has sections, students, subjects or a Program Head. Deactivate it instead: its records are kept.");
+        }
+
+        // For good: a soft-deleted row would keep the code taken (unique rule), so it could not be added again.
+        $code = $program->code;
+        $program->forceDelete();
+
+        return redirect()->route('admin.departments.show', $department)->with('success', "{$code} deleted.");
+    }
+
     private function validated(\Illuminate\Http\Request $request, ?int $ignoreId = null): array
     {
         $request->merge(['code' => strtoupper(trim((string) $request->code)), 'name' => trim((string) $request->name)]);

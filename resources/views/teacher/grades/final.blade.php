@@ -2,7 +2,7 @@
 
 <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <div>
-        <x-back-button :href="route('teacher.classes.record', [$section, $subject])" label="Back to Class" />
+        <x-back-button :href="\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" />
         <h1 class="mt-1 text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Final Grades</h1>
         <p class="mt-1 text-sm text-gray-500">{{ $subject->code }} — {{ $subject->name }} &bull; {{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</p>
     </div>
@@ -66,12 +66,12 @@
         <span class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 border border-gray-200 text-gray-400">
             <i class="fa-solid fa-lock"></i> {{ $status === 'verified' ? 'Verified — editing locked' : 'Pending review — editing locked' }}
         </span>
-        <a href="{{ route('teacher.rog.show', [$section, $subject]) }}" target="_blank"
+        <a href="{{ \App\Services\TeacherNav::route('teacher.rog.show', [$section, $subject]) }}" target="_blank"
            style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; font-size:14px; font-weight:600; color:#fff; background:#15803d; border-radius:8px; text-decoration:none;">
             <i class="fa-solid fa-file-lines"></i> Report of Grades
         </a>
     @else
-        <form id="submitVerificationForm" method="POST" action="{{ route('teacher.grades.submit', [$section, $subject]) }}">
+        <form id="submitVerificationForm" method="POST" action="{{ \App\Services\TeacherNav::route('teacher.grades.submit', [$section, $subject]) }}">
             @csrf
             <button type="button" onclick="confirmSubmitVerification()" class="px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
                 <i class="fa-solid fa-paper-plane"></i> Submit for Verification

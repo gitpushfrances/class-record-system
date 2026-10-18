@@ -85,6 +85,10 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
     Route::put('/departments/{department}', [AdminDepartment::class, 'update'])->name('departments.update');
     Route::post('/departments/{department}/programs', [AdminProgram::class, 'store'])->name('programs.store');
     Route::put('/departments/{department}/programs/{program}', [AdminProgram::class, 'update'])->name('programs.update');
+    Route::patch('/departments/{department}/status', [AdminDepartment::class, 'toggleStatus'])->name('departments.status');
+    Route::delete('/departments/{department}', [AdminDepartment::class, 'destroy'])->name('departments.destroy');
+    Route::patch('/departments/{department}/programs/{program}/status', [AdminProgram::class, 'toggleStatus'])->name('programs.status');
+    Route::delete('/departments/{department}/programs/{program}', [AdminProgram::class, 'destroy'])->name('programs.destroy');
     Route::get('/departments/{department}/programs/{program}', [AdminProgram::class, 'show'])->name('programs.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}', [AdminSection::class, 'show'])->name('sections.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}/students', [AdminSection::class, 'students'])->name('sections.students');
@@ -132,6 +136,7 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
     Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
     Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
+    Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}/remove', [DeanEnrollment::class, 'remove'])->name('enrollments.remove');
     Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'dean'])->name('rog.show');
 
     Route::get('/program-heads', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'index'])->name('program-heads.index');
@@ -186,6 +191,7 @@ Route::middleware(['auth', 'status', 'role:teacher', 'no.cache'])->prefix('teach
     Route::post('/classes/{section}/subjects/{subject}/students', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'store'])->name('classes.students.store');
     Route::delete('/classes/{section}/subjects/{subject}/students/{enrollment}', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'destroy'])->name('classes.students.destroy');
     Route::patch('/classes/{section}/subjects/{subject}/students/{enrollment}/restore', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'restore'])->name('classes.students.restore');
+    Route::delete('/classes/{section}/subjects/{subject}/students/{enrollment}/remove', [App\Http\Controllers\Teacher\SubjectRosterController::class, 'remove'])->name('classes.students.remove');
 });
 
 /*
@@ -234,6 +240,7 @@ Route::middleware(['auth', 'status', 'role:program_head', 'no.cache'])->prefix('
     Route::post('/sections/{section}/change-adviser', [App\Http\Controllers\ProgramHead\SectionController::class, 'changeAdviser'])->name('sections.change-adviser');
     Route::post('/sections/{section}/enroll', [App\Http\Controllers\ProgramHead\SectionController::class, 'enrollStudent'])->name('sections.enroll');
     Route::delete('/sections/{section}/enroll/{enrollment}', [App\Http\Controllers\ProgramHead\SectionController::class, 'dropStudent'])->name('sections.drop');
+    Route::delete('/sections/{section}/enroll/{enrollment}/remove', [App\Http\Controllers\ProgramHead\SectionController::class, 'removeStudent'])->name('sections.remove');
 });
 
 /*

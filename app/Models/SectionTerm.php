@@ -93,7 +93,7 @@ class SectionTerm extends Model
     public function subjects()
     {
         return $this->belongsToMany(Subject::class, 'section_subject_teachers')
-            ->withPivot('id', 'teacher_id', 'schedule_days', 'schedule_start', 'schedule_end')
+            ->withPivot('id', 'teacher_id', 'schedule_days', 'schedule_start', 'schedule_end', 'lab_days', 'lab_start', 'lab_end')
             ->withTimestamps();
     }
 }

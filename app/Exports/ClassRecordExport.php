@@ -74,6 +74,10 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         ];
         $rows[] = [''];
 
+        // Last component of each period: its MIDTERM GRADE / FINALS GRADE column comes right after it.
+        $lastOfPeriod = collect($matrix)->groupBy('period')->map(fn ($c) => $c->last()['key'])->all();
+        $periodLabel  = ['midterm' => 'MIDTERM GRADE', 'final' => 'FINALS GRADE'];
+
         // Group header row
         $groupRow = ['', '', ''];
         foreach ($matrix as $comp) {
@@ -85,6 +89,9 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
             } else {
                 $groupRow[] = strtoupper($comp['label']) . ' (' . $comp['weight'] . '%)';
                 $groupRow[] = 'WEIGHTED';
+            }
+            if (($lastOfPeriod[$comp['period']] ?? null) === $comp['key']) {
+                $groupRow[] = $periodLabel[$comp['period']];
             }
         }
         $groupRow[] = 'FINAL %';
@@ -103,6 +110,9 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
             } else {
                 $subRow[] = 'Days Present';
                 $subRow[] = 'Score';
+            }
+            if (($lastOfPeriod[$comp['period']] ?? null) === $comp['key']) {
+                $subRow[] = 'Grade';
             }
         }
         $subRow[] = '';
@@ -168,6 +178,13 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
                     $columnSums[$colIndex] = ($columnSums[$colIndex] ?? 0) + (float) $weighted;
                     $colIndex++;
                 }
+                if (($lastOfPeriod[$comp['period']] ?? null) === $comp['key']) {
+                    $num   = $lg[$comp['period'] . '_numerical'] ?? null;
+                    $row[] = $lg && in_array($comp['period'], $lg['incomplete_periods'] ?? [], true)
+                        ? 'INC'
+                        : ($num !== null ? number_format($num, 1) : '');
+                    $colIndex++;
+                }
             }
 
             $row[] = ($lg && $lg['final_grade'] !== null) ? round($lg['final_grade'], 2) : '';
@@ -193,6 +210,11 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
                 $avgRow[] = '—';
                 $colIndex++;
                 $avgRow[] = $studentCount > 0 ? round(($columnSums[$colIndex] ?? 0) / $studentCount, 2) : '';
+                $colIndex++;
+            }
+            if (($lastOfPeriod[$comp['period']] ?? null) === $comp['key']) {
+                $periodAvg = collect($this->liveGrades)->pluck($comp['period'] . '_numerical')->filter(fn ($v) => $v !== null)->avg();
+                $avgRow[] = $periodAvg !== null ? number_format($periodAvg, 1) : '';
                 $colIndex++;
             }
         }

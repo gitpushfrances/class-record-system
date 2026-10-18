@@ -36,6 +36,7 @@ Edit `.env`:
 | `APP_DEBUG` | `false` (never `true` on the server: it shows passwords and paths on error pages) |
 | `APP_URL` | `https://<site address>` |
 | `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | the server database |
+| `DB_DUMP_PATH` | folder that contains `mysqldump`, used by Backup (`/usr/bin/` on most Linux servers; default `C:/xampp/mysql/bin/`) |
 | `MAIL_*` | the school mail account (password reset e-mails) |
 
 **Do not run `php artisan db:seed` on the server.** The full seeder creates sample departments, students, sections and sample accounts whose password is `password`. Run only the roles seeder, then create the real Admin account:

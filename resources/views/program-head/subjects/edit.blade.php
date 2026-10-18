@@ -65,10 +65,7 @@
                 </div>
 
                 <div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <input type="checkbox" name="has_laboratory" value="1" {{ old('has_laboratory', $subject->has_laboratory) ? 'checked' : '' }}>
-                        Has laboratory (lecture and laboratory attendance are recorded separately)
-                    </label>
+                    @include('program-head.subjects.partials.type-field', ['hasLaboratory' => (bool) $subject->has_laboratory])
                 </div>
 
                 <div>

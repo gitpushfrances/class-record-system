@@ -1,5 +1,5 @@
 <x-sidebar-layout>
-<div style="margin-bottom:12px;"><x-back-button :href="route('teacher.classes.show', $section)" label="Back to Class" /></div>
+<div style="margin-bottom:12px;"><x-back-button :href="\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject])" label="Back to Class Record" /></div>
 
 <div class="mb-6">
     <h1 class="mt-1 text-2xl font-bold" style="color: #0b3d0b;">Grade Configuration</h1>
@@ -36,7 +36,7 @@
     $components = $config ? $config->getComponents() : $defaultComponents;
 @endphp
 
-<form method="POST" action="{{ route('teacher.grades.config.store', [$section, $subject]) }}" id="configForm">
+<form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.grades.config.store', [$section, $subject]) }}" id="configForm">
     @csrf
 
     <fieldset @if($locked) disabled @endif style="border:0; margin:0; padding:0; min-width:0;">

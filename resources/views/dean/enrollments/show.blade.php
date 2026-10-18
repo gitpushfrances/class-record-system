@@ -1,4 +1,9 @@
 <x-sidebar-layout>
+    @php
+        $th  = 'padding:10px 24px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#6b7280; text-align:left; background:#f9fafb; border-bottom:1px solid #e5e7eb;';
+        $td  = 'padding:10px 24px; font-size:14px; color:#374151; border-bottom:1px solid #f3f4f6;';
+        $btn = 'padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer; white-space:nowrap;';
+    @endphp
 
     <div class="max-w-4xl mx-auto space-y-6">
 
@@ -36,29 +41,14 @@
                     <h3 class="text-sm font-semibold text-gray-700">Enroll Students</h3>
                 </div>
                 <div class="px-6 py-4">
-                    @if($availableStudents->isNotEmpty())
-                        <form action="{{ route('dean.enrollments.store', $currentTerm) }}" method="POST" class="flex items-end gap-3">
-                            @csrf
-                            <div class="flex-1">
-                                <label class="block mb-1 text-sm font-medium text-gray-700">Select Student</label>
-                                <select name="student_id" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1" required>
-                                    <option value="">— Choose a student —</option>
-                                    @foreach($availableStudents as $student)
-                                        <option value="{{ $student->id }}">
-                                            {{ $student->student_number }} — {{ $student->full_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('student_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                            </div>
-                            <button type="submit"
-                                    class="px-4 py-2 text-sm font-semibold rounded-lg"
-                                    style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
-                                Enroll Student
-                            </button>
-                        </form>
+                    @if($lockedSubjects)
+                        @include('partials.class-list-locked', ['codes' => $lockedSubjects])
                     @else
-                        <p class="text-sm text-gray-500">All students are already enrolled in this term.</p>
+                        @include('partials.student-picker', [
+                            'action'    => route('dean.enrollments.store', $currentTerm),
+                            'students'  => $availableStudents,
+                            'emptyText' => 'Every active student of this program is already in a section this semester.',
+                        ])
                     @endif
                 </div>
             </div>
@@ -71,49 +61,74 @@
                 @if($currentTerm->enrollments->isEmpty())
                     <div class="px-6 py-4 text-sm text-gray-500">No students enrolled yet.</div>
                 @else
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead style="background:#f9fafb;">
-                            <tr>
-                                <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Student No.</th>
-                                <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Name</th>
-                                <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Year Level</th>
-                                <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-xs font-semibold text-center text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead><tr>
+                                <th style="{{ $th }}">Student No.</th><th style="{{ $th }}">Name</th><th style="{{ $th }}">Year Level</th><th style="{{ $th }}"></th>
+                            </tr></thead>
+                            <tbody>
                             @foreach(\App\Models\Enrollment::sortRoster($currentTerm->enrollments) as $enrollment)
                                 @if($enrollment->student)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-700">{{ $enrollment->student->student_number }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-700">{{ $enrollment->student->full_name }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-600">{{ $enrollment->student->year_level }}</td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full {{ $enrollment->status === 'enrolled' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                            {{ ucfirst($enrollment->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex justify-center">
-                                            <form action="{{ route('dean.enrollments.destroy', [$currentTerm, $enrollment]) }}" method="POST" class="remove-enrollment-form">
+                                <tr>
+                                    <td style="{{ $td }} font-family:monospace;">{{ $enrollment->student->student_number }}</td>
+                                    <td style="{{ $td }}">{{ $enrollment->student->full_name }}</td>
+                                    <td style="{{ $td }}">{{ $enrollment->student->year_level }}</td>
+                                    <td style="{{ $td }} text-align:right; white-space:nowrap;">
+                                        @if(in_array($enrollment->id, $removableIds, true))
+                                            <form method="POST" action="{{ route('dean.enrollments.remove', [$currentTerm, $enrollment]) }}" style="display:inline;"
+                                                  data-confirm="Remove {{ $enrollment->student->full_name }} from the section? Use this only for a student added by mistake: the enrollment is deleted.">
                                                 @csrf
                                                 @method('DELETE')
-                                                <input type="hidden" class="enrollment-label" value="{{ $enrollment->student->full_name }} ({{ $enrollment->student->student_number }})">
-                                                <button type="submit" title="Remove"
-                                                        class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
-                                                        style="color:#dc2626; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3);">
-                                                    <i class="text-xs fa-solid fa-trash"></i>
-                                                </button>
+                                                <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Remove</button>
                                             </form>
-                                        </div>
+                                        @endif
+                                        {{-- Drop: hidden while the class list is locked --}}
+                                        @unless($lockedSubjects)
+                                        <form method="POST" action="{{ route('dean.enrollments.destroy', [$currentTerm, $enrollment]) }}" style="display:inline;"
+                                              data-confirm="Drop {{ $enrollment->student->full_name }} from the section? Grades and attendance are kept, and the Report of Grades will show Dr.">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" style="{{ $btn }} color:#b91c1c; background:#fff; border:1px solid #fca5a5;">Drop</button>
+                                        </form>
+                                        @endunless
                                     </td>
                                 </tr>
                                 @endif
                             @endforeach
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
+
+            @if($droppedEnrollments->isNotEmpty())
+            <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid #f3f4f6;">
+                    <h3 class="text-sm font-semibold text-gray-700">Dropped</h3>
+                    <span style="font-size:12px; color:#6b7280;">Printed as “Dr” on the Report of Grades</span>
+                </div>
+                <table style="width:100%; border-collapse:collapse;">
+                    <tbody>
+                    @foreach(\App\Models\Enrollment::sortRoster($droppedEnrollments) as $enrollment)
+                        <tr>
+                            <td style="{{ $td }} font-family:monospace;">{{ $enrollment->student?->student_number }}</td>
+                            <td style="{{ $td }} color:#6b7280;">{{ $enrollment->student?->full_name }}</td>
+                            <td style="{{ $td }} text-align:right;">
+                                {{-- Re-enroll: hidden while the class list is locked --}}
+                                @unless($lockedSubjects)
+                                <form method="POST" action="{{ route('dean.enrollments.store', $currentTerm) }}">
+                                    @csrf
+                                    <input type="hidden" name="student_id" value="{{ $enrollment->student_id }}">
+                                    <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Re-enroll</button>
+                                </form>
+                                @endunless
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
 
         @else
             <div class="py-8 text-sm text-center text-gray-400 bg-white border border-gray-200 rounded-lg">
@@ -123,26 +138,24 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.querySelectorAll('.remove-enrollment-form').forEach(form => {
+        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                const label = form.querySelector('.enrollment-label').value;
+                const text = form.dataset.confirm;
                 if (typeof Swal === 'undefined') {
-                    if (confirm('Remove this student?\n' + label)) form.submit();
+                    if (confirm(text)) form.submit();
                     return;
                 }
                 Swal.fire({
-                    title: 'Remove this student?',
-                    text: label,
+                    text: text,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#dc2626',
+                    confirmButtonColor: '#b91c1c',
                     cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Yes, remove',
+                    confirmButtonText: 'Yes',
                     cancelButtonText: 'Cancel',
-                }).then(result => { if (result.isConfirmed) form.submit(); });
+                }).then(function (result) { if (result.isConfirmed) form.submit(); });
             });
         });
     </script>

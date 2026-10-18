@@ -90,7 +90,7 @@
                         });
                     </script>
                 @endif
-                @if($errors->any())
+                @if($errors->any() && !old('_form'))
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                             Swal.fire({
@@ -112,5 +112,6 @@
         </div>
     </div>
 
+    @include('layouts.partials.live-search')
 </body>
 </html>

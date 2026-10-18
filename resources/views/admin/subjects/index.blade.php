@@ -48,7 +48,7 @@
                         <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                         <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->program?->department?->name ?? $subject->department ?? 'N/A' }}</td>
-                        <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $subject->units }}@if($subject->has_laboratory)<span style="margin-left:6px; padding:1px 7px; font-size:10px; font-weight:700; color:#0a5b05; background:#eef7ec; border-radius:9999px; white-space:nowrap;">Lec + Lab</span>@endif</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->requester?->name ?? '—' }}</td>
                         <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->created_at->format('M d, Y h:i A') }}</td>
                         <td class="px-4 py-3">
@@ -116,7 +116,7 @@
                         <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ $subject->code }}</td>
                         <td class="px-4 py-3 text-gray-700">{{ $subject->name }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->program?->code ?? '—' }}</td>
-                        <td class="px-4 py-3 text-gray-600">{{ $subject->units }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ $subject->units }}@if($subject->has_laboratory)<span style="margin-left:6px; padding:1px 7px; font-size:10px; font-weight:700; color:#0a5b05; background:#eef7ec; border-radius:9999px; white-space:nowrap;">Lec + Lab</span>@endif</td>
                         <td class="px-4 py-3 text-gray-600">{{ $subject->requester?->name ?? '—' }}</td>
                         <td class="px-4 py-3 text-xs text-gray-500">{{ $subject->approved_at?->format('M d, Y h:i A') ?? '—' }}</td>
                     </tr>

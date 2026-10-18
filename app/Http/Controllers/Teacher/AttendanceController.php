@@ -75,7 +75,7 @@ class AttendanceController extends Controller
             $warning = 'Attendance saved. Needs a guidance office permission slip (' . AttendanceRecord::ABSENCE_WARNING . '+ absences in a row): ' . $names . '.';
         }
 
-        return redirect()->route('teacher.classes.record', [$section, $subject])
+        return redirect(\App\Services\TeacherNav::route('teacher.classes.record', [$section, $subject]))
             ->with($warning ? 'warning' : 'success', $warning ?? 'Attendance saved.');
     }
     public function summary(Section $section, Subject $subject)

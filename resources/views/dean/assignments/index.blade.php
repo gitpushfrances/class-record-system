@@ -29,11 +29,11 @@
         </div>
         <div>
             <label class="block mb-1 text-xs font-medium text-gray-600">Subject</label>
-            <select name="subject_id" required
+            <select name="subject_id" required data-lab-toggle
                     class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">Select Subject</option>
                 @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}">{{ $subject->program?->code }} · {{ $subject->code }} — {{ $subject->name }} ({{ $subject->placement }})</option>
+                    <option value="{{ $subject->id }}" data-lab="{{ $subject->has_laboratory ? 1 : 0 }}" @selected(old('subject_id') == $subject->id)>{{ $subject->program?->code }} · {{ $subject->code }} — {{ $subject->name }} ({{ $subject->placement }}){{ $subject->has_laboratory ? ' · Lec + Lab' : '' }}</option>
                 @endforeach
             </select>
         </div>
@@ -48,7 +48,10 @@
             </select>
         </div>
         <div style="grid-column:1 / -1;">
-            @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null))
+            @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null) + ['title' => 'Class schedule'])
+        </div>
+        <div style="grid-column:1 / -1;">
+            @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null, 'lab') + ['title' => 'Laboratory schedule'])
         </div>
         <div class="flex items-end">
             <button type="submit"
@@ -74,6 +77,7 @@
                         <th class="px-6 py-3 text-left">Section</th>
                         <th class="px-6 py-3 text-left">Subject</th>
                         <th class="px-6 py-3 text-left">Teacher</th>
+                        <th class="px-6 py-3 text-left">Schedule</th>
                         <th class="px-6 py-3 text-left">Action</th>
                     </tr>
                 </thead>
@@ -86,8 +90,10 @@
                             </td>
                             <td class="px-6 py-3 text-gray-800">{{ $a->subject_code }} — {{ $a->subject_name }}</td>
                             <td class="px-6 py-3 text-gray-800">{{ $a->teacher_name }}</td>
-                            <td class="px-6 py-3">
-                                <form method="POST" action="{{ route('dean.assignments.destroy', $a->id) }}" class="remove-assignment-form">
+                            <td class="px-6 py-3 text-gray-800">{{ \App\Services\ClassSchedule::summary($a, (bool) $a->has_laboratory) ?: '—' }}</td>
+                            <td class="px-6 py-3" style="white-space:nowrap;">
+                                <a href="{{ route('dean.sections.show', $a->section_id) }}" class="text-xs font-medium hover:underline" style="margin-right:12px; color:#0a5b05;">Edit</a>
+                                <form method="POST" action="{{ route('dean.assignments.destroy', $a->id) }}" class="remove-assignment-form" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <input type="hidden" class="assignment-label" value="{{ $a->subject_code }} — {{ $a->teacher_name }} ({{ $a->program_code }} {{ $a->year_number }}-{{ $a->section_letter }})">
