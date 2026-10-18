@@ -33,14 +33,10 @@ class SubjectRosterController extends Controller
         $results = collect();
 
         if (mb_strlen($query) >= self::MIN_SEARCH) {
-            $like    = '%' . addcslashes($query, '%_\\') . '%';
             $results = Student::with('program')
                 ->where('status', 'active')
                 ->whereNotIn('id', $roster->pluck('student_id'))
-                ->where(fn ($q) => $q->where('student_number', 'like', $like)
-                    ->orWhere('last_name', 'like', $like)
-                    ->orWhere('first_name', 'like', $like)
-                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]))
+                ->tap(fn ($q) => \App\Services\NameSearch::apply($q, $query, ['last_name', 'first_name'], 'student_number'))
                 ->orderBy('last_name')->orderBy('first_name')
                 ->limit(self::MAX_RESULTS)
                 ->get();

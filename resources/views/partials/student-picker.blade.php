@@ -14,8 +14,8 @@
             @foreach($students as $student)
                 <div data-picker-row data-search="{{ mb_strtolower($student->student_number . ' ' . $student->first_name . ' ' . $student->last_name . ' ' . $student->full_name) }}"
                      style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-bottom:1px solid #f3f4f6;">
-                    <span style="width:110px; font-family:monospace; font-size:13px; color:#374151;">{{ $student->student_number }}</span>
-                    <span style="flex:1; font-size:14px; color:#111827;">{{ $student->full_name }}</span>
+                    <span data-hl style="width:110px; font-family:monospace; font-size:13px; color:#374151;">{{ $student->student_number }}</span>
+                    <span data-hl style="flex:1; font-size:14px; color:#111827;">{{ $student->full_name }}</span>
                     <span style="font-size:12px; color:#6b7280;">{{ $student->year_level }}</span>
                     <button type="submit" name="student_id" value="{{ $student->id }}"
                             style="padding:5px 12px; font-size:12px; font-weight:600; color:#fff; background:#0a5b05; border:none; border-radius:8px; cursor:pointer;">Enroll</button>
@@ -37,11 +37,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const count = form.querySelector('[data-picker-count]');
         const LIMIT = 20;
         const filter = function () {
-            const terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+            const terms = EssuSearch.terms(input.value);
             let matched = 0;
             rows.forEach(function (row) {
-                const hit = terms.every(function (t) { return row.dataset.search.indexOf(t) !== -1; });
+                const hit = EssuSearch.matches(row.dataset.search, terms);
                 row.style.display = hit && matched < LIMIT ? '' : 'none';
+                row.querySelectorAll('[data-hl]').forEach(function (el) { EssuSearch.highlight(el, terms); });
                 if (hit) matched++;
             });
             none.hidden = matched > 0;

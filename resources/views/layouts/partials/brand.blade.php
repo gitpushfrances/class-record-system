@@ -2,6 +2,7 @@
 <link rel="icon" type="image/png" href="{{ asset('images/rog/essu-seal.png') }}">
 <style>
     :root { --essu-green: #0a5b05; --essu-green-dark: #0b3d0b; --essu-gold: #d4af37; --essu-gold-bright: #f3eb21; --essu-cream: #fbf3d0; }
+    mark.search-hit { padding:0 1px; color:inherit; background:#fde68a; border-radius:2px; }
     .bg-indigo-600, .bg-indigo-700 { background-color: #0a5b05 !important; }
     .hover\:bg-indigo-700:hover, .hover\:bg-indigo-800:hover { background-color: #084a04 !important; }
     .bg-indigo-50, .hover\:bg-indigo-50:hover { background-color: #eef7ec !important; }

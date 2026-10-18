@@ -48,8 +48,8 @@
                         <tbody>
                         @foreach($results as $student)
                             <tr>
-                                <td style="{{ $td }}">{{ $student->student_number }}</td>
-                                <td style="{{ $td }}">{{ $student->full_name }}</td>
+                                <td style="{{ $td }}">{{ \App\Services\NameSearch::highlight($student->student_number, $query) }}</td>
+                                <td style="{{ $td }}">{{ \App\Services\NameSearch::highlight($student->full_name, $query) }}</td>
                                 <td style="{{ $td }}">{{ $student->program?->code ?? '—' }}</td>
                                 <td style="{{ $td }}">{{ $student->year_level }}</td>
                                 <td style="{{ $td }} text-align:right;">

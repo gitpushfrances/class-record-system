@@ -86,11 +86,11 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse($students as $student)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-mono text-sm text-gray-700">{{ $student->student_number }}</td>
+                        <td class="px-6 py-4 font-mono text-sm text-gray-700">{{ \App\Services\NameSearch::highlight($student->student_number, request('search')) }}</td>
                         <td class="px-6 py-4">
-                            <div class="font-medium text-gray-800">{{ $student->full_name }}</div>
+                            <div class="font-medium text-gray-800">{{ \App\Services\NameSearch::highlight($student->full_name, request('search')) }}</div>
                             @if($student->email)
-                                <div class="text-sm text-gray-500">{{ $student->email }}</div>
+                                <div class="text-sm text-gray-500">{{ \App\Services\NameSearch::highlight($student->email, request('search'), true) }}</div>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">{{ $student->year_level }}</td>

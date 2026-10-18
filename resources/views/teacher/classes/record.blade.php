@@ -201,10 +201,10 @@
                 <tr class="hover:bg-gray-50 student-row" data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
                     <td class="sticky left-0 z-10 px-4 py-3 text-center text-gray-400 bg-white border border-gray-100">{{ $n }}</td>
                     <td class="sticky left-[40px] z-10 px-4 py-3 font-mono text-xs text-gray-500 bg-white border border-gray-100">
-                        {{ $enrollment->student?->student_number ?? '—' }}
+                        <span data-hl>{{ $enrollment->student?->student_number ?? '—' }}</span>
                     </td>
                     <td class="sticky left-[120px] z-10 px-4 py-3 font-medium text-gray-800 bg-white border border-gray-100">
-                        {{ $enrollment->student?->full_name ?? 'N/A' }}
+                        <span data-hl>{{ $enrollment->student?->full_name ?? 'N/A' }}</span>
                         @if($fg && $fg->is_locked)
                             <span class="ml-1 text-xs text-gray-400"><i class="fa-solid fa-lock"></i></span>
                         @endif
@@ -337,10 +337,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var rows  = document.querySelectorAll('tr.student-row');
     var label = document.getElementById('recordCount');
     input.addEventListener('input', function () {
-        var q = input.value.trim().toLowerCase(), shown = 0;
+        var q = input.value.trim().toLowerCase(), shown = 0, terms = EssuSearch.terms(q);
         rows.forEach(function (r) {
-            var match = q === '' || r.dataset.search.indexOf(q) !== -1;
+            var match = q === '' || EssuSearch.matches(r.dataset.search, terms);
             r.style.display = match ? '' : 'none';
+            r.querySelectorAll('[data-hl]').forEach(function (el) { EssuSearch.highlight(el, terms); });
             if (match) shown++;
         });
         label.textContent = q === '' ? '' : 'Showing ' + shown + ' of ' + rows.length;

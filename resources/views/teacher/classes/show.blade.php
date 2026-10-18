@@ -140,8 +140,8 @@
                     <tr class="roster-row hover:bg-gray-50" data-group="{{ $group }}"
                         data-search="{{ mb_strtolower(($enrollment->student?->student_number ?? '') . ' ' . ($enrollment->student?->full_name ?? '')) }}">
                         <td class="px-6 py-3 text-gray-400">{{ $n }}</td>
-                        <td class="px-6 py-3 font-mono text-gray-600">{{ $enrollment->student?->student_number ?? 'N/A' }}</td>
-                        <td class="px-6 py-3 font-medium text-gray-800">{{ $enrollment->student?->full_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-3 font-mono text-gray-600"><span data-hl>{{ $enrollment->student?->student_number ?? 'N/A' }}</span></td>
+                        <td class="px-6 py-3 font-medium text-gray-800"><span data-hl>{{ $enrollment->student?->full_name ?? 'N/A' }}</span></td>
                     </tr>
                 @empty
                     <tr><td colspan="3" class="px-6 py-10 text-sm text-center text-gray-400">No {{ $gender }} students enrolled.</td></tr>
@@ -158,10 +158,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var rosterRows  = document.querySelectorAll('tr.roster-row');
         var rosterCount = document.getElementById('rosterCount');
         rosterSearch.addEventListener('input', function () {
-            var q = rosterSearch.value.trim().toLowerCase(), shown = 0;
+            var q = rosterSearch.value.trim().toLowerCase(), shown = 0, terms = EssuSearch.terms(q);
             rosterRows.forEach(function (r) {
-                var match = q === '' || r.dataset.search.indexOf(q) !== -1;
+                var match = q === '' || EssuSearch.matches(r.dataset.search, terms);
                 r.style.display = match ? '' : 'none';
+                r.querySelectorAll('[data-hl]').forEach(function (el) { EssuSearch.highlight(el, terms); });
                 if (match) shown++;
             });
             document.querySelectorAll('tr.roster-divider').forEach(function (d) {
