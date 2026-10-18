@@ -55,68 +55,14 @@
             <div class="px-6 py-4 border-b border-gray-100">
                 <h3 class="text-sm font-semibold text-gray-700">Subjects & Teachers</h3>
             </div>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Subject</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Teacher</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse($currentTerm->subjects as $subj)
-                        <tr>
-                            <td class="px-6 py-4 text-sm">{{ $subj->code }} — {{ $subj->name }}</td>
-                            <td class="px-6 py-4 text-sm">
-                                {{ $subj->pivot->teacher_id ? \App\Models\User::find($subj->pivot->teacher_id)?->name : '—' }}
-                                @if(\App\Services\ReportOfGrades::isSubmitted($currentTerm, $subj))
-                                    <a href="{{ route('dean.rog.show', [$currentTerm, $subj]) }}" target="_blank" style="margin-left:6px; font-size:12px; font-weight:600; color:#0a5b05;">View ROG</a>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <form method="POST" action="{{ route('dean.sections.change-subject-teacher', $section) }}" class="flex items-center gap-2">
-                                    @csrf
-                                    <input type="hidden" name="subject_id" value="{{ $subj->id }}">
-                                    <select name="teacher_id" class="px-2 py-1 text-xs border border-gray-300 rounded-lg">
-                                        @foreach($teachers as $t)
-                                            <option value="{{ $t->id }}" {{ $subj->pivot->teacher_id == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit" class="px-3 py-1 text-xs font-medium border rounded-lg" style="border-color:#d1d5db; color:#374151;">Update</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="3" class="px-6 py-4 text-sm text-center text-gray-400">No subjects added to this term yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-            <div class="px-6 py-4 border-t border-gray-100">
-                <form method="POST" action="{{ route('dean.sections.attach-subject', $section) }}" style="display:flex; flex-direction:column; gap:12px;">
-                    @csrf
-                    @if($availableSubjects->isEmpty())
-                        <p class="text-sm text-gray-400">No subject left to assign: every approved subject of the program for this term's semester is already in this section.</p>
-                    @else
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                            <select name="subject_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg" style="min-width:220px;">
-                                <option value="">— Select subject —</option>
-                                @foreach($availableSubjects as $s)
-                                    <option value="{{ $s->id }}" @selected(old('subject_id') == $s->id)>{{ $s->code }} — {{ $s->name }} ({{ $s->placement }})</option>
-                                @endforeach
-                            </select>
-                            <select name="teacher_id" required class="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-lg" style="min-width:180px;">
-                                <option value="">— Select teacher —</option>
-                                @foreach($teachers as $t)
-                                    <option value="{{ $t->id }}" @selected(old('teacher_id') == $t->id)>{{ $t->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @include('partials.schedule-fields', \App\Services\ClassSchedule::formValues(null))
-                        <div style="display:flex; justify-content:flex-end;">
-                            <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white rounded-lg" style="background:#0b3d0b;">Add subject</button>
-                        </div>
-                    @endif
-                </form>
+            <div style="padding:16px 24px;">
+                @include('program-head.sections.partials.subjects', [
+                    'subjects'    => $currentTerm->subjects,
+                    'attachRoute' => 'dean.sections.attach-subject',
+                    'updateRoute' => 'dean.sections.change-subject-teacher',
+                    'rogRoute'    => 'dean.rog.show',
+                    'term'        => $currentTerm,
+                ])
             </div>
         </div>
 

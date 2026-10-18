@@ -34,7 +34,15 @@ class AssignmentController extends Controller
                 'users.name as teacher_name',
                 'section_subject_teachers.section_term_id',
                 'section_subject_teachers.subject_id',
-                'section_subject_teachers.teacher_id'
+                'section_subject_teachers.teacher_id',
+                'section_subject_teachers.schedule_days',
+                'section_subject_teachers.schedule_start',
+                'section_subject_teachers.schedule_end',
+                'section_subject_teachers.lab_days',
+                'section_subject_teachers.lab_start',
+                'section_subject_teachers.lab_end',
+                'subjects.has_laboratory',
+                'sections.id as section_id'
             )
             ->where('section_terms.status', 'active')
             ->where('programs.department_id', $departmentId)
@@ -67,55 +75,25 @@ class AssignmentController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'section_id' => 'required|exists:sections,id',
-            'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'required|exists:users,id',
-            ...\App\Services\ClassSchedule::rules(),
-        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
+        $request->validate(['section_id' => 'required|exists:sections,id'] + \App\Services\SubjectAssignment::rules(), [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        $section = Section::with('program')->findOrFail($validated['section_id']);
+        $section = Section::with('program')->findOrFail($request->section_id);
         abort_if(
             $section->program->department_id !== \App\Services\Scope::departmentId(),
             403,
             'This section does not belong to your department.'
         );
 
-        $currentTerm = SectionTerm::where('section_id', $validated['section_id'])
-            ->where('status', 'active')
-            ->first();
+        $currentTerm = SectionTerm::where('section_id', $section->id)->where('status', 'active')->first();
 
         if (!$currentTerm) {
             return redirect()->route('dean.assignments.index')
                 ->with('error', 'This section has no active term. Set one up on the Sections page first.');
         }
 
-        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($validated['subject_id']))) {
-            return redirect()->route('dean.assignments.index')->with('error', $refusal)->withInput();
+        if ($error = \App\Services\SubjectAssignment::attach($currentTerm, $request)) {
+            return redirect()->route('dean.assignments.index')->with('error', reset($error))->withInput();
         }
-
-        $exists = DB::table('section_subject_teachers')
-            ->where('section_term_id', $currentTerm->id)
-            ->where('subject_id', $validated['subject_id'])
-            ->exists();
-
-        if ($exists) {
-            return redirect()->route('dean.assignments.index')
-                ->with('error', 'A teacher is already assigned to that subject for this section\'s current term. Remove it first to reassign.');
-        }
-
-        $slot = \App\Services\ClassSchedule::fromRequest($request);
-        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $validated['subject_id'], $slot)) {
-            return redirect()->route('dean.assignments.index')->with('error', $conflict)->withInput();
-        }
-
-        DB::table('section_subject_teachers')->insert([
-            'section_term_id' => $currentTerm->id,
-            'subject_id' => $validated['subject_id'],
-            'teacher_id' => $validated['teacher_id'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ] + $slot);
 
         return redirect()->route('dean.assignments.index')
             ->with('success', 'Teacher assigned successfully.');

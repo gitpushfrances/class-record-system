@@ -32,7 +32,7 @@ class ReportOfGrades
         $section = $term->section;
         $program = $section->program;
         $pivot    = $term->subjects()->where('subjects.id', $subject->id)->firstOrFail()->pivot;
-        $schedule = ClassSchedule::label($pivot->schedule_days, $pivot->schedule_start, $pivot->schedule_end);
+        $schedule = ClassSchedule::summary($pivot, (bool) $subject->has_laboratory);
 
         $active      = $term->rosterFor($subject->id)->with('student')->get();
         $dropped     = $term->droppedFrom($subject->id)->with('student')->get();

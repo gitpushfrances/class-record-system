@@ -186,24 +186,11 @@ class SectionController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         abort_if(!$currentTerm, 422, 'This section has no active term.');
 
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'required|exists:users,id',
-            ...\App\Services\ClassSchedule::rules(),
-        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
+        $request->validate(\App\Services\SubjectAssignment::rules(), [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        if ($refusal = \App\Services\SubjectOffering::refusal($currentTerm, Subject::findOrFail($request->subject_id))) {
-            return back()->withErrors(['subject_id' => $refusal])->withInput();
+        if ($error = \App\Services\SubjectAssignment::attach($currentTerm, $request)) {
+            return back()->withErrors($error)->withInput();
         }
-
-        $slot = \App\Services\ClassSchedule::fromRequest($request);
-        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
-            return back()->withErrors(['schedule_days' => $conflict])->withInput();
-        }
-
-        $currentTerm->subjects()->syncWithoutDetaching([
-            $request->subject_id => ['teacher_id' => $request->teacher_id] + $slot,
-        ]);
 
         return redirect()->route('program-head.sections.show', $section)->with('success', 'Subject added and teacher assigned.');
     }
@@ -219,18 +206,11 @@ class SectionController extends Controller
         $currentTerm = $section->terms()->where('status', 'active')->first();
         abort_if(!$currentTerm, 422, 'This section has no active term.');
 
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'required|exists:users,id',
-            ...\App\Services\ClassSchedule::rules(),
-        ], [], \App\Services\ClassSchedule::ATTRIBUTES);
+        $request->validate(\App\Services\SubjectAssignment::rules(), [], \App\Services\ClassSchedule::ATTRIBUTES);
 
-        $slot = \App\Services\ClassSchedule::fromRequest($request);
-        if ($conflict = \App\Services\ClassSchedule::conflict($currentTerm->id, (int) $request->subject_id, $slot)) {
-            return back()->withErrors(['schedule_days' => $conflict])->withInput();
+        if ($error = \App\Services\SubjectAssignment::update($currentTerm, $request)) {
+            return back()->withErrors($error)->withInput();
         }
-
-        $currentTerm->subjects()->updateExistingPivot($request->subject_id, ['teacher_id' => $request->teacher_id] + $slot);
 
         return redirect()->route('program-head.sections.show', $section)->with('success', 'Teacher and schedule updated.');
     }
