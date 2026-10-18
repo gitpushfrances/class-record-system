@@ -13,7 +13,7 @@
                class="block overflow-hidden transition bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <div class="font-semibold text-gray-800">{{ $department->name }}</div>
-                    <div class="text-xs text-gray-500">{{ $department->code }}</div>
+                    <div class="text-xs text-gray-500">{{ $department->code }}@if($department->status === 'inactive')<span style="margin-left:6px; padding:1px 8px; font-size:11px; font-weight:600; color:#6b7280; background:#f3f4f6; border-radius:9999px;">Inactive</span>@endif</div>
                 </div>
                 <div class="px-5 py-4 space-y-2 text-sm">
                     <div class="flex justify-between">

@@ -38,6 +38,30 @@ class DepartmentController extends Controller
         return back()->with('success', "{$department->code} updated.");
     }
 
+    /** Deactivate or activate. An inactive department is hidden when creating accounts; its records stay. */
+    public function toggleStatus(Department $department)
+    {
+        $department->update(['status' => $department->status === 'active' ? 'inactive' : 'active']);
+
+        return back()->with('success', $department->status === 'active'
+            ? "{$department->code} activated."
+            : "{$department->code} deactivated. Its records are kept.");
+    }
+
+    /** Delete a department added by mistake: only while it has no programs and no accounts. */
+    public function destroy(Department $department)
+    {
+        if ($department->programs()->exists() || \App\Models\User::where('department_id', $department->id)->exists()) {
+            return back()->with('error', "{$department->code} already has programs or accounts. Deactivate it instead: its records are kept.");
+        }
+
+        // For good: a soft-deleted row would keep the code taken (unique rule), so it could not be added again.
+        $code = $department->code;
+        $department->forceDelete();
+
+        return redirect()->route('admin.departments.index')->with('success', "{$code} deleted.");
+    }
+
     private function validated(\Illuminate\Http\Request $request, ?int $ignoreId = null): array
     {
         $request->merge(['code' => strtoupper(trim((string) $request->code)), 'name' => trim((string) $request->name)]);

@@ -1,4 +1,4 @@
-{{-- Code + name form in a dialog. Params: $id, $title, $action, $method (POST|PUT), $code, $name, $submit --}}
+{{-- Code + name form in a dialog. Params: $id, $title, $action, $method (POST|PUT), $code, $name, $submit; optional $codeHint, $nameHint (examples) --}}
 @php $reopen = $errors->any() && old('_form') === $id; @endphp
 <dialog id="{{ $id }}" style="padding:0; border:none; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,.25); width:min(92vw,420px);">
     <form method="POST" action="{{ $action }}" style="padding:20px;">
@@ -14,11 +14,11 @@
         @endif
 
         <label style="display:block; font-size:13px; font-weight:600; color:#374151;">Code
-            <input type="text" name="code" value="{{ $reopen ? old('code') : $code }}" required maxlength="20" placeholder="e.g. CCS"
+            <input type="text" name="code" value="{{ $reopen ? old('code') : $code }}" required maxlength="20" placeholder="e.g. {{ $codeHint ?? 'CCS' }}"
                    style="display:block; width:100%; margin-top:4px; padding:8px; text-transform:uppercase; border:1px solid #d1d5db; border-radius:8px;">
         </label>
         <label style="display:block; margin-top:12px; font-size:13px; font-weight:600; color:#374151;">Name
-            <input type="text" name="name" value="{{ $reopen ? old('name') : $name }}" required maxlength="255" placeholder="e.g. College of Computer Studies"
+            <input type="text" name="name" value="{{ $reopen ? old('name') : $name }}" required maxlength="255" placeholder="e.g. {{ $nameHint ?? 'College of Computer Studies' }}"
                    style="display:block; width:100%; margin-top:4px; padding:8px; border:1px solid #d1d5db; border-radius:8px;">
         </label>
 

@@ -85,6 +85,10 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
     Route::put('/departments/{department}', [AdminDepartment::class, 'update'])->name('departments.update');
     Route::post('/departments/{department}/programs', [AdminProgram::class, 'store'])->name('programs.store');
     Route::put('/departments/{department}/programs/{program}', [AdminProgram::class, 'update'])->name('programs.update');
+    Route::patch('/departments/{department}/status', [AdminDepartment::class, 'toggleStatus'])->name('departments.status');
+    Route::delete('/departments/{department}', [AdminDepartment::class, 'destroy'])->name('departments.destroy');
+    Route::patch('/departments/{department}/programs/{program}/status', [AdminProgram::class, 'toggleStatus'])->name('programs.status');
+    Route::delete('/departments/{department}/programs/{program}', [AdminProgram::class, 'destroy'])->name('programs.destroy');
     Route::get('/departments/{department}/programs/{program}', [AdminProgram::class, 'show'])->name('programs.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}', [AdminSection::class, 'show'])->name('sections.show');
     Route::get('/departments/{department}/programs/{program}/sections/{section}/students', [AdminSection::class, 'students'])->name('sections.students');
