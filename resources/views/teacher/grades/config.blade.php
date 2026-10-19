@@ -21,19 +21,7 @@
 @endif
 
 @php
-    $defaultComponents = [
-        ['key' => 'quiz',       'label' => 'Quiz',        'weight' => 20, 'period' => 'midterm'],
-        ['key' => 'exam',        'label' => 'Exam',        'weight' => 30, 'period' => 'midterm'],
-        ['key' => 'project',     'label' => 'Project',     'weight' => 20, 'period' => 'midterm'],
-        ['key' => 'assessment',  'label' => 'Assessment',  'weight' => 15, 'period' => 'midterm'],
-        ['key' => 'attendance',  'label' => 'Attendance',  'weight' => 15, 'period' => 'midterm'],
-        ['key' => 'security',    'label' => 'Security',    'weight' => 20, 'period' => 'final'],
-        ['key' => 'exam_final',  'label' => 'Final Exam',  'weight' => 30, 'period' => 'final'],
-        ['key' => 'project_final','label' => 'Final Project','weight' => 25, 'period' => 'final'],
-        ['key' => 'attendance_f', 'label' => 'Attendance (F)','weight' => 15, 'period' => 'final'],
-        ['key' => 'others_1',    'label' => 'Others',      'weight' => 10, 'period' => 'final'],
-    ];
-    $components = $config ? $config->getComponents() : $defaultComponents;
+    $components = $config ? $config->getComponents() : \App\Models\GradeConfiguration::DEFAULT_COMPONENTS;
 @endphp
 
 <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.grades.config.store', [$section, $subject]) }}" id="configForm">

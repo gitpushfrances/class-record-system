@@ -57,6 +57,26 @@ class GradeConfigOrderTest extends TestCase
         $this->actingAs($this->teacher)->get($record)->assertOk()->assertSeeInOrder(['Quiz (50%)', 'Exam (40%)', 'Attendance (10%)', 'Final Exam (100%)']);
     }
 
+    public function test_default_components_put_the_exam_at_40_percent(): void
+    {
+        $defaults = collect(\App\Models\GradeConfiguration::DEFAULT_COMPONENTS);
+
+        foreach (['midterm', 'final'] as $period) {
+            $components = $defaults->where('period', $period);
+            $this->assertEquals(100, $components->sum('weight'), "{$period} weights must total 100");
+            $this->assertEquals(40, $components->first(fn ($c) => str_starts_with($c['key'], 'exam'))['weight']);
+        }
+        $this->assertSame($defaults->count(), $defaults->pluck('key')->unique()->count(), 'component keys must be unique');
+        $this->assertFalse($defaults->contains('key', 'security'));
+        $this->assertTrue($defaults->contains(fn ($c) => \App\Services\GradeCalculator::isAttendance($c['key']) && $c['period'] === 'final'));
+
+        // A class without a configuration opens with these defaults.
+        $this->actingAs($this->teacher)->get(route('teacher.grades.config', [$this->term->section, $this->subject]))
+            ->assertOk()
+            ->assertSee('"key":"exam","label":"Exam","weight":40', false)
+            ->assertDontSee('"key":"security"', false);
+    }
+
     public function test_grade_config_has_move_up_and_down(): void
     {
         $this->actingAs($this->teacher)->get(route('teacher.grades.config', [$this->term->section, $this->subject]))
