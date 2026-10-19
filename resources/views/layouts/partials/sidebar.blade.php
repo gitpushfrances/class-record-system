@@ -295,6 +295,12 @@
                 'icon'   => 'fa-chalkboard-teacher',
                 'label'  => 'My Subjects',
             ])
+            @include('layouts.partials.sidebar-link', [
+                'href'   => route('teacher.past-classes.index'),
+                'active' => request()->routeIs('teacher.past-classes.*'),
+                'icon'   => 'fa-box-archive',
+                'label'  => 'Past Classes',
+            ])
         @endif
 
     </nav>

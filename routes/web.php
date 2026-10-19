@@ -155,6 +155,11 @@ Route::middleware(['auth', 'status', 'role:teacher', 'no.cache'])->prefix('teach
     Route::get('/advisory', [TeacherDashboard::class, 'advisory'])->name('advisory');
     Route::get('/teaching', [TeacherDashboard::class, 'teaching'])->name('teaching');
 
+    // Past Classes: closed terms, read-only
+    Route::get('/past-classes', [App\Http\Controllers\Teacher\PastClassController::class, 'index'])->name('past-classes.index');
+    Route::get('/past-classes/{sectionTerm}/{subject}', [App\Http\Controllers\Teacher\PastClassController::class, 'show'])->name('past-classes.show');
+    Route::get('/past-classes/{sectionTerm}/{subject}/rog', [App\Http\Controllers\Teacher\PastClassController::class, 'rog'])->name('past-classes.rog');
+
     // Class overview
     Route::get('/classes/{section}', [ClassController::class, 'show'])->name('classes.show');
 

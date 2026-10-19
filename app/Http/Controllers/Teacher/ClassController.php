@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Exports\ClassRecordExport;
 use App\Models\AcademicPeriod;
 use App\Models\Enrollment;
-use App\Models\FinalGrade;
 use App\Models\Section;
 use App\Models\SectionTerm;
 use App\Models\Subject;
@@ -59,53 +58,10 @@ class ClassController extends Controller
                 ->with('warning', 'Set up grade configuration first.');
         }
 
-        if ($currentTerm) {
-            $currentTerm->loadRoster($subject->id, [
-                'enrollments.student',
-                'enrollments.finalGrade' => fn($q) => $q->where('subject_id', $subject->id),
-                'enrollments.studentGrades' => fn($q) => $q
-                    ->whereHas('gradeItem', fn($q2) => $q2->where('subject_id', $subject->id))
-                    ->with('gradeItem'),
-                'enrollments.attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id),
-            ]);
-        }
+        $data   = \App\Services\ClassRecordData::build($currentTerm, $subject, $config, AcademicPeriod::getActive()?->midterm_cutoff_date, $request->gender, $request->order);
+        $locked = $currentTerm->verifications()->where('subject_id', $subject->id)->whereIn('status', ['pending', 'verified'])->exists();
 
-        $gradeItemsByType = $currentTerm->gradeItemsFor($subject->id)->get()->groupBy('component_type');
-        $matrix           = $config->buildComponentMatrix($gradeItemsByType, true);
-        $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
-        $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
-
-        $streaks = \App\Models\AttendanceRecord::streaksFor($subject->id, $enrollments->pluck('id'));
-        $locked  = $currentTerm->verifications()->where('subject_id', $subject->id)->whereIn('status', ['pending', 'verified'])->exists();
-
-        $liveGrades        = [];
-        $attendanceDisplay = [];
-        $componentGrades   = [];
-
-        foreach ($enrollments as $enrollment) {
-            $liveGrades[$enrollment->id] = GradeCalculator::result($enrollment, $config, $cutoffDate);
-
-            $componentGrades[$enrollment->id] = $this->calculateComponentGrades($enrollment, $config, $cutoffDate);
-
-            foreach ($matrix as $comp) {
-                if ($comp['type'] !== 'attendance') continue;
-                $period  = $comp['period'];
-                $records = $enrollment->attendanceRecords->filter(
-                    fn($r) => $cutoffDate
-                        ? ($period === 'midterm' ? $r->date->lte($cutoffDate) : $r->date->gt($cutoffDate))
-                        : false
-                );
-                $attendanceDisplay[$enrollment->id][$comp['key']] = [
-                    'present' => $records->where('status', 'present')->count(),
-                    'total'   => $records->count(),
-                ];
-            }
-        }
-
-        return view('teacher.classes.record', compact(
-            'section', 'subject', 'currentTerm', 'config', 'matrix',
-            'enrollments', 'liveGrades', 'attendanceDisplay', 'componentGrades', 'streaks', 'locked'
-        ));
+        return view('teacher.classes.record', $data + compact('section', 'subject', 'currentTerm', 'config', 'locked'));
     }
 
     public function export(Section $section, Subject $subject, Request $request)
@@ -182,48 +138,6 @@ class ClassController extends Controller
         abort_if(!$isSubjectTeacher, 403, 'You are not assigned to teach this subject in this section.');
 
         return $currentTerm;
-    }
-
-    /**
-     * Per-component grade equivalent (display only). Transmutes each
-     * component's own raw percentage independently — does NOT feed into
-     * the final composite calculation, which still runs on weighted
-     * percentages via GradeCalculator. Exists only so the
-     * "Grade" column can show 1.00–5.00 instead of weighted points.
-     */
-    private function calculateComponentGrades($enrollment, $config, $cutoffDate = null): array
-    {
-        $components = $config->getComponents();
-        $grades = [];
-
-        foreach ($components as $comp) {
-            $key = $comp['key'];
-            $grades[$key] = null;
-
-            if (GradeCalculator::isAttendance($key)) {
-                $period = $comp['period'] ?? 'midterm';
-                $rate = GradeCalculator::attendanceRate($enrollment, $period, $cutoffDate);
-                if ($rate !== null) {
-                    $grades[$key] = FinalGrade::convertToNumericalGrade($rate, $config->computation_method ?? 'standard');
-                }
-                continue;
-            }
-
-            $items = $enrollment->studentGrades->filter(
-                fn($g) => $g->gradeItem !== null && $g->gradeItem->component_type === $key
-            );
-
-            if ($items->isNotEmpty()) {
-                $earned   = $items->sum(fn($g) => (float) $g->score);
-                $possible = $items->sum(fn($g) => (float) $g->gradeItem->max_score);
-                if ($possible > 0) {
-                    $pct = round(($earned / $possible) * 100, 2);
-                    $grades[$key] = FinalGrade::convertToNumericalGrade($pct, $config->computation_method ?? 'standard');
-                }
-            }
-        }
-
-        return $grades;
     }
 
 }

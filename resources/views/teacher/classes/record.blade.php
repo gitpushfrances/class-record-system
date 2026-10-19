@@ -1,5 +1,10 @@
 <x-sidebar-layout>
-@php [$backUrl, $backLabel] = \App\Services\TeacherNav::recordBack($section); @endphp
+@php
+    $readOnly = $readOnly ?? false; // Past Classes: a closed term, shown without editing controls
+    [$backUrl, $backLabel] = $readOnly
+        ? [route('teacher.past-classes.index'), 'Back to Past Classes']
+        : \App\Services\TeacherNav::recordBack($section);
+@endphp
 <div class="no-print" style="margin-bottom:12px;"><x-back-button :href="$backUrl" :label="$backLabel" /></div>
 
 {{-- Header --}}
@@ -30,6 +35,14 @@
         </div>
     </div>
     <div class="flex flex-wrap gap-2 mt-1 no-print">
+        @if($readOnly)
+            @if($rogUrl ?? null)
+                <a href="{{ $rogUrl }}" target="_blank"
+                   class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
+                    <i class="fa-solid fa-file-lines"></i> Report of Grades
+                </a>
+            @endif
+        @else
         <a href="{{ \App\Services\TeacherNav::route('teacher.classes.students', [$section, $subject]) }}"
            class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
             <i class="fa-solid fa-users"></i> Students
@@ -54,6 +67,7 @@
            class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             <i class="fa-solid fa-file-excel"></i> Export Excel
         </a>
+        @endif {{-- /editing controls --}}
         <button type="button" onclick="window.print()"
                 class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             <i class="fa-solid fa-print"></i> Print
@@ -61,7 +75,11 @@
     </div>
 </div>
 
-@if(collect($matrix)->where('type', 'items')->every(fn($c) => $c['items']->isEmpty()))
+@if($readOnly)
+    <div class="px-4 py-3 mb-4 text-sm rounded-lg no-print" style="color:#374151; background:#f3f4f6;">
+        <i class="fa-solid fa-lock"></i> Closed term ({{ $currentTerm->semester }} {{ $currentTerm->academic_year }}). This record is read-only.
+    </div>
+@elseif(collect($matrix)->where('type', 'items')->every(fn($c) => $c['items']->isEmpty()))
     <div class="px-4 py-3 mb-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg">
         No grade items yet. Click <strong>+ Add</strong> on a component header to add the first quiz, activity or exam.
     </div>
@@ -216,7 +234,7 @@
                                 @php $sg = $gradeMap->get($item->id); @endphp
                                 <td class="px-3 py-3 text-center border {{ $comp['color']['bg200'] }} {{ $comp['color']['bg50'] }}/30">
                                     @php $shown = $sg ? rtrim(rtrim(number_format($sg->score, 2, '.', ''), '0'), '.') : ''; @endphp
-                                    @if($item->is_locked)
+                                    @if($item->is_locked || $readOnly)
                                         @if($sg)
                                             <span class="font-medium text-gray-800">{{ $shown }}</span>
                                             <span class="text-xs text-gray-400">/{{ number_format($item->max_score, 0) }}</span>
@@ -357,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+@unless($readOnly)
 <dialog id="addItemDialog" style="padding:0; border:none; border-radius:12px; box-shadow:0 20px 40px rgba(0,0,0,.25); width:min(92vw,360px);">
     <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.grades.items.store', [$section, $subject]) }}" style="padding:20px;">
         @csrf
@@ -381,6 +400,7 @@ function openAddItem(key, name) {
     document.getElementById('addItemDialog').showModal();
 }
 </script>
+@endunless {{-- /add item dialog --}}
 
 <div id="scoreToast" style="position:fixed; right:16px; bottom:16px; display:none; padding:8px 14px; border-radius:8px; font-size:13px; color:#fff; z-index:60;"></div>
 <script>
