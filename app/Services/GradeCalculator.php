@@ -180,9 +180,9 @@ class GradeCalculator
         ];
     }
 
-    /** Grades display to one decimal. */
+    /** Grades display to one decimal, rounded the same way they are computed (FinalGrade::roundGrade). */
     public static function formatGrade($grade, ?string $method = 'standard'): string
     {
-        return number_format((float) $grade, 1);
+        return number_format(FinalGrade::roundGrade((float) $grade), 1);
     }
 }

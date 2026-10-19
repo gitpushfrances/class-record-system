@@ -60,11 +60,21 @@ class FinalGrade extends Model
         'formula_b' => 'Minor subjects: 4 − 3(S/TS)',
     ];
 
-    /** Average of the midterm and final grades, rounded half up to one decimal. */
+    /**
+     * A grade to one decimal, the ESSU way: exactly half goes DOWN, anything above half goes up.
+     * 1.75 → 1.7, 1.751 → 1.8, 1.76 → 1.8, 3.05 → 3.0. On the 1.0–5.0 scale a lower grade is better,
+     * so a tie favours the student. The 0.000001 tolerance only absorbs floating-point noise: grades
+     * come from percentages with two decimals, so real differences are at least 0.0001.
+     */
+    public static function roundGrade(float $grade): float
+    {
+        return ceil($grade * 10 - 0.5 - 1e-6) / 10;
+    }
+
+    /** Average of the midterm and final grades, rounded with roundGrade() (1.7 and 1.4 → 1.55 → 1.5). */
     public static function averageGrade($mid, $fin, ?string $method = 'standard')
     {
-        $avg = ((float) $mid + (float) $fin) / 2;
-        return round($avg + 1e-9, 1);
+        return self::roundGrade(((float) $mid + (float) $fin) / 2);
     }
 
     public static function convertToNumericalGrade($percentage, ?string $method = 'standard')
@@ -75,8 +85,8 @@ class FinalGrade extends Model
         if ($method === 'formula_a' || $method === 'formula_b') {
             $ratio = max(0.0, min(1.0, $percentage / 100));
             return $method === 'formula_a'
-                ? round(5 - 4 * $ratio + 1e-9, 1)
-                : round(4 - 3 * $ratio + 1e-9, 1);
+                ? self::roundGrade(5 - 4 * $ratio)
+                : self::roundGrade(4 - 3 * $ratio);
         }
 
         // Flat zones — match Scholaro's Most Common Tertiary table exactly,
@@ -87,7 +97,7 @@ class FinalGrade extends Model
         if ($percentage < 70) return 5.00;
 
         // Interpolated zones (77%-100%), linear within each band,
-        // rounded to nearest 0.1 per client decision
+        // rounded to one decimal with roundGrade() (client decision: exactly half goes down)
         $bands = [
             ['pct_min' => 96.00, 'pct_max' => 100.00, 'grade_min' => 1.00, 'grade_max' => 1.24],
             ['pct_min' => 94.00, 'pct_max' => 95.99,  'grade_min' => 1.25, 'grade_max' => 1.49],
@@ -105,7 +115,7 @@ class FinalGrade extends Model
                 $grade = $span > 0
                     ? $band['grade_max'] - ($band['grade_max'] - $band['grade_min']) * (($percentage - $band['pct_min']) / $span)
                     : $band['grade_min'];
-                return round($grade, 1);
+                return self::roundGrade($grade);
             }
         }
 
