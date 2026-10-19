@@ -12,6 +12,7 @@ class GradeConfiguration extends Model
 
     protected $fillable = [
         'section_id',
+        'section_term_id',
         'subject_id',
         'config_json',
         'computation_method',
@@ -23,6 +24,24 @@ class GradeConfiguration extends Model
     protected $casts = [
         'config_json' => 'array',
         'approved_at' => 'datetime',
+    ];
+
+    /**
+     * Starting components for a class without a saved configuration (the teacher can change, add,
+     * remove or reorder them). Class standing 60% + major exam 40% in each period, the common split
+     * in Philippine state universities; the exam at 40% was requested by the client.
+     */
+    public const DEFAULT_COMPONENTS = [
+        ['key' => 'quiz',             'label' => 'Quiz',       'weight' => 20, 'period' => 'midterm'],
+        ['key' => 'project',          'label' => 'Project',    'weight' => 15, 'period' => 'midterm'],
+        ['key' => 'assessment',       'label' => 'Assessment', 'weight' => 15, 'period' => 'midterm'],
+        ['key' => 'attendance',       'label' => 'Attendance', 'weight' => 10, 'period' => 'midterm'],
+        ['key' => 'exam',             'label' => 'Exam',       'weight' => 40, 'period' => 'midterm'],
+        ['key' => 'quiz_final',       'label' => 'Quiz',       'weight' => 20, 'period' => 'final'],
+        ['key' => 'project_final',    'label' => 'Project',    'weight' => 15, 'period' => 'final'],
+        ['key' => 'assessment_final', 'label' => 'Assessment', 'weight' => 15, 'period' => 'final'],
+        ['key' => 'attendance_f',     'label' => 'Attendance', 'weight' => 10, 'period' => 'final'],
+        ['key' => 'exam_final',       'label' => 'Final Exam', 'weight' => 40, 'period' => 'final'],
     ];
 
     public function section()
@@ -86,7 +105,7 @@ class GradeConfiguration extends Model
      * never drift out of sync with each other or with the config screen.
      *
      * $gradeItems must be a Collection of GradeItem already grouped by component_type,
-     * e.g. Section::gradeItemsFor($subjectId)->get()->groupBy('component_type').
+     * e.g. SectionTerm::gradeItemsFor($subjectId)->get()->groupBy('component_type').
      */
     public function buildComponentMatrix($gradeItemsByType, bool $includeEmpty = false): array
     {

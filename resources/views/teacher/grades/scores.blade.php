@@ -1,5 +1,5 @@
 <x-sidebar-layout>
-@php $gradeMethod = $section->gradeConfigurationFor($subject->id)?->computation_method ?? 'standard'; @endphp
+{{-- $gradeMethod: conversion method of this term's grade configuration (GradeController::scores). --}}
 
 
 
@@ -89,11 +89,16 @@
 <script>
 const gradeMethod = @json($gradeMethod);
 
+// Same rule as FinalGrade::roundGrade: exactly half goes down (1.75 → 1.7), above half goes up.
+function roundGrade(g) {
+    return Math.ceil(g * 10 - 0.5 - 1e-6) / 10;
+}
+
 function convertToNumericalGrade(percentage) {
     if (gradeMethod === 'formula_a' || gradeMethod === 'formula_b') {
         const ratio = Math.max(0, Math.min(1, percentage / 100));
         const g = gradeMethod === 'formula_a' ? 5 - 4 * ratio : 4 - 3 * ratio;
-        return Math.round((g + 1e-9) * 10) / 10;
+        return roundGrade(g);
     }
     if (percentage >= 75 && percentage < 77) return 3.00;
     if (percentage >= 70 && percentage < 75) return 4.00;
@@ -116,7 +121,7 @@ function convertToNumericalGrade(percentage) {
             const grade = span > 0
                 ? band.gradeMax - (band.gradeMax - band.gradeMin) * ((percentage - band.pctMin) / span)
                 : band.gradeMin;
-            return Math.round(grade * 10) / 10;
+            return roundGrade(grade);
         }
     }
 

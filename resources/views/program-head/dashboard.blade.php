@@ -29,7 +29,7 @@
             $verification = $term->verifications->firstWhere('subject_id', $subject->id);
             $status = $verification->status ?? 'not_submitted';
             $teacher = \App\Models\User::find($subject->pivot->teacher_id);
-            $method  = $configs->get($term->section_id . '-' . $subject->id)?->computation_method ?? 'standard';
+            $method  = $configs->get($term->id . '-' . $subject->id)?->computation_method ?? 'standard';
         @endphp
         <div style="border-bottom:1px solid #e5e7eb;">
             <div class="flex items-center justify-between px-6 py-4 cursor-pointer select-none"

@@ -19,7 +19,7 @@ class RoleAccessTest extends TestCase
         'super_admin'  => ['admin.dashboard', 'admin.view-as.index', 'admin.deans.index', 'admin.users.create', 'admin.subjects.index', 'admin.departments.index', 'admin.academic.index', 'admin.backup.index', 'admin.rog.index'],
         'dean'         => ['dean.dashboard', 'dean.faculty.index', 'dean.teachers.pending', 'dean.sections.index', 'dean.students.index', 'dean.subjects.index', 'dean.assignments.index', 'dean.enrollments.index', 'dean.program-heads.index', 'dean.promotions.index'],
         'program_head' => ['program-head.dashboard', 'program-head.sections.index', 'program-head.sections.create', 'program-head.students.index', 'program-head.students.create', 'program-head.subjects.index', 'program-head.subjects.create'],
-        'teacher'      => ['teacher.dashboard', 'teacher.advisory', 'teacher.teaching'],
+        'teacher'      => ['teacher.dashboard', 'teacher.advisory', 'teacher.teaching', 'teacher.past-classes.index'],
     ];
 
     private const ACCOUNTS = [

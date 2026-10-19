@@ -35,9 +35,9 @@ class ProgramHeadController extends Controller
             ->get()
             ->groupBy(fn($fg) => $fg->enrollment_id . '-' . $fg->subject_id);
 
-        $configs = GradeConfiguration::whereIn('section_id', $sectionTerms->pluck('section_id'))
+        $configs = GradeConfiguration::whereIn('section_term_id', $sectionTerms->pluck('id'))
             ->get()
-            ->keyBy(fn($c) => $c->section_id . '-' . $c->subject_id);
+            ->keyBy(fn($c) => $c->section_term_id . '-' . $c->subject_id);
 
         return view('program-head.dashboard', compact('sectionTerms', 'finalGrades', 'configs'));
     }
@@ -76,8 +76,7 @@ class ProgramHeadController extends Controller
             'rejection_reason' => $request->input('reason'),
         ]);
 
-        $section = $sectionTerm->section;
-        $section->gradeItemsFor($subject->id)->update(['is_locked' => false]);
+        $sectionTerm->gradeItemsFor($subject->id)->update(['is_locked' => false]);
 
         $enrollmentIds = \App\Models\Enrollment::where('section_term_id', $sectionTerm->id)->pluck('id');
         FinalGrade::where('subject_id', $subject->id)

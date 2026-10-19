@@ -6,12 +6,12 @@
 **PHP Version:** 8.4.11  
 **Node Version:** 18.20.8  
 **Started:** February 8, 2026  
-**Current Release:** v1.0-rc2 (October 19, 2026), client testing  
-**Automated Tests:** 214 passing  
+**Current Release:** v1.0-rc3 (October 20, 2026), client testing  
+**Automated Tests:** 245 passing  
 
 ---
 
-## SYSTEM FLOW — ROLES AND RULES (v1.0-rc2, October 19, 2026)
+## SYSTEM FLOW — ROLES AND RULES (v1.0-rc3, October 20, 2026)
 
 This replaces the original February plan. It describes what the system does today.
 
@@ -44,8 +44,8 @@ This replaces the original February plan. It describes what the system does toda
 
 ### Teacher
 - Requests an account from the sign-in page; pending until the Dean or Admin approves
-- **Dashboard**, **My Advisory** (advisory section roster), **My Subjects**
-- Per subject: **Grade Config** (components, weights = 100%, conversion: standard table, major formula 5 − 4(S/TS), minor formula 4 − 3(S/TS)), **Class Record** (+ Add items, inline scores, Midterm Grade and Finals Grade columns, Print, Export Excel), **Attendance** (present / absent; lecture and laboratory separately for lab subjects), **Students** (add irregular students, drop / restore per subject, remove one added by mistake), **Final Grades**, **Submit for Verification**, **Report of Grades**
+- **Dashboard**, **My Advisory** (advisory section roster), **My Subjects**, **Past Classes** (closed terms, read-only: Class Record, Attendance Summary, Report of Grades)
+- Per subject: **Grade Config** (components in the teacher's order (▲ / ▼), weights = 100%; defaults Class Standing 60% and Exam 40% in each period; conversion: standard table, major formula 5 − 4(S/TS), minor formula 4 − 3(S/TS)), **Class Record** (+ Add items, inline scores, Midterm Grade and Finals Grade columns, Print, Export Excel), **Attendance** (present / absent; lecture and laboratory separately for lab subjects; Summary with one column per session, ✓ / ✗ per student, Midterm and Finals), **Students** (add irregular students, drop / restore per subject, remove one added by mistake), **Final Grades**, **Submit for Verification**, **Report of Grades**
 - Back buttons lead to where the class was opened from (My Subjects, My Advisory or Dashboard)
 
 ### Key rules
@@ -60,8 +60,38 @@ This replaces the original February plan. It describes what the system does toda
 - Remove deletes an enrollment only while it has no scores, attendance or final grade and nothing is submitted; otherwise the student is dropped (records kept, "Dr" on the ROG)
 - A subject with a laboratory has a lecture schedule and a laboratory schedule on the same assignment (same day allowed at different times); both are checked for conflicts and both print on the ROG
 - Search boxes search while typing; each typed word must match the start of a name or of a student-number part, and an e-mail is searched only when the word contains "@"; the matched letters are highlighted
+- Each term has its own grade items and grade configuration: a new term starts with an empty Class Record; a closed term keeps its records and opens read-only in Past Classes (nothing is copied or moved)
+- Grades are rounded to one decimal; exactly half goes down, anything above half goes up (1.75 → 1.7, 1.751 → 1.8, Average 3.05 → 3.0); the same rule for period grades, averages and the Scores preview (`FinalGrade::roundGrade`)
+- Each academic period needs its midterm cutoff date: attendance on or before it counts toward Midterm, later toward Finals; without it, attendance-graded classes show INC and `grades:recompute` skips them
+- The Report of Grades prints "Nothing Follows" in the first empty row after the last student of each list
 
 ---
+
+## RELEASE v1.0-rc3 — October 20, 2026 (client testing, round 3)
+
+Tag `v1.0-rc3` on `main`. 245 automated tests passing. Server install: `DEPLOY.md`.
+
+### What this release contains (Phase 10: the client's round-3 requests)
+- **10a — New term, empty Class Record**: grade items and grade configurations belong to the term (`section_term_id`); before, a section that took the same subject again showed last term's items, kept numbering them and refused a new exam. Migration `2026_10_20_000100` assigns existing rows to their terms
+- **10b — Past Classes (archive)**: teachers open their closed terms read-only: Class Record, Attendance Summary and Report of Grades. Requested as "move submitted records to another table and clear the class record"; done without copying, since a closed term already keeps its records and a new term starts empty (10a)
+- **10c — Report of Grades**: "Nothing Follows" in the first empty row after the last student of each list
+- **10d — Attendance Summary**: one column per session (date; Lec / Lab for laboratory subjects), ✓ present / ✗ absent / – no record, Midterm and Finals by the cutoff date, totals, absence streak and rate; printable; also in Past Classes
+- **10e — Grade Config order**: ▲ / ▼ moves a component within its period; the saved order is the Class Record column order (Ma'am Mich)
+- **10e-2 — Default components**: Quiz 20, Project 15, Assessment 15, Attendance 10, Exam 40 in each period (class standing 60% + exam 40%, the common split in Philippine state universities); "Security" and "Others" removed; still editable
+- **10f — Rounding**: exactly half goes down, above half goes up (client's rule), for every grade, average and the Scores preview
+- **10g — Background**: signed-in pages get an off-white background with a faint ESSU-green dot grid, a gold glow and the ESSU seal watermark (Sir Baldo); sign-in page, ROG and printouts unchanged
+
+### Updating to this release (client)
+1. Back up the database first: `mysqldump -h 127.0.0.1 -P 3306 -u root -p <database> > backup.sql` (use `127.0.0.1`, not `localhost`, on XAMPP)
+2. `git fetch --tags && git checkout v1.0-rc3`, `composer install`, `npm ci && npm run build`, `php artisan migrate` (10a), `php artisan optimize:clear`
+3. Admin → Academic Period: every period needs its midterm cutoff date
+4. `php artisan grades:recompute` (dry run), read it, then `--apply` (the rounding rule changes values that sat exactly on a half)
+
+### Waiting for the client
+- **Sir Roger**: written yes to the rounding example (Midterm 3.0 + Finals 3.1 → Average 3.05 → 3.0 Passed; before: 3.1 Failed); D1 formula vs. printed legend; D6 component total ÷ total vs. average of item percentages
+- **Ma'am Mich**: the default components (Exam 40% is in; the other weights follow the common 60/40 split until she sends her list)
+- **Sir Baldo**: the background as built, or another direction
+- Still open from rc2: D7 teachers from other departments, D8 programs with majors, D9 lecture / laboratory units, D10 absence warning at 3 or 4, D11 the exact Backup error
 
 ## RELEASE v1.0-rc2 — October 19, 2026 (client testing, round 2)
 
@@ -1266,14 +1296,54 @@ f
 ### Test safety
 - If tests fail with database errors and 0 assertions, recreate the test database: `DROP DATABASE class_record_test; CREATE DATABASE class_record_test …` (an interrupted run left foreign-key leftovers in it, October 18)
 
-## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 19, 2026)
+## QA FIXES & PATCHES — October 20, 2026 (client round 3)
+
+### New term starts with an empty Class Record (Phase 10a)
+- Found while checking the client's "archive" request: `grade_items` and `grade_configurations` were keyed by section and subject only. A section taking the same subject in a later term showed the old items, continued their numbering ("Quiz 6"), refused a new "Midterm Examination" and reused the old weights
+- `section_term_id` on both tables; unique key `(section_term_id, subject_id)` on configurations; `SectionTerm::gradeItemsFor()` / `gradeConfigurationFor()` replace the section-level methods (removed); every caller moved (Grade Config, Items, Scores, inline scores, Final Grades, Submit, Class Record, Excel export, `grades:recompute`, Program Head dashboard and Reject)
+- A grade item is scored, deleted or opened only in its own term (403 otherwise)
+- Migration backfill: an item goes to the term of the students scored on it (split into one copy per term when scored in several); an unscored item to the term current when it was created; a configuration is copied to every term that used it. The old unique key had to be replaced by an explicit `section_id` index first (MySQL had dropped the foreign key's own index; checked on MariaDB 10.11)
+- Tests: `TermGradeRecordTest`
+
+### Past Classes (Phase 10b)
+- `Teacher\PastClassController`: closed terms (`completed`) of the signed-in teacher, grouped by semester; read-only Class Record (same view, `readOnly`), Attendance Summary and Report of Grades; another teacher gets 403, an active term 404
+- `App\Services\ClassRecordData` builds the Class Record data for the current and the past view (one computation); a closed term uses its own academic period's midterm cutoff
+- Tests: `PastClassesTest`
+
+### Report of Grades: Nothing Follows (Phase 10c)
+- First empty row after the last student of each list (MALE, FEMALE, GENDER NOT SET); on row 1 of an empty list; not printed on a full page of 25
+- Tests: `ReportOfGradesTest`
+
+### Attendance Summary per session (Phase 10d)
+- `App\Services\AttendanceSheet`: sessions in date order (lecture before laboratory), Midterm / Finals by the cutoff (one "Sessions" group without a cutoff), marks per student, totals, streak, rate; same sheet in Past Classes
+- Tests: `AttendanceSheetTest`
+
+### Grade Config order and defaults (Phase 10e, 10e-2)
+- ▲ / ▼ per component within its period; the controller already saved the submitted order and the Class Record already followed it
+- `GradeConfiguration::DEFAULT_COMPONENTS`: Quiz 20, Project 15, Assessment 15, Attendance 10, Exam 40 per period; applies only to classes without a saved configuration
+- Tests: `GradeConfigOrderTest`
+
+### Rounding (Phase 10f)
+- `FinalGrade::roundGrade()` = `ceil(grade × 10 − 0.5 − 0.000001) / 10`: exactly half goes down, above half up; used by both formulas, the standard table, `averageGrade()` and `GradeCalculator::formatGrade()`; the Scores page preview uses the same rule (checked equal to PHP on all 30,003 percentage × method values)
+- Changed expectations in `GradeConversionTest` are the values exactly on a half (95.99 → 1.2, 90.99 → 1.7, 85.99 → 2.2, 79.99 → 2.7; averages 1.55 → 1.5, 1.35 → 1.3, 1.15 → 1.1); new rounding cases added
+- Run `grades:recompute` after deploying
+
+### ESSU background (Phase 10g)
+- `body.app-shell` (signed-in layout) in `brand.blade.php`: off-white, ESSU-green dot grid, gold glow, seal watermark at 6% opacity; plain white when printing
+- Tests: `BrandTest`
+
+### Backup command (development note)
+- `mysqldump` with `localhost` failed on Windows (error 2002, 0-byte file): `localhost` can resolve to IPv6 while XAMPP's MariaDB listens on IPv4. Use `-h 127.0.0.1 -P 3306`, the same host Laravel uses
+
+## OPEN KNOWN GAPS — CONSOLIDATED CHECKLIST (as of October 20, 2026)
 
 Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item (`[x]`) and add the date and commit when it is fixed or decided. The dated sections above keep the history.
 
 ### Decisions and sign-offs (client)
 - [ ] Written approval from Sir Roger that grades use the S/TS formulas (major 5 − 4(S/TS), minor 4 − 3(S/TS)) while the printed ROG legend says 55-69% = Failed; with the formulas, 3.0 (passing) falls at 50% (major) and 33.3% (minor)
 - [ ] Confirm the Registrar name on Admin → ROG Settings (sample form: REGINA L. DOCENA, DBA)
-- [ ] Default grade-configuration components still include "Security" (20%, Finals) in `teacher/grades/config.blade.php`; confirm the default Finals components with the client
+- [x] Default grade components set: Quiz 20, Project 15, Assessment 15, Attendance 10, Exam 40 per period; "Security" removed — October 20, 2026 (Phase 10e-2); Ma'am Mich may still send her own list
+- [ ] Written yes from Sir Roger to the rounding rule as built (Midterm 3.0 + Finals 3.1 → Average 3.05 → 3.0 Passed)
 - [ ] Teacher double-booking (same teacher, two sections, same time) is not checked; only subjects inside the same section are (`ClassSchedule::conflict`)
 - [ ] Component grade: total ÷ total (current, DepEd style) or average of item percentages (client's wording) — Sir Roger (guide D6); blocks 9d
 - [ ] Teachers from other departments (e.g. GE subjects): any subject or GE only (guide D7)
@@ -1283,11 +1353,11 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 
 ### Grading (Phase 2)
 - [ ] Run `php artisan grades:recompute` then `--apply` on the client server after deploy; stored `final_grades` keep old values until then
-- [ ] The grade conversion is still ported to JavaScript for the live preview on the Scores page (`teacher/grades/scores.blade.php`); it can drift from `FinalGrade::convertToNumericalGrade()` if the formula changes
+- [ ] The grade conversion is still ported to JavaScript for the live preview on the Scores page (`teacher/grades/scores.blade.php`); it uses the same rule as `FinalGrade::roundGrade` and matched PHP on every value (October 20), but it must be updated together with any future formula change
 - [ ] A weighted component with no items, attendance with no records, or no midterm cutoff on the active Academic Period makes the period INC for every student (rule as approved; teachers must be told)
 
 ### Class Record and attendance (Phase 3)
-- [ ] Attendance date columns (✓ / ✗ per date) on the Class Record are not built; attendance shows as "present / total"
+- [x] Attendance with a column per date (✓ / ✗) — done October 20, 2026 on the Attendance Summary (Phase 10d); the Class Record keeps "present / total"
 - [ ] The old Grade Items and Scores pages still exist alongside "+ Add" and inline entry in the Class Record
 - [ ] Inline score save re-fetches the whole Class Record page for every cell (slow on large classes)
 - [ ] Attendance migration `down()` fails when a student has lecture and laboratory records on the same date; converted late / excused marks cannot be restored
@@ -1313,7 +1383,7 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [ ] General-education subjects owned by one program cannot be assigned to another program's section (assignment is program-only)
 - [ ] Assigned teacher's department is not checked on the server — active-teacher check done October 18, 2026 (Phase 9a, `SubjectAssignment`); the department rule waits for D7 (teachers from other departments)
 - [ ] Seeded sample subjects (CS101 etc.) have no program; they appear only under Admin "No department" and cannot be assigned
-- [ ] Completed terms are not browsable by teachers (teacher pages open the active term only); the records are kept, but no page lists completed terms yet (the Program Head / Dean ROG URL still opens them)
+- [x] Completed terms are browsable by teachers — Past Classes, October 20, 2026 (Phase 10b)
 - [x] Set Term warning for unverified subjects — done October 17, 2026 (Phase 8b)
 - [ ] Promotion cannot be undone from the UI (drop the students from the target section; the year level must be corrected by editing the student)
 - [ ] Admin View As covers Dean and Program Head pages only; Admin cannot open a teacher's Class Record (ROGs are visible through View As Dean / Program Head)
@@ -1337,7 +1407,8 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - [x] ESSU palette and the ESSU seal in place of the book icon — done October 17, 2026 (Phase 7a)
 - [x] Dead code removed — done October 17, 2026 (Phase 7d)
 
-### Client testing (v1.0-rc2)
+### Client testing (v1.0-rc3)
+- [ ] Client tests the round-3 changes (Phase 10) and returns bug reports
 - [ ] Client runs the v1.0-rc2 Client Testing Guide (Word / PDF) and returns the step marks and bug reports
 - [ ] Answers to decisions D1–D11 (guide Part 9) recorded under "Decisions and sign-offs"
 - [ ] INC rule confirmed with the client: a zero total in any weighted component (for example absent at every session) makes the period INC, not failed
@@ -1351,10 +1422,10 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 
 ## ROADMAP (after client testing)
 
-### Next — v1.0-rc3: client decisions and round-3 reports
+### Next — v1.0-rc4: client decisions and round-4 reports
 - 9d component grade computation (after D6), 9f2 programs with majors (after D8), teachers from other departments (after D7), lecture / laboratory units (after D9)
-- Bugs reported through the Client Testing Guide (Part 10), sorted into bugs, client decisions and misunderstandings before any code changes
-- 8d undo last promotion; completed terms browsable by teachers
+- Bugs reported by the client, sorted into bugs, client decisions and misunderstandings before any code changes
+- 8d undo last promotion
 
 ### Later: Reporting & Analytics (planned)
 - Teacher: class performance summary, grade distribution, failing students alert, attendance trends
@@ -1366,12 +1437,12 @@ Every open gap from Phases 1–4 and earlier sessions in one place. Tick an item
 - Open: breadcrumbs, mobile audit, keyboard navigation (Tab / Enter / arrows) between score cells, reusable `<x-confirm-form>`
 
 ### Testing & Deployment (partly done)
-- Done: 214 automated tests (role access, grading and INC, Report of Grades, enrollment rules and class list lock, lecture and laboratory schedules, search, term rollover, promotion), separate `class_record_test` database, login rate limiting (5 attempts), `DEPLOY.md`
+- Done: 245 automated tests (role access, grading, rounding and INC, Report of Grades, enrollment rules and class list lock, lecture and laboratory schedules, search, term rollover and term-scoped records, past classes, attendance sheet, promotion), separate `class_record_test` database, login rate limiting (5 attempts), `DEPLOY.md`
 - Open: production server with HTTPS, scheduled backups, real Admin account and no sample seeders on the server, `grades:recompute --apply` after deploy
 
 ---
 
-**Last Updated:** October 19, 2026  
-**Current Release:** v1.0-rc2 (client testing)  
-**Next Milestone:** v1.0-rc3 — client decisions (D1–D11) and round-3 reports  
+**Last Updated:** October 20, 2026  
+**Current Release:** v1.0-rc3 (client testing)  
+**Next Milestone:** v1.0-rc4 — client decisions (rounding sign-off, D1–D11) and round-4 reports  
 **Maintained By:** Frances Igop
