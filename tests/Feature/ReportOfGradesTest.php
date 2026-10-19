@@ -7,6 +7,7 @@ use App\Models\GradeVerification;
 use App\Models\SectionTerm;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\ReportOfGrades;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -168,5 +169,34 @@ class ReportOfGradesTest extends TestCase
         $programHead = User::where('email', 'programhead@classrecord.test')->firstOrFail();
 
         $this->actingAs($programHead)->get(route('program-head.rog.show', [$this->term, $this->subject]))->assertNotFound();
+    }
+
+    public function test_the_first_empty_row_of_each_list_says_nothing_follows(): void
+    {
+        $this->submit();
+
+        // The MALE and FEMALE lists always print; each list's last page closes with one "Nothing Follows" row.
+        $pages = collect(ReportOfGrades::build($this->term, $this->subject)['pages']);
+        $short = $pages->filter(fn ($page) => count($page['rows']) < ReportOfGrades::ROWS_PER_PAGE)->count();
+        $this->assertGreaterThanOrEqual(2, $short);
+
+        $html = $this->actingAs($this->teacher)->get($this->teacherUrl())->assertOk()->getContent();
+        $this->assertSame($short, substr_count($html, 'Nothing Follows'));
+    }
+
+    public function test_a_full_page_has_no_nothing_follows_row(): void
+    {
+        $this->submit();
+
+        $data          = ReportOfGrades::build($this->term, $this->subject);
+        $data['pages'] = [[
+            'label' => 'MALE',
+            'rows'  => collect(range(1, ReportOfGrades::ROWS_PER_PAGE))->map(fn ($n) => ['no' => $n, 'name' => "Student {$n}"]),
+        ]];
+
+        $html = view('rog.show', $data + ['backUrl' => '#'])->render();
+
+        $this->assertStringContainsString('Student ' . ReportOfGrades::ROWS_PER_PAGE, $html);
+        $this->assertStringNotContainsString('Nothing Follows', $html);
     }
 }

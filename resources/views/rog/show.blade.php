@@ -34,6 +34,7 @@
     table.grades th { text-align: center; font-weight: bold; }
     table.grades .c { text-align: center; }
     table.grades .group { text-align: center; font-weight: bold; }
+    table.grades .nothing-follows { text-align: center; font-style: italic; }
     .signs { display: flex; justify-content: space-between; margin-top: 0.15in; font-size: 7.5pt; }
     .signs > div { width: 24%; }
     .signs .cap { margin-bottom: 0.3in; }
@@ -115,10 +116,18 @@
         <tr><th></th><th>Name of Students</th><th>Student No.</th><th>Midterm</th><th>Finals</th><th>Average</th><th>Remarks</th></tr>
         <tr><td></td><td class="group">{{ $page['label'] }}</td><td></td><td></td><td></td><td></td><td></td></tr>
         @for($r = 0; $r < \App\Services\ReportOfGrades::ROWS_PER_PAGE; $r++)
-            @php $row = $page['rows'][$r] ?? null; @endphp
+            @php
+                $row = $page['rows'][$r] ?? null;
+                // The first empty row after the last student closes the list, so no name can be written in below it.
+                $closesList = $row === null && $r === count($page['rows']);
+            @endphp
             <tr>
                 <td class="c">{{ $row['no'] ?? '' }}</td>
-                <td>{{ $row['name'] ?? '' }}</td>
+                @if($closesList)
+                    <td class="nothing-follows">Nothing Follows</td>
+                @else
+                    <td>{{ $row['name'] ?? '' }}</td>
+                @endif
                 <td class="c">{{ $row['number'] ?? '' }}</td>
                 <td class="c">{{ $row['midterm'] ?? '' }}</td>
                 <td class="c">{{ $row['finals'] ?? '' }}</td>
