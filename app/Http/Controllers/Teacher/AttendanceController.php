@@ -80,32 +80,16 @@ class AttendanceController extends Controller
     }
     public function summary(Section $section, Subject $subject)
     {
-        $this->authorizeSectionSubject($section, $subject);
-        $currentTerm = $section->terms()->where('status', 'active')->first();
-        $enrollments = collect();
-        if ($currentTerm) {
-            $enrollments = $currentTerm->rosterFor($subject->id)
-                ->with(['student', 'attendanceRecords' => fn($q) => $q->where('subject_id', $subject->id)])
-                ->get()
-                ->pipe(fn ($c) => \App\Models\Enrollment::sortRoster($c))
-                ->map(function ($enrollment) {
-                    $records = $enrollment->attendanceRecords;
-                    $total   = $records->count();
-                    $present = $records->where('status', 'present')->count();
-                    $absent  = $records->where('status', 'absent')->count();
-                    $percent = $total > 0 ? round(($present / $total) * 100, 2) : 0;
-                    return [
-                        'enrollment' => $enrollment,
-                        'student'    => $enrollment->student,
-                        'total'      => $total,
-                        'present'    => $present,
-                        'absent'     => $absent,
-                        'streak'     => AttendanceRecord::consecutiveAbsences($records),
-                        'percent'    => $percent,
-                    ];
-                });
-        }
-        return view('teacher.attendance.summary', compact('section', 'subject', 'enrollments'));
+        $term  = $this->authorizeSectionSubject($section, $subject);
+        $sheet = \App\Services\AttendanceSheet::build($term, $subject, \App\Models\AcademicPeriod::getActive()?->midterm_cutoff_date);
+
+        return view('teacher.attendance.summary', $sheet + [
+            'section'   => $section,
+            'subject'   => $subject,
+            'term'      => $term,
+            'backUrl'   => \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]),
+            'backLabel' => 'Back to Attendance',
+        ]);
     }
 
     /**

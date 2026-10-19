@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\SectionTerm;
 use App\Models\Subject;
+use App\Services\AttendanceSheet;
 use App\Services\ClassRecordData;
 use App\Services\ReportOfGrades;
 use Illuminate\Http\Request;
@@ -60,6 +61,19 @@ class PastClassController extends Controller
             'locked'      => true,
             'readOnly'    => true,
             'rogUrl'      => $rogUrl,
+        ]);
+    }
+
+    public function attendance(SectionTerm $sectionTerm, Subject $subject)
+    {
+        $this->authorizePastClass($sectionTerm, $subject);
+
+        return view('teacher.attendance.summary', AttendanceSheet::build($sectionTerm, $subject, ClassRecordData::cutoffFor($sectionTerm)) + [
+            'section'   => $sectionTerm->section,
+            'subject'   => $subject,
+            'term'      => $sectionTerm,
+            'backUrl'   => route('teacher.past-classes.show', [$sectionTerm, $subject]),
+            'backLabel' => 'Back to Class Record',
         ]);
     }
 

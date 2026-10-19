@@ -36,6 +36,10 @@
     </div>
     <div class="flex flex-wrap gap-2 mt-1 no-print">
         @if($readOnly)
+            <a href="{{ route('teacher.past-classes.attendance', [$currentTerm, $subject]) }}"
+               class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
+                <i class="fa-solid fa-clipboard-check"></i> Attendance
+            </a>
             @if($rogUrl ?? null)
                 <a href="{{ $rogUrl }}" target="_blank"
                    class="bg-white border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-2.5 rounded-lg transition hover:bg-gray-50">
