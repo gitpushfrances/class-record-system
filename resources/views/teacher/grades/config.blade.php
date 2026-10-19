@@ -116,7 +116,7 @@ const initialComponents = {!! json_encode($components) !!};
 initialComponents.forEach(c => { if (typeof c.editing === 'undefined') c.editing = false; });
 let rowCounter = initialComponents.length;
 
-const ROW_GRID = 'display:grid; grid-template-columns: 1fr 34px 84px 22px 34px; align-items:center; column-gap:8px;';
+const ROW_GRID = 'display:grid; grid-template-columns: 22px 1fr 34px 84px 22px 34px; align-items:center; column-gap:8px;';
 
 function showConfigError(msg) {
     const box = document.getElementById('configErrorBox');
@@ -145,12 +145,34 @@ function weightInput(idx, value) {
                    oninput="updateTotals()">`;
 }
 
-function makeRow(comp, idx) {
+// ▲ / ▼: the order of the components in each period is the order of the Class Record columns.
+function moveButtons(idx, pos) {
+    const btn = (dir, icon, disabled, title) => `<button type="button" onclick="moveRow(${idx}, ${dir})" title="${title}" ${disabled ? 'disabled' : ''}
+                style="display:flex; align-items:center; justify-content:center; width:22px; height:16px; padding:0; border:0; border-radius:4px; background:transparent; color:${disabled ? '#d1d5db' : '#0b3d0b'}; cursor:${disabled ? 'default' : 'pointer'};">
+                <i class="fas ${icon}" style="font-size:10px;"></i>
+            </button>`;
+    return `<div style="display:flex; flex-direction:column; gap:2px;">${btn(-1, 'fa-chevron-up', pos.first, 'Move up')}${btn(1, 'fa-chevron-down', pos.last, 'Move down')}</div>`;
+}
+
+function moveRow(idx, dir) {
+    syncFromDOM();
+    clearConfigError();
+    const period  = initialComponents[idx].period;
+    const samePer = initialComponents.map((c, i) => i).filter(i => initialComponents[i].period === period);
+    const at      = samePer.indexOf(idx);
+    const other   = samePer[at + dir];
+    if (other === undefined) return;
+    [initialComponents[idx], initialComponents[other]] = [initialComponents[other], initialComponents[idx]];
+    renderRows();
+}
+
+function makeRow(comp, idx, pos) {
     const isCustom = comp.key.startsWith('others_');
 
     if (!isCustom) {
         return `
             <div class="row-item" data-idx="${idx}" style="${ROW_GRID}">
+                ${moveButtons(idx, pos)}
                 <input type="hidden" name="components[${idx}][key]" value="${comp.key}">
                 <input type="hidden" name="components[${idx}][period]" value="${comp.period}">
                 <input type="hidden" name="components[${idx}][label]" value="${comp.label}">
@@ -166,6 +188,7 @@ function makeRow(comp, idx) {
     if (comp.editing) {
         return `
             <div class="row-item" data-idx="${idx}" style="${ROW_GRID}">
+                ${moveButtons(idx, pos)}
                 <input type="hidden" name="components[${idx}][key]" value="${comp.key}">
                 <input type="hidden" name="components[${idx}][period]" value="${comp.period}">
                 <input type="text" name="components[${idx}][label]"
@@ -182,6 +205,7 @@ function makeRow(comp, idx) {
 
     return `
         <div class="row-item" data-idx="${idx}" style="${ROW_GRID}">
+            ${moveButtons(idx, pos)}
             <input type="hidden" name="components[${idx}][key]" value="${comp.key}">
             <input type="hidden" name="components[${idx}][period]" value="${comp.period}">
             <input type="hidden" name="components[${idx}][label]" value="${comp.label}">
@@ -199,10 +223,9 @@ function renderRows() {
     const mid = initialComponents.filter(c => c.period === 'midterm');
     const fin = initialComponents.filter(c => c.period === 'final');
 
-    document.getElementById('midterm-rows').innerHTML =
-        mid.map(c => makeRow(c, initialComponents.indexOf(c))).join('');
-    document.getElementById('final-rows').innerHTML =
-        fin.map(c => makeRow(c, initialComponents.indexOf(c))).join('');
+    const rows = list => list.map((c, i) => makeRow(c, initialComponents.indexOf(c), { first: i === 0, last: i === list.length - 1 })).join('');
+    document.getElementById('midterm-rows').innerHTML = rows(mid);
+    document.getElementById('final-rows').innerHTML   = rows(fin);
 
     updateTotals();
 }
