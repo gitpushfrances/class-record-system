@@ -51,7 +51,7 @@ class RecomputeFinalGrades extends Command
                         continue;
                     }
 
-                    $config = $section->gradeConfigurationFor($fg->subject_id);
+                    $config = $term->gradeConfigurationFor($fg->subject_id);
                     if (!$config) {
                         $skipped['no grade configuration'][] = $label;
                         continue;

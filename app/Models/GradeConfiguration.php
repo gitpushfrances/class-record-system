@@ -12,6 +12,7 @@ class GradeConfiguration extends Model
 
     protected $fillable = [
         'section_id',
+        'section_term_id',
         'subject_id',
         'config_json',
         'computation_method',
@@ -86,7 +87,7 @@ class GradeConfiguration extends Model
      * never drift out of sync with each other or with the config screen.
      *
      * $gradeItems must be a Collection of GradeItem already grouped by component_type,
-     * e.g. Section::gradeItemsFor($subjectId)->get()->groupBy('component_type').
+     * e.g. SectionTerm::gradeItemsFor($subjectId)->get()->groupBy('component_type').
      */
     public function buildComponentMatrix($gradeItemsByType, bool $includeEmpty = false): array
     {

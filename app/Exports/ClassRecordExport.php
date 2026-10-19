@@ -65,7 +65,7 @@ class ClassRecordExport implements FromArray, WithStyles, WithColumnWidths, With
         $rows[] = ['CLASS RECORD'];
         $rows[] = ['Subject: ' . $this->subject->code . ' — ' . $this->subject->name];
         $rows[] = ['Section: ' . $section->program->code . ' ' . $section->year_number . '-' . $section->section_letter . '   |   Year Level: ' . $section->year_level];
-        $method = $this->section->gradeConfigurationFor($this->subject->id)?->computation_method ?? 'standard';
+        $method = $this->currentTerm?->gradeConfigurationFor($this->subject->id)?->computation_method ?? 'standard';
         $rows[] = [
             ($this->currentTerm
                 ? $this->currentTerm->semester . '   |   A.Y. ' . $this->currentTerm->academic_year

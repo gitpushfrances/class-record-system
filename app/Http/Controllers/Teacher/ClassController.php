@@ -22,10 +22,7 @@ class ClassController extends Controller
 
         $currentTerm = $section->terms()->where('status', 'active')->first();
 
-        $section->load([
-            'program.department',
-            'gradeItems',
-        ]);
+        $section->load('program.department');
 
         if ($currentTerm) {
             $currentTerm->load([
@@ -43,8 +40,8 @@ class ClassController extends Controller
                 $subjectsData->push([
                     'subject'   => $subject,
                     'isMine'    => (int) $subject->pivot->teacher_id === (int) auth()->id(),
-                    'hasConfig' => $section->gradeConfigurationFor($subject->id) !== null,
-                    'itemCount' => $section->gradeItemsFor($subject->id)->count(),
+                    'hasConfig' => $currentTerm->gradeConfigurationFor($subject->id) !== null,
+                    'itemCount' => $currentTerm->gradeItemsFor($subject->id)->count(),
                 ]);
             }
         }
@@ -56,7 +53,7 @@ class ClassController extends Controller
     {
         $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
-        $config = $section->gradeConfigurationFor($subject->id);
+        $config = $currentTerm->gradeConfigurationFor($subject->id);
         if (!$config) {
             return redirect(\App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]))
                 ->with('warning', 'Set up grade configuration first.');
@@ -73,7 +70,7 @@ class ClassController extends Controller
             ]);
         }
 
-        $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
+        $gradeItemsByType = $currentTerm->gradeItemsFor($subject->id)->get()->groupBy('component_type');
         $matrix           = $config->buildComponentMatrix($gradeItemsByType, true);
         $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
         $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;
@@ -115,7 +112,7 @@ class ClassController extends Controller
     {
         $currentTerm = $this->authorizeSectionSubject($section, $subject);
 
-        $config = $section->gradeConfigurationFor($subject->id);
+        $config = $currentTerm->gradeConfigurationFor($subject->id);
         if (!$config) {
             return redirect(\App\Services\TeacherNav::route('teacher.grades.config', [$section, $subject]))
                 ->with('warning', 'Set up grade configuration before exporting.');
@@ -132,7 +129,7 @@ class ClassController extends Controller
             ]);
         }
 
-        $gradeItemsByType = $section->gradeItemsFor($subject->id)->get()->groupBy('component_type');
+        $gradeItemsByType = $currentTerm->gradeItemsFor($subject->id)->get()->groupBy('component_type');
         $matrix           = $config->buildComponentMatrix($gradeItemsByType);
         $enrollments = $currentTerm ? \App\Models\Enrollment::sortRoster($currentTerm->enrollments, $request->gender, $request->order) : collect();
         $cutoffDate       = AcademicPeriod::getActive()?->midterm_cutoff_date;

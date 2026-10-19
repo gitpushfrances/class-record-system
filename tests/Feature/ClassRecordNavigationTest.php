@@ -36,6 +36,7 @@ class ClassRecordNavigationTest extends TestCase
 
         GradeConfiguration::create([
             'section_id'         => $this->term->section_id,
+            'section_term_id'    => $this->term->id,
             'subject_id'         => $this->subject->id,
             'computation_method' => 'standard',
             'status'             => 'active',
@@ -46,7 +47,7 @@ class ClassRecordNavigationTest extends TestCase
         ]);
 
         $quiz = GradeItem::create([
-            'section_id' => $this->term->section_id, 'subject_id' => $this->subject->id, 'component_type' => 'quiz',
+            'section_id' => $this->term->section_id, 'section_term_id' => $this->term->id, 'subject_id' => $this->subject->id, 'component_type' => 'quiz',
             'period' => 'midterm', 'name' => 'Quiz 1', 'max_score' => 10, 'date_given' => now()->toDateString(), 'created_by' => $this->teacher->id,
         ]);
         StudentGrade::create([

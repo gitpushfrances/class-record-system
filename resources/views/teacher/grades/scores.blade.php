@@ -1,5 +1,5 @@
 <x-sidebar-layout>
-@php $gradeMethod = $section->gradeConfigurationFor($subject->id)?->computation_method ?? 'standard'; @endphp
+{{-- $gradeMethod: conversion method of this term's grade configuration (GradeController::scores). --}}
 
 
 

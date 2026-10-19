@@ -73,6 +73,18 @@ class SectionTerm extends Model
         return $this->setRelation('enrollments', $this->rosterFor($subjectId)->with($nested)->get());
     }
 
+    /** Grade items of one subject in this term (the Class Record columns). */
+    public function gradeItemsFor(int $subjectId)
+    {
+        return $this->hasMany(GradeItem::class)->where('subject_id', $subjectId);
+    }
+
+    /** Grade configuration (components, weights, conversion) of one subject in this term. */
+    public function gradeConfigurationFor(int $subjectId): ?GradeConfiguration
+    {
+        return $this->hasMany(GradeConfiguration::class)->where('subject_id', $subjectId)->first();
+    }
+
     public function verifications()
     {
         return $this->hasMany(\App\Models\GradeVerification::class, 'section_term_id');

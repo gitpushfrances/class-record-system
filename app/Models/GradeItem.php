@@ -12,6 +12,7 @@ class GradeItem extends Model
 
     protected $fillable = [
         'section_id',
+        'section_term_id',
         'subject_id',
         'component_type',
         'period',
@@ -51,6 +52,11 @@ class GradeItem extends Model
     public function section()
     {
         return $this->belongsTo(Section::class);
+    }
+
+    public function sectionTerm()
+    {
+        return $this->belongsTo(SectionTerm::class);
     }
 
     public function creator()
