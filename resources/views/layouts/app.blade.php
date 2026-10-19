@@ -18,7 +18,7 @@
         select option { color: #0b3d0b; background-color: #ffffff; }
     </style>
 </head>
-<body class="font-sans antialiased bg-stone-100" style="font-family: 'DM Sans', sans-serif;">
+<body class="font-sans antialiased bg-stone-100 app-shell" style="font-family: 'DM Sans', sans-serif;">
 
     {{-- Mobile overlay --}}
     <div id="sidebar-overlay"
