@@ -20,7 +20,7 @@ HOW TO USE THIS GUIDE
 -------------------------------------------------------------------------------
 
 REQUIREMENTS (Windows)
-  - XAMPP with PHP 8.1 or newer (tested on PHP 8.4) and MySQL, installed in
+  - XAMPP with PHP 8.2 or newer (tested on PHP 8.4) and MySQL, installed in
     C:\xampp  (backups only work from this folder in this version)
   - In C:\xampp\php\php.ini these lines must NOT start with ";" :
         extension=zip

@@ -28,6 +28,9 @@ class BackupController extends Controller
     public function run()
     {
         try {
+            if (! array_key_exists('backup:run', Artisan::all())) {
+                return redirect()->route('admin.backup.index')->with('error', 'Backup failed: the backup package is not installed. On the server run "composer install" then "php artisan optimize:clear" (needs PHP 8.2 or newer with extension=zip enabled).');
+            }
             if (DIRECTORY_SEPARATOR === '\\' && getenv('SystemRoot') !== false) { $_SERVER['SystemRoot'] = getenv('SystemRoot'); } // WIN-ENV: mysqldump child needs SystemRoot (Winsock)
             $exit = Artisan::call('backup:run');
             if ($exit !== 0) {
