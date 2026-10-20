@@ -4,7 +4,7 @@ Steps for the ESSU Guiuan server. Run them in order. Commands are run from the p
 
 ## 1. Server requirements
 
-- PHP 8.4 with the extensions `pdo_mysql`, `mbstring`, `xml`, `zip`, `gd`, `bcmath`, `fileinfo`
+- PHP 8.2 or newer (XAMPP 8.2 works; developed on 8.4) with the extensions `pdo_mysql`, `mbstring`, `xml`, `zip`, `gd`, `bcmath`, `fileinfo`
 - MySQL 8 (or MariaDB 10.6+)
 - Composer 2 and Node.js 18+ (only for building the CSS / JS)
 - HTTPS certificate for the site address
