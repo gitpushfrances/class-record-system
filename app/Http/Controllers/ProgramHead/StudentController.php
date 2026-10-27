@@ -42,7 +42,7 @@ class StudentController extends Controller
 
         $result = \App\Services\StudentImport::run($request->file('file'), $programId);
         if ($result['errors']) {
-            return back()->with('import_errors', $result['errors']);
+            return back()->with('import_errors', $result['errors'])->with('import_groups', $result['groups']);
         }
         if ($result['imported'] === 0 && $result['skipped']) {
             return back()->with('import_errors', [\App\Services\StudentImport::allExistMessage($result)]);

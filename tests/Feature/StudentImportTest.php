@@ -111,7 +111,7 @@ class StudentImportTest extends TestCase
     {
         $response = $this->actingAs($this->programHead)->get(route('program-head.students.template'))->assertOk();
 
-        $this->assertSame("student_number,last_name,first_name,middle_name,gender,year_level,student_type,email\r\n", $response->getContent());
+        $this->assertSame("student_number,last_name,first_name,middle_name,gender,year_level,student_type,email,section\r\n", $response->getContent());
         $this->assertStringContainsString('student-import-template.csv', $response->headers->get('Content-Disposition'));
     }
 }

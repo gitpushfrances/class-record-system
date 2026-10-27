@@ -16,13 +16,13 @@ use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
  */
 class StudentImport
 {
-    public const COLUMNS          = ['student_number', 'last_name', 'first_name', 'middle_name', 'gender', 'year_level', 'student_type', 'email'];
+    public const COLUMNS          = ['student_number', 'last_name', 'first_name', 'middle_name', 'gender', 'year_level', 'student_type', 'email', 'section'];
     public const REQUIRED_COLUMNS = ['student_number', 'last_name', 'first_name', 'gender', 'year_level'];
     public const YEAR_LEVELS      = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'];
     public const MAX_ROWS         = 1000;
     public const FILE_RULES       = 'required|file|max:2048|mimes:xlsx,csv,txt';
 
-    /** @return array{imported: int, skipped: string[], errors: string[]} */
+    /** @return array{imported: int, enrolled: int, unplaced: int, skipped: string[], errors: string[], groups: array} */
     public static function run(UploadedFile $file, int $programId): array
     {
         try {
@@ -36,6 +36,7 @@ class StudentImport
         if ($missing) {
             return self::failed(['Missing column(s): ' . implode(', ', $missing) . '. Use the template headers.']);
         }
+        $hasSection = in_array('section', $header, true);
 
         $rows = [];
         foreach ($sheet as $i => $cells) {
@@ -58,18 +59,20 @@ class StudentImport
             return self::failed(['The file has ' . count($rows) . ' rows. Import at most ' . self::MAX_ROWS . ' at a time.']);
         }
 
-        $existing = Student::whereIn('student_number', array_column($rows, 'student_number'))->pluck('student_number')->all();
-        $errors   = [];
-        $skipped  = [];
-        $create   = [];
-        $numbers  = [];
-        $emails   = [];
+        $existing  = Student::whereIn('student_number', array_column($rows, 'student_number'))->pluck('student_number')->all();
+        $rowErrors = [];
+        $skipped   = [];
+        $create    = [];
+        $place     = [];
+        $unplaced  = 0;
+        $numbers   = [];
+        $emails    = [];
 
         foreach ($rows as $line => $row) {
             $number = $row['student_number'];
 
             if ($number !== '' && isset($numbers[$number])) {
-                $errors[] = "Row {$line}: student number {$number} is repeated (first on row {$numbers[$number]}).";
+                $rowErrors[] = "Row {$line}: student number {$number} is repeated (first on row {$numbers[$number]}).";
                 continue;
             }
             $numbers[$number] = $line;
@@ -97,33 +100,70 @@ class StudentImport
 
             if ($validator->fails()) {
                 foreach ($validator->errors()->all() as $message) {
-                    $errors[] = "Row {$line}: {$message}";
+                    $rowErrors[] = "Row {$line}: {$message}";
                 }
                 continue;
             }
 
             if ($row['email'] !== null) {
                 if (isset($emails[$row['email']])) {
-                    $errors[] = "Row {$line}: email {$row['email']} is repeated (first on row {$emails[$row['email']]}).";
+                    $rowErrors[] = "Row {$line}: email {$row['email']} is repeated (first on row {$emails[$row['email']]}).";
                     continue;
                 }
                 $emails[$row['email']] = $line;
             }
 
-            $create[] = $row + ['program_id' => $programId, 'status' => 'active'];
-        }
-
-        if ($errors) {
-            return self::failed($errors);
-        }
-
-        DB::transaction(function () use ($create) {
-            foreach ($create as $attributes) {
-                Student::create($attributes);
+            if ($hasSection) {
+                if ($row['section'] === '') {
+                    $unplaced++;
+                } else {
+                    $place[$line] = $row;
+                }
             }
-        });
 
-        return ['imported' => count($create), 'skipped' => $skipped, 'errors' => []];
+            $create[$line] = $row + ['program_id' => $programId, 'status' => 'active'];
+        }
+
+        // Every problem is collected before anything is saved, so the file can be fixed in one pass.
+        $plan   = ImportPlacement::plan($programId, $place);
+        $groups = $plan['groups'];
+        if ($rowErrors) {
+            array_unshift($groups, [
+                'title' => 'Rows with problems',
+                'hint'  => 'Correct these cells in the file.',
+                'items' => $rowErrors,
+            ]);
+        }
+        if ($groups) {
+            return self::failed(array_merge(...array_column($groups, 'items')), $groups);
+        }
+
+        try {
+            $enrolled = DB::transaction(function () use ($create, $plan) {
+                $enrolled = 0;
+                foreach ($create as $line => $attributes) {
+                    unset($attributes['section']);
+                    $student = Student::create($attributes);
+
+                    if (isset($plan['terms'][$line])) {
+                        if ($error = SectionEnrollment::enroll($plan['terms'][$line], $student)) {
+                            throw new \RuntimeException("Row {$line}: {$error}");
+                        }
+                        $enrolled++;
+                    }
+                }
+
+                return $enrolled;
+            });
+        } catch (\RuntimeException $e) {
+            return self::failed([$e->getMessage()], [[
+                'title' => 'A student could not be enrolled',
+                'hint'  => 'Nothing was saved. Fix the problem and upload the file again.',
+                'items' => [$e->getMessage()],
+            ]]);
+        }
+
+        return ['imported' => count($create), 'enrolled' => $enrolled, 'unplaced' => $unplaced, 'skipped' => $skipped, 'errors' => [], 'groups' => []];
     }
 
     /** Header-only CSV template. */
@@ -136,6 +176,13 @@ class StudentImport
     public static function summary(array $result): string
     {
         $message = $result['imported'] . ' ' . \Illuminate\Support\Str::plural('student', $result['imported']) . ' imported.';
+
+        if (($result['enrolled'] ?? 0) > 0) {
+            $message .= " {$result['enrolled']} enrolled into their sections.";
+        }
+        if (($result['unplaced'] ?? 0) > 0) {
+            $message .= " {$result['unplaced']} not placed in a section (the section cell was empty).";
+        }
 
         if ($result['skipped']) {
             $shown    = array_slice($result['skipped'], 0, 10);
@@ -184,8 +231,16 @@ class StudentImport
         return $row;
     }
 
-    private static function failed(array $errors): array
+    /** @param array<int, array{title: string, hint: string, items: string[]}>|null $groups The problems shown in the error dialog; one generic group when omitted. */
+    private static function failed(array $errors, ?array $groups = null): array
     {
-        return ['imported' => 0, 'skipped' => [], 'errors' => $errors];
+        return [
+            'imported' => 0,
+            'enrolled' => 0,
+            'unplaced' => 0,
+            'skipped'  => [],
+            'errors'   => $errors,
+            'groups'   => $groups ?? [['title' => 'The file cannot be imported', 'hint' => 'Use the template and upload the file again.', 'items' => $errors]],
+        ];
     }
 }
