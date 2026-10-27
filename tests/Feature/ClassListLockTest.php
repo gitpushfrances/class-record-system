@@ -59,15 +59,6 @@ class ClassListLockTest extends TestCase
         $this->assertDatabaseHas('enrollments', ['id' => $this->enrollment->id, 'status' => 'dropped']);
     }
 
-    public function test_dean_cannot_drop_while_a_subject_is_verified(): void
-    {
-        $this->submit('verified');
-
-        $this->actingAs($this->dean)->delete(route('dean.enrollments.destroy', [$this->term, $this->enrollment]))
-            ->assertRedirect()->assertSessionHas('error');
-        $this->assertDatabaseHas('enrollments', ['id' => $this->enrollment->id, 'status' => 'enrolled']);
-    }
-
     public function test_drop_is_allowed_again_after_the_submission_is_rejected(): void
     {
         $this->submit('pending');

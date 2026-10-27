@@ -96,19 +96,15 @@ class StudentImportTest extends TestCase
             ->assertSessionHas('import_errors', ['Missing column(s): gender, year_level. Use the template headers.']);
     }
 
-    public function test_dean_imports_into_a_program_of_their_department_only(): void
+    public function test_dean_cannot_import_students(): void
     {
-        $dean    = User::where('email', 'dean@classrecord.test')->firstOrFail();
-        $bsit    = Program::where('code', 'BSIT')->firstOrFail();
-        $foreign = Program::where('code', 'BSBA')->firstOrFail();
+        $dean = User::where('email', 'dean@classrecord.test')->firstOrFail();
+        $bsit = Program::where('code', 'BSIT')->firstOrFail();
 
-        $this->actingAs($dean)->post(route('dean.students.import'), ['program_id' => $bsit->id, 'file' => $this->csv('24-0007,Garcia,Lea,,Female,1st Year,regular,')])
-            ->assertSessionHas('success', 'BSIT: 1 student imported.');
-        $this->assertDatabaseHas('students', ['student_number' => '24-0007', 'program_id' => $bsit->id]);
-
-        $this->actingAs($dean)->post(route('dean.students.import'), ['program_id' => $foreign->id, 'file' => $this->csv('24-0008,Garcia,Leo,,Male,1st Year,regular,')])
-            ->assertForbidden();
-        $this->assertDatabaseMissing('students', ['student_number' => '24-0008']);
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('dean.students.import'));
+        $this->actingAs($dean)->post('/dean/students/import', ['program_id' => $bsit->id, 'file' => $this->csv('24-0007,Garcia,Lea,,Female,1st Year,regular,')])
+            ->assertNotFound();
+        $this->assertDatabaseMissing('students', ['student_number' => '24-0007']);
     }
 
     public function test_template_downloads_the_column_headers(): void

@@ -71,12 +71,6 @@ class LiveSearchAndLockNoticeTest extends TestCase
             ->assertSee($subject->code)
             ->assertDontSee('data-picker-input', false)
             ->assertDontSee('>Drop<', false);
-
-        $this->actingAs($this->dean)->get(route('dean.enrollments.show', $this->term))
-            ->assertOk()
-            ->assertSee('Class list locked')
-            ->assertDontSee('data-picker-input', false)
-            ->assertDontSee('>Drop<', false);
     }
 
     public function test_unlocked_class_list_keeps_its_controls(): void

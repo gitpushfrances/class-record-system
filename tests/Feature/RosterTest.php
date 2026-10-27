@@ -85,17 +85,17 @@ class RosterTest extends TestCase
         $this->assertFalse($this->term->enrollments()->whereKey($enrollment->id)->exists());
     }
 
-    public function test_dean_drop_keeps_the_record_and_re_enrolling_restores_it(): void
+    public function test_program_head_drop_keeps_the_record_and_re_enrolling_restores_it(): void
     {
-        $dean       = User::where('email', 'dean@classrecord.test')->firstOrFail();
-        $enrollment = $this->member();
+        $programHead = User::where('email', 'programhead@classrecord.test')->firstOrFail();
+        $enrollment  = $this->member();
 
-        $this->actingAs($dean)->delete(route('dean.enrollments.destroy', [$this->term, $enrollment]))->assertRedirect();
+        $this->actingAs($programHead)->delete(route('program-head.sections.drop', [$this->term->section, $enrollment]))->assertRedirect();
 
         $this->assertDatabaseHas('enrollments', ['id' => $enrollment->id, 'status' => 'dropped']);
         $this->assertFalse($this->term->enrollments()->whereKey($enrollment->id)->exists());
 
-        $this->actingAs($dean)->post(route('dean.enrollments.store', $this->term), ['student_id' => $enrollment->student_id])->assertRedirect();
+        $this->actingAs($programHead)->post(route('program-head.sections.enroll', $this->term->section), ['student_id' => $enrollment->student_id])->assertRedirect();
 
         $this->assertDatabaseHas('enrollments', ['id' => $enrollment->id, 'status' => 'enrolled', 'type' => 'regular']);
     }

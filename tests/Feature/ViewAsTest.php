@@ -59,7 +59,7 @@ class ViewAsTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('dean.dashboard'))->assertOk();
         $this->actingAs($this->admin)->get(route('dean.students.index'))->assertOk();
-        $this->actingAs($this->admin)->get(route('dean.students.edit', $foreign))->assertForbidden();
+        $this->actingAs($this->admin)->get(route('dean.students.index'))->assertDontSee($foreign->student_number);
         $this->actingAs($this->admin)->get(route('program-head.sections.index'))->assertRedirect(route('admin.view-as.index'));
     }
 

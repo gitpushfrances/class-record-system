@@ -13,7 +13,10 @@
     @endif
 
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-gray-800">Enrollments</h2>
+        <div>
+            <h2 class="text-lg font-semibold text-gray-800">Enrollments</h2>
+            <p class="mt-1 text-sm text-gray-500">Read-only. The Program Head enrolls students; instructors add students to their own subjects.</p>
+        </div>
     </div>
 
     <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -48,7 +51,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <a href="{{ route('dean.enrollments.show', $term) }}" class="text-blue-600 hover:text-blue-900">
-                                    Manage Enrollments
+                                    View Class List
                                 </a>
                             </td>
                         </tr>

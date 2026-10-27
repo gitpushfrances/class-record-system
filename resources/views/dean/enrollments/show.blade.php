@@ -2,7 +2,6 @@
     @php
         $th  = 'padding:10px 24px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#6b7280; text-align:left; background:#f9fafb; border-bottom:1px solid #e5e7eb;';
         $td  = 'padding:10px 24px; font-size:14px; color:#374151; border-bottom:1px solid #f3f4f6;';
-        $btn = 'padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer; white-space:nowrap;';
     @endphp
 
     <div class="max-w-4xl mx-auto space-y-6">
@@ -35,24 +34,6 @@
                 </div>
             </div>
 
-            {{-- Enroll Students --}}
-            <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h3 class="text-sm font-semibold text-gray-700">Enroll Students</h3>
-                </div>
-                <div class="px-6 py-4">
-                    @if($lockedSubjects)
-                        @include('partials.class-list-locked', ['codes' => $lockedSubjects])
-                    @else
-                        @include('partials.student-picker', [
-                            'action'    => route('dean.enrollments.store', $currentTerm),
-                            'students'  => $availableStudents,
-                            'emptyText' => 'Every active student of this program is already in a section this semester.',
-                        ])
-                    @endif
-                </div>
-            </div>
-
             {{-- Enrolled Students --}}
             <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div class="px-6 py-4 border-b border-gray-100">
@@ -64,7 +45,7 @@
                     <div style="overflow-x:auto;">
                         <table style="width:100%; border-collapse:collapse;">
                             <thead><tr>
-                                <th style="{{ $th }}">Student No.</th><th style="{{ $th }}">Name</th><th style="{{ $th }}">Year Level</th><th style="{{ $th }}"></th>
+                                <th style="{{ $th }}">Student No.</th><th style="{{ $th }}">Name</th><th style="{{ $th }}">Year Level</th>
                             </tr></thead>
                             <tbody>
                             @foreach(\App\Models\Enrollment::sortRoster($currentTerm->enrollments) as $enrollment)
@@ -73,25 +54,6 @@
                                     <td style="{{ $td }} font-family:monospace;">{{ $enrollment->student->student_number }}</td>
                                     <td style="{{ $td }}">{{ $enrollment->student->full_name }}</td>
                                     <td style="{{ $td }}">{{ $enrollment->student->year_level }}</td>
-                                    <td style="{{ $td }} text-align:right; white-space:nowrap;">
-                                        @if(in_array($enrollment->id, $removableIds, true))
-                                            <form method="POST" action="{{ route('dean.enrollments.remove', [$currentTerm, $enrollment]) }}" style="display:inline;"
-                                                  data-confirm="Remove {{ $enrollment->student->full_name }} from the section? Use this only for a student added by mistake: the enrollment is deleted.">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Remove</button>
-                                            </form>
-                                        @endif
-                                        {{-- Drop: hidden while the class list is locked --}}
-                                        @unless($lockedSubjects)
-                                        <form method="POST" action="{{ route('dean.enrollments.destroy', [$currentTerm, $enrollment]) }}" style="display:inline;"
-                                              data-confirm="Drop {{ $enrollment->student->full_name }} from the section? Grades and attendance are kept, and the Report of Grades will show Dr.">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" style="{{ $btn }} color:#b91c1c; background:#fff; border:1px solid #fca5a5;">Drop</button>
-                                        </form>
-                                        @endunless
-                                    </td>
                                 </tr>
                                 @endif
                             @endforeach
@@ -113,16 +75,6 @@
                         <tr>
                             <td style="{{ $td }} font-family:monospace;">{{ $enrollment->student?->student_number }}</td>
                             <td style="{{ $td }} color:#6b7280;">{{ $enrollment->student?->full_name }}</td>
-                            <td style="{{ $td }} text-align:right;">
-                                {{-- Re-enroll: hidden while the class list is locked --}}
-                                @unless($lockedSubjects)
-                                <form method="POST" action="{{ route('dean.enrollments.store', $currentTerm) }}">
-                                    @csrf
-                                    <input type="hidden" name="student_id" value="{{ $enrollment->student_id }}">
-                                    <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Re-enroll</button>
-                                </form>
-                                @endunless
-                            </td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -138,25 +90,4 @@
 
     </div>
 
-    <script>
-        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const text = form.dataset.confirm;
-                if (typeof Swal === 'undefined') {
-                    if (confirm(text)) form.submit();
-                    return;
-                }
-                Swal.fire({
-                    text: text,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#b91c1c',
-                    cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'Cancel',
-                }).then(function (result) { if (result.isConfirmed) form.submit(); });
-            });
-        });
-    </script>
 </x-sidebar-layout>

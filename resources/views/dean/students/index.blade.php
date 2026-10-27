@@ -3,23 +3,9 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold" style="font-family:'Fraunces',serif; color:#0b3d0b;">Student Master List</h1>
-            <p class="mt-1 text-sm text-gray-500">Manage the institution's student records.</p>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <button type="button" onclick="document.getElementById('importStudentsDialog').showModal()"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
-                    style="background:#fff; border:1px solid #d4af37; color:#0b3d0b;">
-                <i class="text-xs fa-solid fa-file-import"></i> Import
-            </button>
-            <a href="{{ route('dean.students.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition rounded-lg"
-               style="background:linear-gradient(135deg,#a8861a,#d4af37); color:#0b3d0b;">
-                <i class="text-xs fa-solid fa-plus"></i> Add Student
-            </a>
+            <p class="mt-1 text-sm text-gray-500">Student records of your department. Read-only: the Program Head enrolls and imports students.</p>
         </div>
     </div>
-
-    @include('partials.student-import', ['action' => route('dean.students.import'), 'template' => route('dean.students.template'), 'programs' => $programs])
 
     <style>
         .filter-select { height:38px; padding:0 2.25rem 0 .75rem; font-size:.875rem; border:1px solid #d1d5db; border-radius:.5rem; background-color:#fff; background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2020%2020%27%20fill=%27none%27%3E%3Cpath%20d=%27M6%208l4%204%204-4%27%20stroke=%27%236b7280%27%20stroke-width=%271.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3C/svg%3E); background-repeat:no-repeat; background-position:right .75rem center; background-size:1rem; -webkit-appearance:none; appearance:none; cursor:pointer; }
@@ -74,7 +60,6 @@
                             @if($sort === 'created_at')<i class="fa-solid fa-sort-{{ $direction === 'asc' ? 'up' : 'down' }}"></i>@endif
                         </a>
                     </th>
-                    <th class="px-6 py-3 text-xs font-semibold text-center text-gray-500 uppercase">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -97,31 +82,10 @@
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">{{ $student->program->code ?? '—' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-600">{{ $student->created_at->format('M d, Y') }}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center justify-center gap-3">
-                                <a href="{{ route('dean.students.edit', $student) }}" title="Edit"
-                                   class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
-                                   style="color:#8a6a3d; background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.35);">
-                                    <i class="text-xs fa-solid fa-pen"></i>
-                                </a>
-                                <button type="button" title="Remove"
-                                    onclick="confirmDelete({{ $student->id }}, '{{ addslashes($student->full_name) }}')"
-                                    class="flex items-center justify-center w-8 h-8 transition rounded-lg hover:opacity-80"
-                                    style="color:#dc2626; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3);">
-                                    <i class="text-xs fa-solid fa-trash"></i>
-                                </button>
-                                <form id="delete-form-{{ $student->id }}"
-                                    action="{{ route('dean.students.destroy', $student) }}"
-                                    method="POST" class="hidden">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
-                            </div>
-                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-10 text-sm text-center text-gray-400">No students found.</td>
+                        <td colspan="6" class="px-6 py-10 text-sm text-center text-gray-400">No students found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -132,39 +96,4 @@
         {{ $students->links() }}
     </div>
 
-{{-- Delete Confirmation Modal --}}
-<div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-40">
-    <div class="w-full max-w-sm p-6 bg-white shadow-lg rounded-xl">
-        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
-            <i class="text-xl text-red-600 fa-solid fa-triangle-exclamation"></i>
-        </div>
-        <h3 class="mb-1 text-lg font-semibold text-center text-gray-800">Remove Student</h3>
-        <p class="mb-1 text-sm text-center text-gray-500">You are about to remove:</p>
-        <p id="deleteStudentName" class="mb-4 text-sm font-semibold text-center text-gray-800"></p>
-        <p class="mb-6 text-xs text-center text-red-500">This will remove them from all enrolled classes permanently.</p>
-        <div class="flex gap-3">
-            <button onclick="closeDeleteModal()"
-                class="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Cancel
-            </button>
-            <button id="confirmDeleteBtn"
-                class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
-                Yes, Remove
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-function confirmDelete(id, name) {
-    document.getElementById('deleteStudentName').textContent = name;
-    document.getElementById('confirmDeleteBtn').onclick = function () {
-        document.getElementById('delete-form-' + id).submit();
-    };
-    document.getElementById('deleteModal').classList.replace('hidden', 'flex');
-}
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.replace('flex', 'hidden');
-}
-</script>
 </x-sidebar-layout>

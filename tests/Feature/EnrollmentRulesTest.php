@@ -135,18 +135,18 @@ class EnrollmentRulesTest extends TestCase
         $this->assertDatabaseHas('enrollments', ['id' => $enrollment->id]);
     }
 
-    public function test_dean_page_has_search_drop_and_remove(): void
+    public function test_dean_page_lists_the_class_but_has_no_enrollment_controls(): void
     {
         $dean    = User::where('email', 'dean@classrecord.test')->firstOrFail();
         $student = $this->newStudent();
         $this->enroll($this->term->section, $student)->assertSessionHas('success');
-        $enrollment = Enrollment::where('student_id', $student->id)->firstOrFail();
 
         $this->actingAs($dean)->get(route('dean.enrollments.show', $this->term))
-            ->assertOk()->assertSee('data-picker-input', false)->assertSee('>Drop<', false)->assertSee('>Remove<', false);
-
-        $this->actingAs($dean)->delete(route('dean.enrollments.remove', [$this->term, $enrollment]))->assertSessionHas('success');
-        $this->assertDatabaseMissing('enrollments', ['id' => $enrollment->id]);
+            ->assertOk()
+            ->assertSee($student->student_number)
+            ->assertDontSee('data-picker-input', false)
+            ->assertDontSee('>Drop<', false)
+            ->assertDontSee('>Remove<', false);
     }
 
     public function test_teacher_removes_an_irregular_student_added_by_mistake_but_not_a_section_member(): void

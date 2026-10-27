@@ -116,9 +116,8 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/sections/{section}/attach-subject', [DeanSection::class, 'attachSubject'])->name('sections.attach-subject');
     Route::post('/sections/{section}/change-subject-teacher', [DeanSection::class, 'changeSubjectTeacher'])->name('sections.change-subject-teacher');
 
-    Route::get('/students/import-template', [DeanStudent::class, 'template'])->name('students.template');
-    Route::post('/students/import', [DeanStudent::class, 'import'])->name('students.import');
-    Route::resource('students', DeanStudent::class)->except(['show']);
+    // Read-only: students are created, imported and enrolled by the Program Head.
+    Route::get('/students', [DeanStudent::class, 'index'])->name('students.index');
     Route::get('/subjects', [DeanSubject::class, 'index'])->name('subjects.index');
     Route::post('/subjects/{subject}/approve', [DeanSubject::class, 'approve'])->name('subjects.approve');
     Route::post('/subjects/approve-selected', [DeanSubject::class, 'approveSelected'])->name('subjects.approve-selected');
@@ -134,9 +133,6 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::post('/promotions/sections/{section}', [App\Http\Controllers\PromotionController::class, 'store'])->name('promotions.store');
     Route::get('/enrollments', [DeanEnrollment::class, 'index'])->name('enrollments.index');
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
-    Route::post('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'store'])->name('enrollments.store');
-    Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}', [DeanEnrollment::class, 'destroy'])->name('enrollments.destroy');
-    Route::delete('/section-terms/{sectionTerm}/enrollments/{enrollment}/remove', [DeanEnrollment::class, 'remove'])->name('enrollments.remove');
     Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'dean'])->name('rog.show');
 
     Route::get('/program-heads', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'index'])->name('program-heads.index');
