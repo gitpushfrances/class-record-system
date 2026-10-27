@@ -12,7 +12,7 @@
             <div class="px-6 pt-4">
                 <dl class="p-3 space-y-1 text-sm border border-gray-200 rounded-md bg-gray-50">
                     <div class="flex gap-2"><dt class="w-24 text-gray-500">Name</dt><dd id="approveName" class="font-medium text-gray-900"></dd></div>
-                    <div class="flex gap-2"><dt class="w-24 text-gray-500">Email</dt><dd id="approveEmail" class="font-medium text-gray-900"></dd></div>
+                    <div class="flex gap-2"><dt class="w-24 text-gray-500">Username</dt><dd id="approveEmail" class="font-medium text-gray-900"></dd></div>
                 </dl>
             </div>
 

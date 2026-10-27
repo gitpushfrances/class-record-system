@@ -24,7 +24,7 @@ class AuthPagesTest extends TestCase
     {
         $this->get(route('register'))
             ->assertOk()
-            ->assertSeeInOrder(['Your name', 'Last name', 'First name', 'Middle name', 'Account', 'Email address', 'Password', 'Confirm password'])
+            ->assertSeeInOrder(['Your name', 'Last name', 'First name', 'Middle name', 'Account', 'Username', 'Email address', 'Password', 'Confirm password'])
             ->assertSee('autocomplete="family-name"', false);
     }
 }

@@ -38,8 +38,8 @@ class DeanFacultyTest extends TestCase
     {
         $this->actingAs($this->dean)->get(route('dean.faculty.index'))
             ->assertOk()
-            ->assertSee('teacher@classrecord.test')
-            ->assertDontSee('teacher.cba@classrecord.test');
+            ->assertSee('>teacher</td>', false)
+            ->assertDontSee('>teacher.cba</td>', false);
     }
 
     public function test_teacher_with_a_load_cannot_be_deactivated(): void

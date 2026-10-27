@@ -6,20 +6,20 @@
     <div class="form-header">
         <div class="form-eyebrow"><span class="form-eyebrow-line"></span> Secure access</div>
         <h1 class="form-title">Sign In</h1>
-        <p class="form-sub">Use your registered email address and password.</p>
+        <p class="form-sub">Use your username and password.</p>
     </div>
 
     <form method="POST" action="{{ route('login') }}" id="login-form">
         @csrf
 
-        <div class="field @error('email') has-error @enderror">
-            <label class="field-label" for="email">Email address</label>
+        <div class="field @error('username') has-error @enderror">
+            <label class="field-label" for="username">Username</label>
             <div class="field-wrap">
-                <i class="fas fa-envelope field-ico"></i>
-                <input id="email" class="field-input" type="email" name="email" value="{{ old('email') }}"
-                       placeholder="you@essu.edu.ph" required autofocus autocomplete="username">
+                <i class="fas fa-user field-ico"></i>
+                <input id="username" class="field-input" type="text" name="username" value="{{ old('username') }}"
+                       placeholder="your.username" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false">
             </div>
-            @error('email')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
+            @error('username')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
         </div>
 
         <div class="field @error('password') has-error @enderror">
@@ -37,9 +37,6 @@
             <label class="check-label" for="remember_me">
                 <input type="checkbox" name="remember" id="remember_me" @checked(old('remember'))> Remember me
             </label>
-            @if (Route::has('password.request'))
-                <a href="{{ route('password.request') }}" class="link-forgot">Forgot password?</a>
-            @endif
         </div>
 
         <button type="submit" class="btn-submit" id="submit-btn">
@@ -47,6 +44,8 @@
             <span class="btn-spinner"><span class="spinner-ring"></span></span>
         </button>
     </form>
+
+    <p class="form-alt">Forgot your password? Ask your administrator to reset it.</p>
 
     @if (Route::has('register'))
         <p class="form-alt">New faculty member? <a href="{{ route('register') }}" class="link-forgot">Request an account</a></p>

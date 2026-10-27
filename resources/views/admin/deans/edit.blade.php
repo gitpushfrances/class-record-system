@@ -29,8 +29,13 @@
                             </div>
 
                             <div class="mb-4">
-                                <x-input-label for="email" :value="__('Email')" />
-                                <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', $user->email)" required />
+                                <x-input-label for="username" :value="__('Username')" />
+                                <x-text-input id="username" name="username" type="text" class="block w-full mt-1" :value="old('username', $user->username)" required minlength="3" maxlength="30" autocapitalize="none" />
+                                <x-input-error :messages="$errors->get('username')" class="mt-2" />
+                            </div>
+                            <div class="mb-4">
+                                <x-input-label for="email" :value="__('Email (optional)')" />
+                                <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', $user->email)" />
                                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>
                             <div class="mb-4">

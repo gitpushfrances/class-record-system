@@ -19,15 +19,34 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create(['role' => 'teacher', 'status' => 'active']);
+        $user = User::factory()->create(['role' => 'teacher', 'status' => 'active', 'username' => 'juan.cruz']);
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'username' => 'juan.cruz',
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticated();
+        $this->assertAuthenticatedAs($user);
         $response->assertRedirect('/teacher/dashboard');
+    }
+
+    public function test_username_is_not_case_sensitive(): void
+    {
+        $user = User::factory()->create(['role' => 'teacher', 'status' => 'active', 'username' => 'juan.cruz']);
+
+        $this->post('/login', ['username' => '  Juan.Cruz ', 'password' => 'password']);
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_the_email_address_no_longer_signs_in(): void
+    {
+        $user = User::factory()->create(['role' => 'teacher', 'status' => 'active']);
+
+        $this->post('/login', ['username' => $user->email, 'password' => 'password'])
+            ->assertSessionHasErrors('username');
+
+        $this->assertGuest();
     }
 
     public function test_pending_users_can_not_sign_in(): void
@@ -35,7 +54,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create(['role' => null, 'status' => 'pending_review']);
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
 
@@ -48,7 +67,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'wrong-password',
         ]);
 

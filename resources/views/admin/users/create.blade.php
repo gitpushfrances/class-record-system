@@ -71,10 +71,18 @@
                 </div>
             </div>
             <div>
-                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Email</label>
+                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Username</label>
+                <input type="text" name="username" value="{{ old('username') }}" required minlength="3" maxlength="30" autocapitalize="none" spellcheck="false"
+                       class="w-full px-3 py-2 text-sm rounded-lg"
+                       style="background:rgba(212,175,55,0.07);border:1px solid #e5e7eb;color:#1f2937;">
+                @error('username')<p class="mt-1 text-xs" style="color:#b91c1c;">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Email <span style="opacity:.6;">(optional)</span></label>
                 <input type="email" name="email" value="{{ old('email') }}"
                        class="w-full px-3 py-2 text-sm rounded-lg"
                        style="background:rgba(212,175,55,0.07);border:1px solid #e5e7eb;color:#1f2937;">
+                @error('email')<p class="mt-1 text-xs" style="color:#b91c1c;">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Password</label>

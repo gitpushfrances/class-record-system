@@ -21,7 +21,8 @@ class ProfileUpdateRequest extends FormRequest
                 'academic_rank' => ['nullable', 'string', 'max:100'],
                 'credentials'   => ['nullable', 'string', 'max:100'],
             ]),
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
+            'username' => User::usernameRules($this->user()->id),
+            'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
         ];
     }
 }

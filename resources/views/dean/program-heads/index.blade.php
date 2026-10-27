@@ -23,7 +23,7 @@
                 <thead style="background:#f9fafb;">
                     <tr>
                         <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Name</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Email</th>
+                        <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Username</th>
                         <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Current Program</th>
                         <th class="px-6 py-3 text-xs font-semibold text-left text-gray-500 uppercase">Assign / Reassign</th>
                         <th class="px-6 py-3 text-xs font-semibold text-center text-gray-500 uppercase">Actions</th>
@@ -33,7 +33,7 @@
                     @foreach($programHeads as $programHead)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 font-medium text-gray-800">{{ $programHead->name }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $programHead->email }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $programHead->username }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">
                                 {{ $programHead->program->code ?? 'Unassigned' }}
                             </td>

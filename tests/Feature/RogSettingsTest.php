@@ -91,6 +91,7 @@ class RogSettingsTest extends TestCase
         $this->actingAs($teacher)->patch('/profile', [
             'last_name'     => 'User',
             'first_name'    => 'Test',
+            'username'      => $teacher->username,
             'email'         => $teacher->email,
             'academic_rank' => 'Asst. Professor III',
             'credentials'   => 'MIT, PCpE',

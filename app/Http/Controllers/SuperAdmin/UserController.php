@@ -167,7 +167,8 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             ...User::nameRules(),
-            'email'         => 'required|email|unique:users,email',
+            'username'      => User::usernameRules(),
+            'email'         => 'nullable|email|unique:users,email',
             'password'      => 'required|string|min:8|confirmed',
             'role'          => 'required|in:' . implode(',', $this->managedRoles),
             'department_id' => 'nullable|exists:departments,id',
@@ -213,7 +214,8 @@ class UserController extends Controller
             'last_name'   => $validated['last_name'],
             'first_name'  => $validated['first_name'],
             'middle_name' => $validated['middle_name'] ?? null,
-            'email'         => $validated['email'],
+            'username'      => $validated['username'],
+            'email'         => $validated['email'] ?? null,
             'password'      => Hash::make($validated['password']),
             'role'          => $validated['role'],
             'status'        => 'active',
@@ -254,7 +256,8 @@ class UserController extends Controller
 
         $validated = $request->validate([
             ...User::nameRules(),
-            'email'         => 'required|email|unique:users,email,' . $dean->id,
+            'username'      => User::usernameRules($dean->id),
+            'email'         => 'nullable|email|unique:users,email,' . $dean->id,
             'password'      => 'nullable|string|min:8|confirmed',
             'role'          => 'required|in:' . implode(',', $this->managedRoles),
             'department_id' => 'nullable|exists:departments,id',
@@ -306,7 +309,8 @@ class UserController extends Controller
             'last_name'   => $validated['last_name'],
             'first_name'  => $validated['first_name'],
             'middle_name' => $validated['middle_name'] ?? null,
-            'email'         => $validated['email'],
+            'username'      => $validated['username'],
+            'email'         => $validated['email'] ?? null,
             'role'          => $validated['role'],
             'department_id' => $validated['department_id'] ?? null,
             'program_id'    => in_array($validated['role'], ['program_head', 'teacher'], true) ? ($validated['program_id'] ?? null) : null,

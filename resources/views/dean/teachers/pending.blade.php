@@ -16,7 +16,7 @@
                             <thead>
                                 <tr>
                                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Name</th>
-                                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Username</th>
                                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Registered</th>
                                     <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Actions</th>
                                 </tr>
@@ -25,7 +25,7 @@
                                 @foreach($pendingTeachers as $teacher)
                                     <tr>
                                         <td class="px-6 py-4">{{ $teacher->name }}</td>
-                                        <td class="px-6 py-4">{{ $teacher->email }}</td>
+                                        <td class="px-6 py-4">{{ $teacher->username }}</td>
                                         <td class="px-6 py-4">{{ $teacher->created_at->diffForHumans() }}</td>
                                         <td class="px-6 py-4">
                                             <form action="{{ route('dean.teachers.approve', $teacher) }}" method="POST" class="inline">

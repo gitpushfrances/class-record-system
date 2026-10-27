@@ -17,7 +17,8 @@ class RegisteredUserController extends Controller
     {
         $validated = $request->validate([
             ...User::nameRules(),
-            'email'    => 'required|string|email|max:255|unique:users,email',
+            'username' => User::usernameRules(),
+            'email'    => 'nullable|string|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -25,7 +26,8 @@ class RegisteredUserController extends Controller
             'last_name'   => $validated['last_name'],
             'first_name'  => $validated['first_name'],
             'middle_name' => $validated['middle_name'] ?? null,
-            'email'    => $validated['email'],
+            'username' => $validated['username'],
+            'email'    => $validated['email'] ?? null,
             'password' => Hash::make($validated['password']),
             'role'     => null,
             'status'   => 'pending_review',

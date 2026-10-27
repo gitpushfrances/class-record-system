@@ -36,14 +36,14 @@
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse;">
                 <thead><tr>
-                    <th style="{{ $th }}">Name</th><th style="{{ $th }}">Email</th><th style="{{ $th }}">This term</th><th style="{{ $th }}"></th>
+                    <th style="{{ $th }}">Name</th><th style="{{ $th }}">Username</th><th style="{{ $th }}">This term</th><th style="{{ $th }}"></th>
                 </tr></thead>
                 <tbody>
                 @foreach($teachers as $teacher)
                     @php $l = $load[$teacher->id]; $busy = $l['subjects'] > 0 || $l['advisory'] > 0; @endphp
                     <tr>
                         <td style="{{ $td }} font-weight:600;">{{ \App\Services\NameSearch::highlight($teacher->name, request('search')) }}</td>
-                        <td style="{{ $td }} color:#6b7280;">{{ \App\Services\NameSearch::highlight($teacher->email, request('search'), true) }}</td>
+                        <td style="{{ $td }} color:#6b7280;">{{ $teacher->username }}</td>
                         <td style="{{ $td }}">
                             @if($busy)
                                 {{ $l['subjects'] }} {{ \Illuminate\Support\Str::plural('subject', $l['subjects']) }}{{ $l['advisory'] > 0 ? ', adviser of ' . $l['advisory'] . ' ' . \Illuminate\Support\Str::plural('section', $l['advisory']) : '' }}

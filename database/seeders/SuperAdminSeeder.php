@@ -20,7 +20,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $superAdmin->assignRole('super_admin');
-        echo "Super Admin created successfully!\nEmail: admin@classrecord.test\nPassword: password\n";
+        echo "Super Admin created successfully!\nUsername: admin\nPassword: password\n";
 
         // Departments
         $ccs = Department::create(['name' => 'College of Computer Studies', 'code' => 'CCS']);
@@ -40,7 +40,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $dean->assignRole('dean');
-        echo "Sample Dean created successfully!\nEmail: dean@classrecord.test\nPassword: password\n";
+        echo "Sample Dean created successfully!\nUsername: dean\nPassword: password\n";
 
         $teacher = User::create([
             'name'              => 'Teacher Sample',
@@ -54,7 +54,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $teacher->assignRole('teacher');
-        echo "Sample Teacher created successfully!\nEmail: teacher@classrecord.test\nPassword: password\n";
+        echo "Sample Teacher created successfully!\nUsername: teacher\nPassword: password\n";
 
         $programHead = User::create([
             'name'              => 'Program Head Sample',
@@ -68,7 +68,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $programHead->assignRole('program_head');
-        echo "Sample Program Head created!\nEmail: programhead@classrecord.test\nPassword: password\n";
+        echo "Sample Program Head created!\nUsername: programhead\nPassword: password\n";
 
         $pendingTeacher = User::create([
             'name'              => 'Pending Teacher',
@@ -80,7 +80,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $pendingTeacher->assignRole('teacher');
-        echo "Pending Teacher created successfully!\nEmail: pending@classrecord.test\nPassword: password\n";
+        echo "Pending Teacher created successfully!\nUsername: pending\nPassword: password\n";
 
         // CBA — second department for negative-testing department isolation
         $cba = Department::where('code', 'CBA')->first();
@@ -97,7 +97,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $deanCba->assignRole('dean');
-        echo "Sample CBA Dean created!\nEmail: dean.cba@classrecord.test\nPassword: password\n";
+        echo "Sample CBA Dean created!\nUsername: dean.cba\nPassword: password\n";
 
         $teacherCba = User::create([
             'name'              => 'Teacher CBA Sample',
@@ -111,7 +111,7 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $teacherCba->assignRole('teacher');
-        echo "Sample CBA Teacher created!\nEmail: teacher.cba@classrecord.test\nPassword: password\n";
+        echo "Sample CBA Teacher created!\nUsername: teacher.cba\nPassword: password\n";
 
         $programHeadCba = User::create([
             'name'              => 'Program Head CBA Sample',
@@ -125,6 +125,6 @@ class SuperAdminSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
         $programHeadCba->assignRole('program_head');
-        echo "Sample CBA Program Head created!\nEmail: programhead.cba@classrecord.test\nPassword: password\n";
+        echo "Sample CBA Program Head created!\nUsername: programhead.cba\nPassword: password\n";
     }
 }

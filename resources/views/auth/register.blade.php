@@ -27,12 +27,23 @@
         <hr class="form-divider">
         <p class="form-section">Account</p>
 
+        <div class="field @error('username') has-error @enderror">
+            <label class="field-label" for="username">Username</label>
+            <div class="field-wrap">
+                <i class="fas fa-user field-ico"></i>
+                <input id="username" class="field-input" type="text" name="username" value="{{ old('username') }}"
+                       placeholder="juan.delacruz" minlength="3" maxlength="30" required autocomplete="username" autocapitalize="none" spellcheck="false">
+            </div>
+            <div style="margin-top:4px; font-size:12px; color:#6b7280;">3 to 30 letters, numbers, dots, underscores or hyphens. You sign in with this.</div>
+            @error('username')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
+        </div>
+
         <div class="field @error('email') has-error @enderror">
-            <label class="field-label" for="email">Email address</label>
+            <label class="field-label" for="email">Email address <span class="opt">(optional)</span></label>
             <div class="field-wrap">
                 <i class="fas fa-envelope field-ico"></i>
                 <input id="email" class="field-input" type="email" name="email" value="{{ old('email') }}"
-                       placeholder="you@essu.edu.ph" maxlength="255" required autocomplete="username">
+                       placeholder="you@essu.edu.ph" maxlength="255" autocomplete="email">
             </div>
             @error('email')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
         </div>
