@@ -61,6 +61,18 @@ class StudentImportTest extends TestCase
         $this->assertDatabaseHas('students', ['student_number' => '24-0003']);
     }
 
+    public function test_file_with_only_existing_student_numbers_is_an_error_not_a_success(): void
+    {
+        $existing = Student::firstOrFail();
+
+        $this->actingAs($this->programHead)->post(route('program-head.students.import'), ['file' => $this->csv(
+            "{$existing->student_number},Changed,Name,,Male,2nd Year,regular,"
+        )])->assertSessionMissing('success')
+          ->assertSessionHas('import_errors', ["Nothing was imported: every student number in this file already exists ({$existing->student_number})."]);
+
+        $this->assertDatabaseHas('students', ['id' => $existing->id, 'last_name' => $existing->last_name]);
+    }
+
     public function test_any_invalid_row_imports_nothing(): void
     {
         $this->actingAs($this->programHead)->post(route('program-head.students.import'), ['file' => $this->csv(

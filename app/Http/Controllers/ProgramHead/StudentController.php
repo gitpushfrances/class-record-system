@@ -44,6 +44,9 @@ class StudentController extends Controller
         if ($result['errors']) {
             return back()->with('import_errors', $result['errors']);
         }
+        if ($result['imported'] === 0 && $result['skipped']) {
+            return back()->with('import_errors', [\App\Services\StudentImport::allExistMessage($result)]);
+        }
 
         return redirect()->route('program-head.students.index')->with('success', \App\Services\StudentImport::summary($result));
     }

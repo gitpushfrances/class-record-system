@@ -146,6 +146,16 @@ class StudentImport
         return $message;
     }
 
+    /** Error text for a file in which every student number already exists (nothing to import). */
+    public static function allExistMessage(array $result): string
+    {
+        $shown = array_slice($result['skipped'], 0, 10);
+        $more  = count($result['skipped']) - count($shown);
+
+        return 'Nothing was imported: every student number in this file already exists ('
+            . implode(', ', $shown) . ($more > 0 ? " and {$more} more" : '') . ').';
+    }
+
     private static function read(UploadedFile $file): array
     {
         $reader = strtolower($file->getClientOriginalExtension()) === 'xlsx' ? new Xlsx() : new Csv();
