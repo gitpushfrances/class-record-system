@@ -207,6 +207,13 @@
                 'label'  => 'Assignments',
             ])
             @include('layouts.partials.sidebar-link', [
+                'href'   => route('dean.borrowing.index'),
+                'active' => request()->routeIs('dean.borrowing.*'),
+                'icon'   => 'fa-people-arrows',
+                'label'  => 'Borrowed Faculty',
+                'badge'  => \App\Services\FacultyBorrowing::pendingIncomingCount(),
+            ])
+            @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.enrollments.index'),
                 'active' => request()->routeIs('dean.enrollments.*'),
                 'icon'   => 'fa-clipboard-list',
@@ -328,7 +335,7 @@
                     {{ auth()->user()->display_name }}
                 </div>
                 <div class="text-xs truncate" style="color: rgba(212,175,55,0.75);">
-                    {{ auth()->user()->email }}
+                    {{ auth()->user()->username }}
                 </div>
             </div>
 

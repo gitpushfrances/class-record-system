@@ -284,7 +284,7 @@
                             <label class="block mb-1 text-sm font-medium text-gray-700">Adviser</label>
                             <select name="adviser_id" id="modalAdviser" class="w-full px-3 py-2 border rounded" required {{ $activePeriod ? '' : 'disabled' }}>
                                 <option value="">Select Adviser</option>
-                                @foreach($teachers as $teacher)
+                                @foreach($teachers->whereNull('borrowed_from') as $teacher)
                                     <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
                                 @endforeach
                             </select>

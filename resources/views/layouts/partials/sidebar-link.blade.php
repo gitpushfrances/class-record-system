@@ -12,6 +12,10 @@
 >
     <i class="fas {{ $icon }} w-4 text-center text-xs flex-shrink-0"></i>
     <span class="truncate sidebar-label">{{ $label }}</span>
+    @if(($badge ?? 0) > 0)
+        <span data-nav-badge class="flex-shrink-0 ml-auto px-1.5 text-xs font-bold rounded-full"
+              style="min-width:18px; text-align:center; background:#d4af37; color:#1f2937;">{{ $badge }}</span>
+    @endif
     @if($active)
         <span class="flex-shrink-0 w-1 h-4 ml-auto rounded-full sidebar-active-bar"
               style="background: #d4af37;"></span>

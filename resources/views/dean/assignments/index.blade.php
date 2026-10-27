@@ -43,7 +43,7 @@
                     class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">Select Teacher</option>
                 @foreach($teachers as $teacher)
-                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                    <option value="{{ $teacher->id }}">{{ $teacher->name }}{{ $teacher->borrowed_from ? ' (borrowed from ' . $teacher->borrowed_from . ')' : '' }}</option>
                 @endforeach
             </select>
         </div>

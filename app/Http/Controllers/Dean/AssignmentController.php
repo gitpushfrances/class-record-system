@@ -64,11 +64,7 @@ class AssignmentController extends Controller
             ->whereHas('program', fn ($q) => $q->where('department_id', $departmentId))
             ->orderBy('code')
             ->get();
-        $teachers = User::where('role', 'teacher')
-            ->where('status', 'active')
-            ->where('department_id', $departmentId)
-            ->orderBy('name')
-            ->get();
+        $teachers = \App\Services\FacultyBorrowing::teachersFor($departmentId);
 
         return view('dean.assignments.index', compact('assignments', 'sections', 'subjects', 'teachers'));
     }

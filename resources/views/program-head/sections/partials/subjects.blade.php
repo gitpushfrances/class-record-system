@@ -62,7 +62,7 @@
                                 <label class="sched-label" for="{{ $rowId }}-teacher">Teacher</label>
                                 <select id="{{ $rowId }}-teacher" name="teacher_id" class="sst-input" required>
                                     @foreach($teachers as $t)
-                                        <option value="{{ $t->id }}" @selected($subj->pivot->teacher_id == $t->id)>{{ $t->name }}</option>
+                                        <option value="{{ $t->id }}" @selected($subj->pivot->teacher_id == $t->id)>{{ $t->name }}{{ $t->borrowed_from ? ' (borrowed from ' . $t->borrowed_from . ')' : '' }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -105,7 +105,7 @@
                 <select id="sst-add-teacher-{{ $section->id }}" name="teacher_id" class="sst-input" required>
                     <option value="">Select teacher</option>
                     @foreach($teachers as $t)
-                        <option value="{{ $t->id }}" @selected(old('teacher_id') == $t->id)>{{ $t->name }}</option>
+                        <option value="{{ $t->id }}" @selected(old('teacher_id') == $t->id)>{{ $t->name }}{{ $t->borrowed_from ? ' (borrowed from ' . $t->borrowed_from . ')' : '' }}</option>
                     @endforeach
                 </select>
             </div>

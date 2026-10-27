@@ -135,6 +135,14 @@ Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->
     Route::get('/section-terms/{sectionTerm}/enrollments', [DeanEnrollment::class, 'show'])->name('enrollments.show');
     Route::get('/rog/{sectionTerm}/{subject}', [App\Http\Controllers\ReportOfGradesController::class, 'dean'])->name('rog.show');
 
+    // Borrowed faculty: a Dean asks another department to lend a teacher for the semester
+    Route::get('/borrowing', [App\Http\Controllers\Dean\FacultyBorrowController::class, 'index'])->name('borrowing.index');
+    Route::post('/borrowing', [App\Http\Controllers\Dean\FacultyBorrowController::class, 'store'])->name('borrowing.store');
+    Route::patch('/borrowing/{borrowRequest}/cancel', [App\Http\Controllers\Dean\FacultyBorrowController::class, 'cancel'])->name('borrowing.cancel');
+    Route::patch('/borrowing/{borrowRequest}/approve', [App\Http\Controllers\Dean\FacultyBorrowController::class, 'approve'])->name('borrowing.approve');
+    Route::patch('/borrowing/{borrowRequest}/decline', [App\Http\Controllers\Dean\FacultyBorrowController::class, 'decline'])->name('borrowing.decline');
+    Route::patch('/borrowing/{borrowRequest}/revoke', [App\Http\Controllers\Dean\FacultyBorrowController::class, 'revoke'])->name('borrowing.revoke');
+
     Route::get('/program-heads', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'index'])->name('program-heads.index');
     Route::post('/program-heads/{programHead}/assign', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'assign'])->name('program-heads.assign');
     Route::delete('/program-heads/{programHead}/remove', [App\Http\Controllers\Dean\ProgramAssignmentController::class, 'remove'])->name('program-heads.remove');

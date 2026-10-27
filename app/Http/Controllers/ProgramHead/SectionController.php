@@ -28,11 +28,7 @@ class SectionController extends Controller
             ->get()
             ->groupBy('year_level');
 
-        $teachers = User::where('role', 'teacher')
-            ->where('status', 'active')
-            ->where('department_id', \App\Services\Scope::departmentId())
-            ->orderBy('name')
-            ->get();
+        $teachers = \App\Services\FacultyBorrowing::teachersFor(\App\Services\Scope::departmentId());
 
         $activePeriod = AcademicPeriod::getActive();
 
@@ -86,11 +82,7 @@ class SectionController extends Controller
 
         $availableSubjects = $currentTerm ? \App\Services\SubjectOffering::forTerm($currentTerm) : collect();
 
-        $teachers = User::where('role', 'teacher')
-            ->where('status', 'active')
-            ->where('department_id', \App\Services\Scope::departmentId())
-            ->orderBy('name')
-            ->get();
+        $teachers = \App\Services\FacultyBorrowing::teachersFor(\App\Services\Scope::departmentId());
 
         $availableStudents = $currentTerm ? \App\Services\SectionEnrollment::availableStudents($currentTerm) : collect();
         $removableIds      = $currentTerm ? \App\Services\SectionEnrollment::removableIds($currentTerm, $currentTerm->enrollments) : [];

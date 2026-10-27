@@ -26,11 +26,7 @@ class SubjectController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        $teachers = User::where('role', 'teacher')
-            ->where('status', 'active')
-            ->where('department_id', $departmentId)
-            ->orderBy('name')
-            ->get();
+        $teachers = \App\Services\FacultyBorrowing::teachersFor($departmentId);
 
         return view('dean.subjects.index', compact('subjects', 'pendingFromProgramHeads', 'teachers'));
     }

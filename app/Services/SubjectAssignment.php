@@ -50,9 +50,14 @@ class SubjectAssignment
 
     private static function save(SectionTerm $term, Subject $subject, Request $request, callable $write): ?array
     {
-        $teacherActive = User::whereKey($request->input('teacher_id'))->where('role', 'teacher')->where('status', 'active')->exists();
-        if (!$teacherActive) {
+        $teacher = User::whereKey($request->input('teacher_id'))->where('role', 'teacher')->where('status', 'active')->first();
+        if (!$teacher) {
             return ['teacher_id' => 'Select an active teacher.'];
+        }
+
+        $departmentId = $term->section->program->department_id;
+        if (!FacultyBorrowing::canAssign($teacher, $departmentId ? (int) $departmentId : null, $term->academic_year, $term->semester)) {
+            return ['teacher_id' => "{$teacher->name} belongs to another department. Request them under Borrowed Faculty and wait for approval."];
         }
 
         $columns = ClassSchedule::columnsFromRequest($request, (bool) $subject->has_laboratory);

@@ -27,11 +27,7 @@ class SectionController extends Controller
             ->groupBy(fn($section) => $section->program->code)
             ->sortKeys();
 
-        $teachers = User::where('role', 'teacher')
-            ->where('status', 'active')
-            ->where('department_id', $departmentId)
-            ->orderBy('name')
-            ->get();
+        $teachers = \App\Services\FacultyBorrowing::teachersFor($departmentId);
         $activePeriod = AcademicPeriod::getActive();
 
         return view('dean.sections.index', compact('sections', 'teachers', 'activePeriod'));
@@ -50,11 +46,7 @@ class SectionController extends Controller
 
         $availableSubjects = $currentTerm ? \App\Services\SubjectOffering::forTerm($currentTerm) : collect();
 
-        $teachers = User::where('role', 'teacher')
-            ->where('status', 'active')
-            ->where('department_id', \App\Services\Scope::departmentId())
-            ->orderBy('name')
-            ->get();
+        $teachers = \App\Services\FacultyBorrowing::teachersFor(\App\Services\Scope::departmentId());
 
         return view('dean.sections.show', compact('section', 'currentTerm', 'availableSubjects', 'teachers'));
     }
