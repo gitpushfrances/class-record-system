@@ -64,7 +64,7 @@
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email (optional)')" />
+            <x-input-label for="email" :value="__('Email (optional. It can also be used to sign in. The system sends no email.)')" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" autocomplete="email" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 

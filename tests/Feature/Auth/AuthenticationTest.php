@@ -22,7 +22,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create(['role' => 'teacher', 'status' => 'active', 'username' => 'juan.cruz']);
 
         $response = $this->post('/login', [
-            'username' => 'juan.cruz',
+            'login'    => 'juan.cruz',
             'password' => 'password',
         ]);
 
@@ -34,19 +34,19 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'teacher', 'status' => 'active', 'username' => 'juan.cruz']);
 
-        $this->post('/login', ['username' => '  Juan.Cruz ', 'password' => 'password']);
+        $this->post('/login', ['login' => '  Juan.Cruz ', 'password' => 'password']);
 
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_the_email_address_no_longer_signs_in(): void
+    public function test_the_email_address_signs_in_too(): void
     {
         $user = User::factory()->create(['role' => 'teacher', 'status' => 'active']);
 
-        $this->post('/login', ['username' => $user->email, 'password' => 'password'])
-            ->assertSessionHasErrors('username');
+        $this->post('/login', ['login' => $user->email, 'password' => 'password'])
+            ->assertRedirect('/teacher/dashboard');
 
-        $this->assertGuest();
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_pending_users_can_not_sign_in(): void
@@ -54,7 +54,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create(['role' => null, 'status' => 'pending_review']);
 
         $response = $this->post('/login', [
-            'username' => $user->username,
+            'login'    => $user->username,
             'password' => 'password',
         ]);
 
@@ -67,7 +67,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'username' => $user->username,
+            'login'    => $user->username,
             'password' => 'wrong-password',
         ]);
 

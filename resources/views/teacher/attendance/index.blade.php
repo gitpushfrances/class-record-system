@@ -22,7 +22,7 @@
         <form method="GET" action="{{ \App\Services\TeacherNav::route('teacher.attendance.index', [$section, $subject]) }}" class="flex items-center gap-3">
             @include('teacher.partials.from-field')
             <label class="text-sm font-medium text-gray-600">Date:</label>
-            <input type="date" name="date" value="{{ $date }}"
+            <input type="date" name="date" value="{{ $date }}" min="{{ $window[0] }}" max="{{ $window[1] }}"
                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                    onchange="this.form.submit()">
             @if($subject->has_laboratory)
@@ -33,7 +33,12 @@
                 </select>
             @endif
         </form>
+        <span class="text-xs text-gray-600">{{ $allowed }}</span>
     </div>
+
+    @if($dateProblem)
+        <div class="px-6 py-3 text-sm border-b" style="color:#92400e; background:#fef3c7; border-color:#fde68a;">{{ $dateProblem }} Attendance cannot be saved for this date.</div>
+    @endif
 
     <form method="POST" action="{{ \App\Services\TeacherNav::route('teacher.attendance.store', [$section, $subject]) }}" id="attendanceForm">
         @csrf
@@ -93,8 +98,9 @@
             </tbody>
         </table>
 
-        <div class="flex justify-end px-6 py-4 border-t border-gray-100">
-            <button type="submit"
+        <div class="flex items-center justify-between gap-4 px-6 py-4 border-t border-gray-100">
+            <p class="text-xs text-gray-600">Saves attendance for {{ \Carbon\Carbon::parse($date)->format('M j, Y') }}. Saving again for the same date and session updates it, so nothing is duplicated.</p>
+            <button type="submit" @disabled($dateProblem) @if($dateProblem) style="opacity:.5; cursor:not-allowed;" @endif
                     class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition">
                 Save Attendance
             </button>

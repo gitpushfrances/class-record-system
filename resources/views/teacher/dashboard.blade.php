@@ -21,7 +21,11 @@
     </div>
 @else
     <div style="display:flex; flex-direction:column; gap:16px;">
-        @foreach($classes as $class)
+        @foreach($departmentGroups as $group)
+        @if($departmentGroups->count() > 1)
+            @include('teacher.partials.department-heading', ['group' => $group])
+        @endif
+        @foreach($group['items'] as $class)
             @php
                 $term    = $class['term'];
                 $subject = $class['subject'];
@@ -33,7 +37,7 @@
                 }
                 $total = $roster['male']->count() + $roster['female']->count() + $roster['other']->count();
             @endphp
-            <details class="class-card overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl" @if($loop->first) open @endif>
+            <details class="class-card overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl" @if($loop->first && $loop->parent->first) open @endif>
                 <summary style="padding:16px 20px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                         <div style="display:flex; align-items:flex-start; gap:12px;">
@@ -86,6 +90,7 @@
                     </div>
                 </div>
             </details>
+        @endforeach
         @endforeach
     </div>
 @endif

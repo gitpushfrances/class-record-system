@@ -68,10 +68,27 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($rows as $i => $row)
+            @php
+                $genderOf     = fn ($row) => in_array($row['gender'] ?? null, ['male', 'female'], true) ? $row['gender'] : 'none';
+                $genderLabels = ['male' => 'Male', 'female' => 'Female', 'none' => 'No gender set'];
+                $genderCounts = $rows->countBy($genderOf);
+                $group = null;
+                $n     = 0;
+            @endphp
+            @forelse($rows as $row)
+                @php
+                    $current = $genderOf($row);
+                    $n       = $current === $group ? $n + 1 : 1;
+                    $group   = $current;
+                @endphp
+                @if($n === 1)
+                    <tr>
+                        <td colspan="{{ $sessions->count() + 5 }}" style="padding:6px 12px; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#374151; background:#f3f4f6; border:1px solid #e5e7eb;">{{ $genderLabels[$current] }} ({{ $genderCounts[$current] }})</td>
+                    </tr>
+                @endif
                 <tr>
                     <td style="{{ $sticky }} padding:8px 12px; border:1px solid #e5e7eb;">
-                        <div style="font-weight:600; color:#1f2937;">{{ $i + 1 }}. {{ $row['student']?->full_name ?? 'N/A' }}</div>
+                        <div style="font-weight:600; color:#1f2937;">{{ $n }}. {{ $row['student']?->full_name ?? 'N/A' }}</div>
                         <div style="font-family:monospace; font-size:11px; color:#6b7280;">{{ $row['student']?->student_number ?? '' }}</div>
                     </td>
                     @foreach($groups as $periodSessions)

@@ -13,6 +13,7 @@ use App\Models\SectionTerm;
 use App\Models\StudentGrade;
 use App\Models\Subject;
 use App\Services\GradeCalculator;
+use App\Services\RecordingWindow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -84,7 +85,11 @@ class GradeController extends Controller
         $config     = $currentTerm->gradeConfigurationFor($subject->id);
         $components = collect($config->getComponents())->keyBy('key');
 
-        return view('teacher.grades.items', compact('section', 'subject', 'gradeItems', 'config', 'components'));
+        $window        = RecordingWindow::bounds($currentTerm);
+        $hints         = RecordingWindow::hints($currentTerm);
+        $windowProblem = RecordingWindow::problem($currentTerm);
+
+        return view('teacher.grades.items', compact('section', 'subject', 'gradeItems', 'config', 'components', 'window', 'hints', 'windowProblem'));
     }
 
     public function storeItem(Request $request, Section $section, Subject $subject)
@@ -111,6 +116,13 @@ class GradeController extends Controller
 
         $component      = collect($config->getComponents())->firstWhere('key', $data['component_type']);
         $data['period'] = $component['period'];
+
+        // A grade item always has a date: left empty it is dated today (in the school's time zone), and it must fall inside its period.
+        $data['date_given'] = filled($data['date_given'] ?? null) ? $data['date_given'] : RecordingWindow::today();
+
+        if ($message = RecordingWindow::refusal($currentTerm, $data['date_given'], $component['period'])) {
+            return back()->withErrors(['date_given' => $message])->withInput();
+        }
 
         $existing = $currentTerm->gradeItemsFor($subject->id)->where('component_type', $component['key'])->get();
         $autoName = GradeItem::autoName($existing, $component['key'], $component['label'] ?? '', $component['period']);

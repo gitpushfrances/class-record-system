@@ -12,6 +12,10 @@
     </div>
 @endif
 
+@if($windowProblem)
+    <div class="px-4 py-3 mb-4 text-sm border rounded-lg" style="color:#92400e; background:#fef3c7; border-color:#fde68a;">{{ $windowProblem }} Grade items cannot be added until it is fixed.</div>
+@endif
+
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
     {{-- Add Item Form --}}
@@ -52,14 +56,16 @@
 
                 <div>
                     <label class="block mb-1 text-xs font-medium text-gray-600">Date Given</label>
-                    <input type="date" name="date_given" value="{{ old('date_given') }}"
+                    <input type="date" id="date-given" name="date_given" value="{{ old('date_given') }}"
                            class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <p id="date-hint" class="mt-1 text-xs text-gray-600"></p>
                 </div>
 
-                <button type="submit"
+                <button type="submit" @disabled($windowProblem) @if($windowProblem) style="opacity:.5; cursor:not-allowed;" @endif
                         class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
                     Add Item
                 </button>
+                <p class="text-xs text-gray-600">Adds the item to the period chosen above. Use Enter Scores in the list to record the marks afterwards.</p>
             </div>
         </form>
     </div>
@@ -122,7 +128,7 @@
                                                     <form method="POST"
                                                           action="{{ \App\Services\TeacherNav::route('teacher.grades.items.destroy', [$section, $subject, $item]) }}"
                                                           class="inline"
-                                                          onsubmit="return confirm('Delete this item?')">
+                                                          onsubmit="return confirm(@js("Delete {$item->name}?\n\nThis removes the item and every score already entered for it. The final grades are recomputed without it. This cannot be undone."))">
                                                         @csrf @method('DELETE')
                                                         <button class="text-xs font-medium text-red-500 hover:text-red-700 hover:underline">Delete</button>
                                                     </form>
@@ -138,11 +144,15 @@
             </div>
         @endforeach
 
+        <p class="text-xs text-gray-600">Enter Scores opens the marks for that item. Delete removes the item together with every score entered for it, and the final grades are recomputed without it. A padlock means the item is locked and cannot be deleted.</p>
+
     </div>
 </div>
 
 <script>
 const allComponents = {!! json_encode($components->values()) !!};
+const recordingWindow = {!! json_encode($window) !!};
+const recordingHints = {!! json_encode($hints) !!};
 
 function filterComponents() {
     const period = document.getElementById('period-select').value;
@@ -156,6 +166,11 @@ function filterComponents() {
             opt.textContent = c.label + (c.weight == 0 ? ' (0% — disabled)' : ' (' + c.weight + '%)');
             sel.appendChild(opt);
         });
+    const range = recordingWindow[period] || [null, null];
+    const date  = document.getElementById('date-given');
+    date.min = range[0] || '';
+    date.max = range[1] || '';
+    document.getElementById('date-hint').textContent = recordingHints[period] + ' Left empty, the item is dated today.';
 }
 filterComponents();
 </script>

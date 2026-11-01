@@ -40,6 +40,7 @@ class AttendanceSheet
 
             return [
                 'student' => $enrollment->student,
+                'gender'  => $enrollment->student?->gender,
                 'marks'   => $records->mapWithKeys(fn ($record) => [self::key($record) => $record->status])->all(),
                 'total'   => $total,
                 'present' => $present,

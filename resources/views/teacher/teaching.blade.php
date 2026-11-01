@@ -13,9 +13,14 @@
         <p class="mt-1 text-sm text-gray-500">Contact your Dean to get assigned to a subject.</p>
     </div>
 @else
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        @foreach($teachingTerms as $term)
-            @foreach($term->subjects as $subject)
+    @foreach($groups as $group)
+        @if($groups->count() > 1)
+            @include('teacher.partials.department-heading', ['group' => $group])
+        @endif
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" style="{{ $loop->last ? '' : 'margin-bottom:28px;' }}">
+            @foreach($group['items'] as $item)
+                @php($term = $item['term'])
+                @php($subject = $item['subject'])
                 <div class="overflow-hidden transition bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md">
                     <div class="px-5 py-4 border-b border-gray-100">
                         <div class="flex items-start justify-between">
@@ -52,7 +57,7 @@
                     </div>
                 </div>
             @endforeach
-        @endforeach
-    </div>
+        </div>
+    @endforeach
 @endif
 </x-sidebar-layout>

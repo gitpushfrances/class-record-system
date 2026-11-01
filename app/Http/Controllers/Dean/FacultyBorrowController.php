@@ -40,7 +40,7 @@ class FacultyBorrowController extends Controller
             'mine'        => $mine,
             'teachers'    => $teachers->sortKeys(),
             'period'      => AcademicPeriod::getActive(),
-            'assignments' => $incoming->where('status', FacultyBorrowRequest::APPROVED)
+            'assignments' => $incoming->concat($mine)->where('status', FacultyBorrowRequest::APPROVED)
                 ->mapWithKeys(fn (FacultyBorrowRequest $loan) => [$loan->id => FacultyBorrowing::assignmentCount($loan)]),
         ]);
     }
@@ -85,7 +85,7 @@ class FacultyBorrowController extends Controller
 
     public function revoke(Request $request, FacultyBorrowRequest $borrowRequest)
     {
-        $this->authorizeLender($borrowRequest);
+        $this->authorizeParty($borrowRequest);
 
         return $this->respond(FacultyBorrowing::revoke($borrowRequest, $request->user()), 'Loan revoked.');
     }
@@ -101,6 +101,16 @@ class FacultyBorrowController extends Controller
     private function authorizeLender(FacultyBorrowRequest $borrowRequest): void
     {
         abort_if((int) $borrowRequest->lending_department_id !== $this->departmentId(), 403, 'This request is not for your department.');
+    }
+
+    /** Either department of the loan may end it: the lender takes the teacher back, the borrower hands them back. */
+    private function authorizeParty(FacultyBorrowRequest $borrowRequest): void
+    {
+        abort_if(
+            !in_array($this->departmentId(), [(int) $borrowRequest->lending_department_id, (int) $borrowRequest->borrowing_department_id], true),
+            403,
+            'This loan does not involve your department.'
+        );
     }
 
     private function respond(?string $error, string $success)

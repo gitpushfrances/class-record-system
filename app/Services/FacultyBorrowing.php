@@ -60,6 +60,20 @@ class FacultyBorrowing
                 ->exists();
     }
 
+    /** The active teacher with this id when they belong to the department. Advisers must be a department's own teachers, never borrowed ones. */
+    public static function ownTeacher(int $teacherId, ?int $departmentId): ?User
+    {
+        if (!$departmentId) {
+            return null;
+        }
+
+        return User::where('id', $teacherId)
+            ->where('role', 'teacher')
+            ->where('status', 'active')
+            ->where('department_id', $departmentId)
+            ->first();
+    }
+
     /** Requests waiting for the signed-in Dean's decision (sidebar badge). */
     public static function pendingIncomingCount(): int
     {
@@ -135,7 +149,7 @@ class FacultyBorrowing
         return null;
     }
 
-    /** The lending Dean takes back an approved loan, as long as the teacher has no class from it yet. */
+    /** Either Dean ends an approved loan, as long as the teacher has no class from it yet. */
     public static function revoke(FacultyBorrowRequest $request, User $decider): ?string
     {
         if ($request->status !== FacultyBorrowRequest::APPROVED) {
@@ -143,8 +157,8 @@ class FacultyBorrowing
         }
 
         if ($count = self::assignmentCount($request)) {
-            return "{$request->teacher->name} is already assigned to {$count} " . \Illuminate\Support\Str::plural('subject', $count)
-                . ' of the borrowing department. Ask its Dean to remove those assignments first.';
+            return "{$request->teacher->name} still teaches {$count} " . \Illuminate\Support\Str::plural('subject', $count)
+                . ' for ' . ($request->borrowingDepartment?->code ?? 'the borrowing department') . ' this semester. Reassign those subjects to another teacher on the Assignments page first.';
         }
 
         return self::decide($request, FacultyBorrowRequest::REVOKED, $decider, null);

@@ -5,6 +5,7 @@ use App\Models\AttendanceRecord;
 use App\Models\Section;
 use App\Models\SectionTerm;
 use App\Models\Subject;
+use App\Services\RecordingWindow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class AttendanceController extends Controller
@@ -12,9 +13,15 @@ class AttendanceController extends Controller
     public function index(Request $request, Section $section, Subject $subject)
     {
         $this->authorizeSectionSubject($section, $subject);
-        $date    = $request->input('date', today()->toDateString());
-        $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
         $currentTerm = $section->terms()->where('status', 'active')->first();
+        $window      = RecordingWindow::bounds($currentTerm)[RecordingWindow::SEMESTER];
+        $requested   = $request->input('date');
+        $date        = is_string($requested) && filled($requested) && strtotime($requested) !== false
+            ? \Carbon\Carbon::parse($requested)->toDateString()
+            : RecordingWindow::clamp(RecordingWindow::today(), $window);
+        $session     = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
+        $allowed     = RecordingWindow::allowed($currentTerm);
+        $dateProblem = RecordingWindow::refusal($currentTerm, $date);
         $enrollments = collect();
         if ($currentTerm) {
             $enrollments = $currentTerm->rosterFor($subject->id)
@@ -29,7 +36,7 @@ class AttendanceController extends Controller
         }
         $enrollments = \App\Models\Enrollment::sortRoster($enrollments);
         $streaks = AttendanceRecord::streaksFor($subject->id, $enrollments->pluck('id'));
-        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date', 'session', 'streaks'));
+        return view('teacher.attendance.index', compact('section', 'subject', 'enrollments', 'date', 'session', 'streaks', 'window', 'allowed', 'dateProblem'));
     }
     public function store(Request $request, Section $section, Subject $subject)
     {
@@ -43,6 +50,10 @@ class AttendanceController extends Controller
             'attendance.*.status'        => 'required|in:present,absent',
         ]);
         $session = $subject->has_laboratory && $request->input('session') === 'laboratory' ? 'laboratory' : 'lecture';
+
+        if ($message = RecordingWindow::refusal($currentTerm, $request->date)) {
+            return back()->withInput()->with('error', $message);
+        }
 
         $classEnrollmentIds = $currentTerm->rosterFor($subject->id)->pluck('id');
         abort_if(collect($request->attendance)->pluck('enrollment_id')->diff($classEnrollmentIds)->isNotEmpty(), 403);

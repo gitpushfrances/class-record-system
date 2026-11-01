@@ -160,7 +160,7 @@
                             @else
                                 @php $nextName = \App\Models\GradeItem::autoName($comp['items'], $comp['key'], $comp['label'], $comp['period']); @endphp
                                 @if($nextName)
-                                    <button type="button" class="no-print" style="{{ $addBtn }}" onclick="openAddItem(@js($comp['key']), @js($nextName))">+ Add</button>
+                                    <button type="button" class="no-print" style="{{ $addBtn }}" onclick="openAddItem(@js($comp['key']), @js($nextName), @js($comp['period']))">+ Add</button>
                                 @endif
                             @endif
                         @endunless
@@ -386,8 +386,9 @@ document.addEventListener('DOMContentLoaded', function () {
         <input type="hidden" name="component_type" id="addItemKey">
         <h3 id="addItemTitle" style="margin:0 0 14px; font-size:16px; font-weight:700; color:#111827;"></h3>
         <label style="display:block; font-size:13px; font-weight:600; color:#374151;">Date
-            <input type="date" name="date_given" value="{{ today()->toDateString() }}" style="display:block; width:100%; margin-top:4px; padding:8px; border:1px solid #d1d5db; border-radius:8px;">
+            <input type="date" id="addItemDate" name="date_given" value="{{ \App\Services\RecordingWindow::today() }}" style="display:block; width:100%; margin-top:4px; padding:8px; border:1px solid #d1d5db; border-radius:8px;">
         </label>
+        <p id="addItemHint" style="margin:4px 0 0; font-size:12px; color:#4b5563;"></p>
         <label style="display:block; margin-top:12px; font-size:13px; font-weight:600; color:#374151;">Highest possible score
             <input type="number" name="max_score" min="1" step="any" required style="display:block; width:100%; margin-top:4px; padding:8px; border:1px solid #d1d5db; border-radius:8px;">
         </label>
@@ -395,10 +396,20 @@ document.addEventListener('DOMContentLoaded', function () {
             <button type="button" onclick="document.getElementById('addItemDialog').close()" style="padding:8px 14px; font-size:13px; font-weight:600; color:#374151; background:#fff; border:1px solid #d1d5db; border-radius:8px; cursor:pointer;">Cancel</button>
             <button type="submit" style="padding:8px 14px; font-size:13px; font-weight:600; color:#fff; background:#0a5b05; border:none; border-radius:8px; cursor:pointer;">Add</button>
         </div>
+        <p style="margin:10px 0 0; font-size:12px; color:#4b5563;">Adds the item to the class record. Type the scores in its column afterwards.</p>
     </form>
 </dialog>
 <script>
-function openAddItem(key, name) {
+var addItemWindow = @json(\App\Services\RecordingWindow::bounds($currentTerm));
+var addItemHints  = @json(\App\Services\RecordingWindow::hints($currentTerm));
+var addItemToday  = @json(\App\Services\RecordingWindow::today());
+function openAddItem(key, name, period) {
+    var range = addItemWindow[period] || [null, null];
+    var date  = document.getElementById('addItemDate');
+    date.min   = range[0] || '';
+    date.max   = range[1] || '';
+    date.value = (range[1] && addItemToday > range[1]) ? range[1] : ((range[0] && addItemToday < range[0]) ? range[0] : addItemToday);
+    document.getElementById('addItemHint').textContent = addItemHints[period] || '';
     document.getElementById('addItemKey').value = key;
     document.getElementById('addItemTitle').textContent = 'Add ' + name;
     document.getElementById('addItemDialog').showModal();

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * Panel recommendation: sign in with a username, not a Gmail/email address.
+ * Panel recommendation: sign in with a username (the email address also works, see EmailOrUsernameLoginTest).
  */
 class UsernameLoginTest extends TestCase
 {
@@ -19,7 +19,7 @@ class UsernameLoginTest extends TestCase
     {
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee('name="username"', false)
+            ->assertSee('name="login"', false)
             ->assertDontSee('name="email"', false)
             ->assertDontSee('Forgot password?')
             ->assertSee('Ask your administrator to reset it');
@@ -57,7 +57,7 @@ class UsernameLoginTest extends TestCase
         $this->seed();
         ob_end_clean();
 
-        $this->post('/login', ['username' => 'dean', 'password' => 'password'])->assertRedirect(route('dean.dashboard'));
+        $this->post('/login', ['login' => 'dean', 'password' => 'password'])->assertRedirect(route('dean.dashboard'));
     }
 
     public function test_admin_creates_an_account_with_a_username_and_no_email_and_resets_its_password(): void
@@ -79,7 +79,7 @@ class UsernameLoginTest extends TestCase
         $this->assertNull($teacher->email);
         $this->post('/logout');
 
-        $this->post('/login', ['username' => 'ana.reyes', 'password' => 'password1'])->assertRedirect(route('teacher.dashboard'));
+        $this->post('/login', ['login' => 'ana.reyes', 'password' => 'password1'])->assertRedirect(route('teacher.dashboard'));
         $this->post('/logout');
 
         $this->actingAs($admin)->put(route('admin.deans.update', $teacher), [
@@ -89,7 +89,7 @@ class UsernameLoginTest extends TestCase
         ])->assertSessionHasNoErrors();
         $this->post('/logout');
 
-        $this->post('/login', ['username' => 'ana.reyes', 'password' => 'newpass99'])->assertRedirect(route('teacher.dashboard'));
+        $this->post('/login', ['login' => 'ana.reyes', 'password' => 'newpass99'])->assertRedirect(route('teacher.dashboard'));
     }
 
     public function test_a_user_without_an_email_can_confirm_their_password(): void

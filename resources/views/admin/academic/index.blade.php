@@ -22,6 +22,12 @@
                 <h3 class="text-sm font-semibold text-gray-700">Add New Period</h3>
             </div>
             <div class="px-6 py-4">
+                <p class="mb-3 text-xs text-gray-600">
+                    Teachers can only record attendance and grade items dated from the semester start to the cutoffs set here:
+                    midterm records up to the midterm cutoff, finals records after it up to the finals cutoff.
+                    A period needs all three dates, otherwise teachers cannot record anything for that semester.
+                    A semester whose finals cutoff has already passed cannot be added.
+                </p>
                 <form action="{{ route('admin.academic.store') }}" method="POST" class="flex flex-wrap items-end gap-4">
                     @csrf
                     <div>
@@ -42,6 +48,12 @@
                         @error('semester')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                     </div>
                     <div>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Semester Start</label>
+                        <input type="date" name="start_date" value="{{ old('start_date') }}"
+                               class="px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
+                        @error('start_date')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
                         <label class="block mb-1 text-sm font-medium text-gray-700">Midterm Cutoff</label>
                         <input type="date" name="midterm_cutoff_date" value="{{ old('midterm_cutoff_date') }}"
                                class="px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
@@ -53,9 +65,12 @@
                                class="px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
                         @error('finals_cutoff_date')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                     </div>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">
-                        Add Period
-                    </button>
+                    <div style="max-width:230px;">
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">
+                            Add Period
+                        </button>
+                        <p class="mt-1 text-xs text-gray-600">Adds the semester as Inactive. Nothing changes for teachers until you press Set Active.</p>
+                    </div>
                 </form>
             </div>
         </div>
@@ -70,6 +85,7 @@
                     <tr>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">School Year</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester</th>
+                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester Start</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Midterm Cutoff</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Finals Cutoff</th>
                         <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
@@ -81,6 +97,7 @@
                         <tr>
                             <td class="px-6 py-4 font-medium text-gray-800">{{ $period->school_year }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $period->semester }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->start_date?->format('M d, Y') ?? '—' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $period->midterm_cutoff_date?->format('M d, Y') ?? '—' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $period->finals_cutoff_date?->format('M d, Y') ?? '—' }}</td>
                             <td class="px-6 py-4">
@@ -90,28 +107,54 @@
                                     <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded">Inactive</span>
                                 @endif
                             </td>
-                            <td class="flex items-center gap-3 px-6 py-4">
+                            <td class="px-6 py-4" style="min-width:250px;">
+                                <div class="space-y-3">
                                 @if(!$period->is_active)
-                                    <form action="{{ route('admin.academic.setActive', $period) }}" method="POST" class="inline">
+                                    <div>
+                                        <form action="{{ route('admin.academic.setActive', $period) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('Make {{ $period->semester }}, {{ $period->school_year }} the active period?\n\nThe period that is active now becomes inactive. Teachers will then be able to record only dates inside this period.');">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="text-sm font-medium text-blue-600 hover:text-blue-800">Set Active</button>
+                                        </form>
+                                        <p class="text-xs text-gray-600" style="margin-top:2px;">Makes this the current semester and deactivates the one that is active now. Teachers can then record only dates inside this period.</p>
+                                    </div>
+                                    <div>
+                                        <form action="{{ route('admin.academic.destroy', $period) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('Delete {{ $period->semester }}, {{ $period->school_year }}?\n\nThis permanently removes the period and cannot be undone. It is refused while a class term still uses it.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-800">Delete</button>
+                                        </form>
+                                        <p class="text-xs text-gray-600" style="margin-top:2px;">Permanently removes this period. Refused if a class term still uses it.</p>
+                                    </div>
+                                @else
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-700">Currently active</span>
+                                        <p class="text-xs text-gray-600" style="margin-top:2px;">Teachers are recording inside these dates now. To change the current semester, press Set Active on another period. The active period cannot be deleted.</p>
+                                    </div>
+                                @endif
+                                <details>
+                                    <summary class="text-sm font-medium text-gray-700 cursor-pointer">Edit dates</summary>
+                                    <p class="mt-1 text-xs text-gray-600">Changes the start and the cutoffs. Records already saved are kept; new entries follow the new dates.</p>
+                                    <form action="{{ route('admin.academic.update', $period) }}" method="POST" class="flex flex-wrap items-end gap-3 mt-2">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Set Active</button>
+                                        <label class="text-xs font-medium text-gray-700">Start
+                                            <input type="date" name="start_date" value="{{ $period->start_date?->toDateString() }}" required class="block px-2 py-1 mt-1 text-sm border rounded"></label>
+                                        <label class="text-xs font-medium text-gray-700">Midterm
+                                            <input type="date" name="midterm_cutoff_date" value="{{ $period->midterm_cutoff_date?->toDateString() }}" required class="block px-2 py-1 mt-1 text-sm border rounded"></label>
+                                        <label class="text-xs font-medium text-gray-700">Finals
+                                            <input type="date" name="finals_cutoff_date" value="{{ $period->finals_cutoff_date?->toDateString() }}" required class="block px-2 py-1 mt-1 text-sm border rounded"></label>
+                                        <button type="submit" class="px-3 py-1 text-sm font-medium text-white rounded" style="background-color:#0a5b05;">Save</button>
                                     </form>
-                                    <span class="text-gray-300">|</span>
-                                    <form action="{{ route('admin.academic.destroy', $period) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-sm text-red-600 hover:text-red-800"
-                                                onclick="return confirm('Delete this period?')">Delete</button>
-                                    </form>
-                                @else
-                                    <span class="text-xs text-gray-400">Currently active</span>
-                                @endif
+                                </details>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No periods found.</td>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-600">No periods found.</td>
                         </tr>
                     @endforelse
                 </tbody>

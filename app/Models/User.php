@@ -61,6 +61,12 @@ class User extends Authenticatable
         $this->attributes['username'] = $value === null ? null : strtolower(trim($value));
     }
 
+    /** Emails are stored in lower case (an empty one as null), so signing in with an email does not depend on capital letters. */
+    public function setEmailAttribute(?string $value): void
+    {
+        $this->attributes['email'] = blank($value) ? null : strtolower(trim($value));
+    }
+
     /** Validation rules for a username; pass the account's id when editing it. */
     public static function usernameRules(?int $ignoreId = null): array
     {

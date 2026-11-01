@@ -69,7 +69,10 @@ class TermGradeRecordTest extends TestCase
     private function nextTerm(): SectionTerm
     {
         AcademicPeriod::query()->update(['is_active' => false]);
-        $period = AcademicPeriod::create(['school_year' => '2099-2100', 'semester' => $this->term->semester, 'is_active' => true]);
+        $period = AcademicPeriod::create([
+            'school_year' => '2099-2100', 'semester' => $this->term->semester, 'is_active' => true,
+            'start_date' => '2099-08-03', 'midterm_cutoff_date' => '2099-10-02', 'finals_cutoff_date' => '2099-12-04',
+        ]);
 
         [$next] = TermRollover::setTerm($this->term->section, $this->teacher->id, $period);
         $next->subjects()->attach($this->subject->id, ['teacher_id' => $this->teacher->id]);
@@ -101,7 +104,7 @@ class TermGradeRecordTest extends TestCase
 
         // Before, the old "Midterm Examination" blocked a new one.
         $this->actingAs($this->teacher)->post(route('teacher.grades.items.store', [$section, $this->subject]), [
-            'component_type' => 'exam', 'max_score' => 60,
+            'component_type' => 'exam', 'max_score' => 60, 'date_given' => '2099-09-01',
         ])->assertSessionHas('success');
 
         $this->assertSame(['Midterm Examination'], $next->gradeItemsFor($this->subject->id)->pluck('name')->all());

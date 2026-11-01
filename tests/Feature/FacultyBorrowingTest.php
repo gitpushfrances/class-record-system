@@ -229,11 +229,14 @@ class FacultyBorrowingTest extends TestCase
         $this->assertFalse(FacultyBorrowing::teachersFor($this->borrowingDean->department_id)->contains('id', $this->borrowed->id));
     }
 
-    public function test_only_the_lending_dean_can_revoke(): void
+    public function test_a_dean_of_a_third_department_cannot_revoke(): void
     {
-        $loan = $this->loan('approved');
+        $loan     = $this->loan('approved');
+        $outsider = User::factory()->create([
+            'role' => 'dean', 'status' => 'active', 'department_id' => \App\Models\Department::where('code', 'COE')->value('id'),
+        ]);
 
-        $this->actingAs($this->borrowingDean)->patch(route('dean.borrowing.revoke', $loan))->assertForbidden();
+        $this->actingAs($outsider)->patch(route('dean.borrowing.revoke', $loan))->assertForbidden();
         $this->assertSame('approved', $loan->fresh()->status);
     }
 

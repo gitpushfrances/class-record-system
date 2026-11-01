@@ -61,6 +61,7 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
 
     Route::get('/academic', [AdminAcademic::class, 'index'])->name('academic.index');
     Route::post('/academic', [AdminAcademic::class, 'store'])->name('academic.store');
+    Route::patch('/academic/{period}', [AdminAcademic::class, 'update'])->name('academic.update');
     Route::patch('/academic/{period}/set-active', [AdminAcademic::class, 'setActive'])->name('academic.setActive');
     Route::delete('/academic/{period}', [AdminAcademic::class, 'destroy'])->name('academic.destroy');
     Route::get('/users/create', [AdminUser::class, 'createAccount'])->name('users.create');

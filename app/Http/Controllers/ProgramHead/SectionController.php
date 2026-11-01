@@ -267,6 +267,10 @@ class SectionController extends Controller
             'adviser_id' => 'required|exists:users,id',
         ]);
 
+        if (!\App\Services\FacultyBorrowing::ownTeacher((int) $request->adviser_id, \App\Services\Scope::departmentId())) {
+            return back()->with('error', 'The adviser must be an active teacher of your department. Borrowed teachers cannot be advisers.');
+        }
+
         $currentTerm = $section->terms()->where('status', 'active')->first();
 
         if (!$request->boolean('confirmed')) {

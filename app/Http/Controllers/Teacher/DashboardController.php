@@ -38,7 +38,13 @@ class DashboardController extends Controller
             ])
             ->values();
 
-        return view('teacher.dashboard', compact('classes'));
+        $departmentGroups = \App\Services\DepartmentGroups::group(
+            $classes,
+            fn ($class) => $class['term']->section->program->department,
+            auth()->user()->department_id ? (int) auth()->user()->department_id : null
+        );
+
+        return view('teacher.dashboard', compact('classes', 'departmentGroups'));
     }
 
     public function advisory()
@@ -52,7 +58,13 @@ class DashboardController extends Controller
     {
         $teachingTerms = $this->teachingQuery()->get();
 
-        return view('teacher.teaching', compact('teachingTerms'));
+        $groups = \App\Services\DepartmentGroups::group(
+            $teachingTerms->flatMap(fn ($term) => $term->subjects->map(fn ($subject) => ['term' => $term, 'subject' => $subject])),
+            fn ($item) => $item['term']->section->program->department,
+            auth()->user()->department_id ? (int) auth()->user()->department_id : null
+        );
+
+        return view('teacher.teaching', compact('teachingTerms', 'groups'));
     }
 
     private function advisoryQuery()

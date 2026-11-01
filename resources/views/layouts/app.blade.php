@@ -16,6 +16,9 @@
     <style>
         /* Native dropdown popups are always light: keep option text dark whatever the select's own color is. */
         select option { color: #0b3d0b; background-color: #ffffff; }
+        /* Pale greys fail contrast on the light content area (WCAG AA needs 4.5:1): raise them to a readable grey. */
+        main .text-gray-300, main .text-gray-400 { color: #6b7280; }
+        main [style^="color:#9ca3af"], main [style*=" color:#9ca3af"], main [style*=";color:#9ca3af"] { color: #6b7280 !important; }
     </style>
 </head>
 <body class="font-sans antialiased bg-stone-100 app-shell" style="font-family: 'DM Sans', sans-serif;">
