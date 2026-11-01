@@ -12,7 +12,7 @@
         </div>
     @endif
 
-    <div class="max-w-3xl mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto space-y-6">
 
         <h2 class="text-lg font-semibold text-gray-800">Academic Periods</h2>
 
@@ -76,38 +76,38 @@
         </div>
 
         {{-- Periods List --}}
-        <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h3 class="text-sm font-semibold text-gray-700">All Periods</h3>
             </div>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">School Year</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester Start</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Midterm Cutoff</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Finals Cutoff</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Actions</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">School Year</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Semester Start</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Midterm Cutoff</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Finals Cutoff</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Status</th>
+                        <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse($periods as $period)
                         <tr>
-                            <td class="px-6 py-4 font-medium text-gray-800">{{ $period->school_year }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->semester }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->start_date?->format('M d, Y') ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->midterm_cutoff_date?->format('M d, Y') ?? '—' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $period->finals_cutoff_date?->format('M d, Y') ?? '—' }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-4 whitespace-nowrap font-medium text-gray-800">{{ $period->school_year }}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{{ $period->semester }}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{{ $period->start_date?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{{ $period->midterm_cutoff_date?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{{ $period->finals_cutoff_date?->format('M d, Y') ?? '—' }}</td>
+                            <td class="px-4 py-4">
                                 @if($period->is_active)
                                     <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">Active</span>
                                 @else
                                     <span class="px-2 py-1 text-xs text-gray-500 bg-gray-100 rounded">Inactive</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4" style="min-width:250px;">
+                            <td class="px-4 py-4" style="min-width:250px;">
                                 <div class="space-y-3">
                                 @if(!$period->is_active)
                                     <div>
