@@ -44,10 +44,42 @@ class BatchPromotion
             ->values();
     }
 
-    /** Source-term members with their INC / failed subjects (subject codes) for the review list. */
+    /**
+     * Students of the source term who already sit in a regular class list of the active period: they have been moved,
+     * so they are not offered again. A student who could not be moved is not in a class list yet and stays.
+     */
+    public static function movedStudentIds(SectionTerm $source): Collection
+    {
+        $period = AcademicPeriod::getActive();
+        if (!$period) {
+            return collect();
+        }
+
+        return Enrollment::whereIn('student_id', $source->enrollments()->pluck('student_id'))
+            ->where('type', Enrollment::TYPE_REGULAR)
+            ->where('status', Enrollment::STATUS_ENROLLED)
+            ->whereHas('sectionTerm', fn ($q) => $q
+                ->where('status', 'active')
+                ->where('academic_year', $period->school_year)
+                ->where('semester', $period->semester))
+            ->pluck('student_id')
+            ->unique()
+            ->values();
+    }
+
+    /** Members of the source term still waiting to be moved. */
+    public static function remainingCount(SectionTerm $source): int
+    {
+        return $source->enrollments()->whereNotIn('student_id', self::movedStudentIds($source))->count();
+    }
+
+    /** Source-term members not moved yet, with their INC / failed subjects (subject codes) for the review list. */
     public static function candidates(SectionTerm $source): Collection
     {
-        $members = Enrollment::sortRoster($source->enrollments()->with('student')->get());
+        $moved   = self::movedStudentIds($source);
+        $members = Enrollment::sortRoster($source->enrollments()->with('student')->get())
+            ->reject(fn ($e) => $moved->contains($e->student_id))
+            ->values();
         $flags   = FinalGrade::with('subject')
             ->whereIn('enrollment_id', $members->pluck('id'))
             ->whereIn('remarks', ['failed', 'incomplete'])

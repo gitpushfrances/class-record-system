@@ -5,7 +5,6 @@
     $td    = 'padding:12px 18px; font-size:14px; color:#374151; border-bottom:1px solid #f3f4f6; vertical-align:middle;';
     $btn   = 'padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; cursor:pointer; white-space:nowrap;';
     $tab   = fn ($on) => 'padding:6px 14px; font-size:13px; font-weight:600; border-radius:8px; text-decoration:none; border:1px solid ' . ($on ? '#0a5b05; color:#fff; background:#0a5b05;' : '#d1d5db; color:#374151; background:#fff;');
-    $pending = ($counts['pending'] ?? 0) + ($counts['pending_review'] ?? 0);
 @endphp
 
 <div style="display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:20px;">
@@ -13,11 +12,6 @@
         <h1 style="margin:0; font-size:24px; font-weight:700; color:#1f2937;">Faculty</h1>
         <p style="margin:4px 0 0; font-size:14px; color:#6b7280;">Deactivate teachers who no longer teach in your department. Their grades and records are kept.</p>
     </div>
-    @if($pending > 0)
-        <a href="{{ route('dean.teachers.pending') }}" style="{{ $btn }} padding:8px 14px; color:#92400e; background:#fef3c7; border:1px solid #fde68a; text-decoration:none;">
-            <i class="fa-solid fa-user-clock"></i> {{ $pending }} pending {{ \Illuminate\Support\Str::plural('approval', $pending) }}
-        </a>
-    @endif
 </div>
 
 <form method="GET" data-live-search style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:16px;">

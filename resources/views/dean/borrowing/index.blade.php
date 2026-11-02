@@ -58,30 +58,26 @@
                                 <div style="display:flex; gap:6px; justify-content:flex-end; align-items:center; flex-wrap:wrap;">
                                     <form method="POST" action="{{ route('dean.borrowing.approve', $loan) }}">
                                         @csrf @method('PATCH')
-                                        <button type="submit" style="{{ $btn }} color:#fff; background:#0a5b05; border:none;">Approve</button>
+                                        <button type="submit" title="{{ $loan->borrowingDepartment?->code }} can assign this teacher to its subjects until the semester ends. Your own classes and records for them stay as they are." style="{{ $btn }} color:#fff; background:#0a5b05; border:none;">Approve</button>
                                     </form>
                                     <form method="POST" action="{{ route('dean.borrowing.decline', $loan) }}" style="display:flex; gap:6px;">
                                         @csrf @method('PATCH')
                                         <input type="text" name="decision_note" maxlength="500" placeholder="Reason (optional)" style="padding:6px 10px; font-size:12px; border:1px solid #d1d5db; border-radius:8px; width:150px;">
-                                        <button type="submit" style="{{ $btn }} color:#991b1b; background:#fff; border:1px solid #fca5a5;">Decline</button>
+                                        <button type="submit" title="Sends your reason back. Nothing changes." style="{{ $btn }} color:#991b1b; background:#fff; border:1px solid #fca5a5;">Decline</button>
                                     </form>
                                 </div>
-                                <p style="margin:6px 0 0 auto; max-width:260px; font-size:12px; line-height:1.4; color:#4b5563; text-align:right;">Approve lets {{ $loan->borrowingDepartment?->code }} assign this teacher to its subjects until the semester ends. Your own classes and records for them stay as they are. Decline sends your reason back and nothing changes.</p>
                             @elseif($loan->status === 'approved')
                                 @php $taught = $assignments[$loan->id] ?? 0; @endphp
                                 <form method="POST" action="{{ route('dean.borrowing.revoke', $loan) }}"
+                                      title="{{ $taught > 0 ? 'Ask ' . $loan->borrowingDepartment?->code . ' to reassign this teacher\'s subjects first.' : 'Takes the teacher back. ' . $loan->borrowingDepartment?->code . ' can no longer assign them.' }}"
                                       onsubmit="return confirm('Take {{ $loan->teacher?->name }} back from {{ $loan->borrowingDepartment?->code }}?\n\n{{ $loan->borrowingDepartment?->code }} will no longer be able to assign this teacher to its subjects. Your own records for them are not affected.');">
                                     @csrf @method('PATCH')
                                     <button type="submit" @disabled($taught > 0)
                                             style="{{ $btn }} color:#991b1b; background:#fff; border:1px solid #fca5a5; {{ $taught > 0 ? 'opacity:.5; cursor:not-allowed;' : '' }}">Revoke</button>
                                 </form>
-                                <p style="margin:6px 0 0 auto; max-width:260px; font-size:12px; line-height:1.4; color:#4b5563; text-align:right;">
-                                    @if($taught > 0)
-                                        Cannot revoke yet: this teacher still teaches {{ $taught }} {{ \Illuminate\Support\Str::plural('subject', $taught) }} for {{ $loan->borrowingDepartment?->code }}. Ask that Dean to reassign them first.
-                                    @else
-                                        Returns the teacher to your department only. {{ $loan->borrowingDepartment?->code }} can no longer assign them.
-                                    @endif
-                                </p>
+                                @if($taught > 0)
+                                    <div style="margin-top:4px; font-size:12px; color:#6b7280;">Teaching {{ $taught }} {{ \Illuminate\Support\Str::plural('subject', $taught) }} now</div>
+                                @endif
                             @endif
                         </td>
                     </tr>
@@ -118,10 +114,9 @@
                 <input id="borrow-message" type="text" name="message" maxlength="500" value="{{ old('message') }}" placeholder="e.g. Needed for IT 301 this semester" style="{{ $input }}">
             </div>
             <div>
-                <button type="submit" @disabled(!$period) style="{{ $btn }} padding:9px 16px; font-size:14px; color:#fff; background:#0a5b05; border:none; {{ $period ? '' : 'opacity:.5; cursor:not-allowed;' }}">
+                <button type="submit" @disabled(!$period) title="Sends your request to the other department's Dean. Nothing changes until they approve it." style="{{ $btn }} padding:9px 16px; font-size:14px; color:#fff; background:#0a5b05; border:none; {{ $period ? '' : 'opacity:.5; cursor:not-allowed;' }}">
                     Send request{{ $period ? ' for ' . $period->semester : '' }}
                 </button>
-                <p style="margin:6px 0 0; font-size:12px; line-height:1.4; color:#4b5563;">Sends your request to the other department's Dean. Nothing changes until they approve it, and you can cancel it while it is pending.</p>
             </div>
         </form>
     @endif
@@ -153,24 +148,20 @@
                             @if($loan->status === 'pending')
                                 <form method="POST" action="{{ route('dean.borrowing.cancel', $loan) }}">
                                     @csrf @method('PATCH')
-                                    <button type="submit" style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Cancel request</button>
+                                    <button type="submit" title="Withdraws this request. Nothing was assigned." style="{{ $btn }} color:#374151; background:#fff; border:1px solid #d1d5db;">Cancel request</button>
                                 </form>
-                                <p style="margin:6px 0 0 auto; max-width:260px; font-size:12px; line-height:1.4; color:#4b5563; text-align:right;">Withdraws this request. Nothing was assigned.</p>
                             @elseif($loan->status === 'approved')
                                 @php $taught = $assignments[$loan->id] ?? 0; @endphp
                                 <form method="POST" action="{{ route('dean.borrowing.revoke', $loan) }}"
+                                      title="{{ $taught > 0 ? 'Reassign this teacher\'s subjects on the Assignments page first.' : 'Hands the teacher back to ' . $loan->lendingDepartment?->code . '. You can no longer assign them.' }}"
                                       onsubmit="return confirm('Hand {{ $loan->teacher?->name }} back to {{ $loan->lendingDepartment?->code }}?\n\nYou will no longer be able to assign this teacher to your subjects.');">
                                     @csrf @method('PATCH')
                                     <button type="submit" @disabled($taught > 0)
                                             style="{{ $btn }} color:#991b1b; background:#fff; border:1px solid #fca5a5; {{ $taught > 0 ? 'opacity:.5; cursor:not-allowed;' : '' }}">Revoke</button>
                                 </form>
-                                <p style="margin:6px 0 0 auto; max-width:260px; font-size:12px; line-height:1.4; color:#4b5563; text-align:right;">
-                                    @if($taught > 0)
-                                        Cannot revoke yet: you still assign this teacher to {{ $taught }} {{ \Illuminate\Support\Str::plural('subject', $taught) }}. Reassign them to another teacher on the Assignments page first.
-                                    @else
-                                        Hands the teacher back to {{ $loan->lendingDepartment?->code }}. You can no longer assign them.
-                                    @endif
-                                </p>
+                                @if($taught > 0)
+                                    <div style="margin-top:4px; font-size:12px; color:#6b7280;">Teaching {{ $taught }} {{ \Illuminate\Support\Str::plural('subject', $taught) }} now</div>
+                                @endif
                             @endif
                         </td>
                     </tr>

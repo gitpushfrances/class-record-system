@@ -56,8 +56,9 @@ class AssignmentController extends Controller
             ->where('status', 'active')
             ->whereHas('program', fn($q) => $q->where('department_id', $departmentId))
             ->whereHas('terms', fn($q) => $q->where('status', 'active'))
-            ->orderBy('year_level')
-            ->get();
+            ->get()
+            ->sortBy(fn (Section $section) => sprintf('%s-%02d-%s', $section->program->code, $section->year_number, $section->section_letter))
+            ->values();
 
         $subjects = Subject::with('program')
             ->where('status', 'approved')

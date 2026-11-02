@@ -8,7 +8,6 @@ use App\Http\Controllers\Dean\StudentController as DeanStudent;
 use App\Http\Controllers\SuperAdmin\SubjectController as AdminSubject;
 use App\Http\Controllers\Dean\SubjectController as DeanSubject;
 use App\Http\Controllers\Dean\DashboardController as DeanDashboard;
-use App\Http\Controllers\Dean\TeacherApprovalController as DeanTeacherApproval;
 use App\Http\Controllers\Dean\SectionController as DeanSection;
 use App\Http\Controllers\Dean\EnrollmentController as DeanEnrollment;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboard;
@@ -103,10 +102,6 @@ Route::middleware(['auth', 'status', 'role:super_admin', 'no.cache'])->prefix('a
 
 Route::middleware(['auth', 'status', 'role:dean', 'no.cache'])->prefix('dean')->name('dean.')->group(function () {
     Route::get('/dashboard', [DeanDashboard::class, 'index'])->name('dashboard');
-
-    Route::get('/teachers/pending', [DeanTeacherApproval::class, 'index'])->name('teachers.pending');
-    Route::post('/teachers/{user}/approve', [DeanTeacherApproval::class, 'approve'])->name('teachers.approve');
-    Route::delete('/teachers/{user}/reject', [DeanTeacherApproval::class, 'reject'])->name('teachers.reject');
 
     Route::get('/faculty', [App\Http\Controllers\Dean\FacultyController::class, 'index'])->name('faculty.index');
     Route::patch('/faculty/{user}/deactivate', [App\Http\Controllers\Dean\FacultyController::class, 'deactivate'])->name('faculty.deactivate');

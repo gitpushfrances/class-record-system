@@ -15,14 +15,17 @@ class FacultyBorrowController extends Controller
     public function index()
     {
         $departmentId = $this->departmentId();
+        $period       = AcademicPeriod::getActive();
 
         $incoming = FacultyBorrowRequest::with(['teacher', 'borrowingDepartment', 'requester'])
             ->where('lending_department_id', $departmentId)
+            ->current($period)
             ->latest('id')
             ->get();
 
         $mine = FacultyBorrowRequest::with(['teacher', 'lendingDepartment'])
             ->where('borrowing_department_id', $departmentId)
+            ->current($period)
             ->latest('id')
             ->get();
 
@@ -39,7 +42,7 @@ class FacultyBorrowController extends Controller
             'incoming'    => $incoming,
             'mine'        => $mine,
             'teachers'    => $teachers->sortKeys(),
-            'period'      => AcademicPeriod::getActive(),
+            'period'      => $period,
             'assignments' => $incoming->concat($mine)->where('status', FacultyBorrowRequest::APPROVED)
                 ->mapWithKeys(fn (FacultyBorrowRequest $loan) => [$loan->id => FacultyBorrowing::assignmentCount($loan)]),
         ]);

@@ -66,7 +66,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" style="{{ $td }} text-align:center; color:#9ca3af;">No students in the closed term.</td></tr>
+                    <tr><td colspan="4" style="{{ $td }} text-align:center; color:#9ca3af;">{{ $moved > 0 ? 'Everyone in this term has already been moved.' : 'No students in the closed term.' }}</td></tr>
                 @endforelse
                 </tbody>
             </table>

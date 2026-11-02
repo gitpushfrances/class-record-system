@@ -119,4 +119,74 @@ class BatchPromotionTest extends TestCase
         $this->actingAs($this->programHead)->get(route('program-head.promotions.index'))->assertRedirect(route('program-head.promotions.program', $this->programHead->program_id));
         $this->actingAs($other)->get(route('program-head.promotions.section', $this->from))->assertForbidden();
     }
+
+    public function test_students_who_were_moved_leave_the_list_and_the_others_stay(): void
+    {
+        $members = $this->oldTerm->enrollments()->with('student')->get();
+        $moved   = $members->take(2);
+        $left    = $members->slice(2);
+        $target  = $this->targetTerm($this->to);
+
+        $this->actingAs($this->programHead)->post(route('program-head.promotions.store', $this->from), [
+            'target_term_id' => $target->id,
+            'student_ids'    => $moved->pluck('student_id')->all(),
+        ]);
+
+        $page = $this->actingAs($this->programHead)->get(route('program-head.promotions.section', $this->from))->assertOk();
+
+        foreach ($moved as $enrollment) {
+            $page->assertDontSee($enrollment->student->student_number);
+        }
+        foreach ($left as $enrollment) {
+            $page->assertSee($enrollment->student->student_number);
+        }
+        $page->assertSee('(' . $left->count() . ' students)');
+    }
+
+    public function test_the_program_page_counts_only_the_students_still_to_move(): void
+    {
+        $members = $this->oldTerm->enrollments()->get();
+        $target  = $this->targetTerm($this->to);
+
+        $this->actingAs($this->programHead)->post(route('program-head.promotions.store', $this->from), [
+            'target_term_id' => $target->id,
+            'student_ids'    => $members->take(2)->pluck('student_id')->all(),
+        ]);
+
+        $remaining = $members->count() - 2;
+
+        $this->actingAs($this->programHead)->get(route('program-head.promotions.program', $this->programHead->program_id))
+            ->assertOk()
+            ->assertSee("From: {$this->oldTerm->semester} {$this->oldTerm->academic_year} ({$remaining} students)");
+    }
+
+    public function test_when_everyone_was_moved_the_list_says_so(): void
+    {
+        $members = $this->oldTerm->enrollments()->with('student')->get();
+        $target  = $this->targetTerm($this->to);
+
+        $this->actingAs($this->programHead)->post(route('program-head.promotions.store', $this->from), [
+            'target_term_id' => $target->id,
+            'student_ids'    => $members->pluck('student_id')->all(),
+        ]);
+
+        $page = $this->actingAs($this->programHead)->get(route('program-head.promotions.section', $this->from))
+            ->assertOk()
+            ->assertSee('Everyone in this term has already been moved.')
+            ->assertSee('(0 students)');
+
+        foreach ($members as $enrollment) {
+            $page->assertDontSee($enrollment->student->student_number);
+        }
+    }
+
+    public function test_a_student_placed_in_another_section_by_hand_is_not_offered_again(): void
+    {
+        $member = $this->oldTerm->enrollments()->with('student')->firstOrFail();
+        \App\Services\SectionEnrollment::enroll($this->targetTerm($this->to), $member->student);
+
+        $this->actingAs($this->programHead)->get(route('program-head.promotions.section', $this->from))
+            ->assertOk()
+            ->assertDontSee($member->student->student_number);
+    }
 }

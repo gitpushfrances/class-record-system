@@ -19,21 +19,21 @@
         @csrf
         <div>
             <label class="block mb-1 text-xs font-medium text-gray-600">Section</label>
-            <select name="section_id" required
+            <select name="section_id" id="assign-section" required
                     class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">Select Section</option>
                 @foreach($sections as $section)
-                    <option value="{{ $section->id }}">{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</option>
+                    <option value="{{ $section->id }}" data-year="{{ $section->year_level }}" @selected(old('section_id') == $section->id)>{{ $section->program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</option>
                 @endforeach
             </select>
         </div>
         <div>
             <label class="block mb-1 text-xs font-medium text-gray-600">Subject</label>
-            <select name="subject_id" required data-lab-toggle
+            <select name="subject_id" id="assign-subject" required data-lab-toggle
                     class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">Select Subject</option>
                 @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}" data-lab="{{ $subject->has_laboratory ? 1 : 0 }}" @selected(old('subject_id') == $subject->id)>{{ $subject->program?->code }} · {{ $subject->code }} — {{ $subject->name }} ({{ $subject->placement }}){{ $subject->has_laboratory ? ' · Lec + Lab' : '' }}</option>
+                    <option value="{{ $subject->id }}" data-lab="{{ $subject->has_laboratory ? 1 : 0 }}" data-year="{{ $subject->year_level }}" @selected(old('subject_id') == $subject->id)>{{ $subject->program?->code }} · {{ $subject->code }} — {{ $subject->name }} ({{ $subject->placement }}){{ $subject->has_laboratory ? ' · Lec + Lab' : '' }}</option>
                 @endforeach
             </select>
         </div>
@@ -112,6 +112,36 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // The subject list follows the year level of the chosen section (a subject with no year level set is always offered).
+    (function () {
+        const section = document.getElementById('assign-section');
+        const subject = document.getElementById('assign-subject');
+        if (!section || !subject) return;
+
+        const all = Array.from(subject.options).slice(1);
+
+        function filter() {
+            const year = section.options[section.selectedIndex]?.dataset.year || '';
+            const keep = subject.value;
+
+            subject.innerHTML = '';
+            const first = document.createElement('option');
+            first.value = '';
+            first.textContent = year ? 'Select Subject' : 'Select a section first';
+            subject.appendChild(first);
+
+            if (year) {
+                all.filter(o => !o.dataset.year || o.dataset.year === year).forEach(o => subject.appendChild(o));
+            }
+
+            subject.value = Array.from(subject.options).some(o => o.value === keep) ? keep : '';
+            subject.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        section.addEventListener('change', filter);
+        filter();
+    })();
+
     document.querySelectorAll('.remove-assignment-form').forEach(form => {
         form.addEventListener('submit', function (e) {
             e.preventDefault();

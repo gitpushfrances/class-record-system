@@ -22,7 +22,7 @@
             <a href="{{ route($prefix . '.promotions.section', $section) }}" style="display:block; padding:16px; text-decoration:none; background:#fff; border:1px solid #e5e7eb; border-radius:12px;">
                 <div style="font-size:16px; font-weight:700; color:#111827;">{{ $program->code }} {{ $section->year_number }}-{{ $section->section_letter }}</div>
                 <div style="margin-top:8px; font-size:12px; color:#4b5563;">
-                    From: {{ $closed ? "{$closed->semester} {$closed->academic_year} ({$closed->enrollments()->count()} students)" : 'no closed term yet' }}
+                    From: {{ $closed ? "{$closed->semester} {$closed->academic_year} (" . \App\Services\BatchPromotion::remainingCount($closed) . ' students)' : 'no closed term yet' }}
                 </div>
                 <div style="margin-top:2px; font-size:12px; color:#4b5563;">
                     Now: {{ $active ? "{$active->semester} {$active->academic_year} ({$active->enrollments()->count()} students)" : 'no active term' }}

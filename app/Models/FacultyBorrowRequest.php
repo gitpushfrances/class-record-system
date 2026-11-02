@@ -35,6 +35,14 @@ class FacultyBorrowRequest extends Model
         return $query->where('academic_year', $academicYear)->where('semester', $semester);
     }
 
+    /** Only the semester that is active now. A loan of an ended semester is over, so it is not listed any more; with no active period nothing is current. */
+    public function scopeCurrent($query, ?AcademicPeriod $period)
+    {
+        return $period
+            ? $query->forTerm($period->school_year, $period->semester)
+            : $query->whereRaw('1 = 0');
+    }
+
     public function borrowingDepartment()
     {
         return $this->belongsTo(Department::class, 'borrowing_department_id')->withTrashed();

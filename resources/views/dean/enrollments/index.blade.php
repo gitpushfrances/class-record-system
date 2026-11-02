@@ -19,53 +19,28 @@
         </div>
     </div>
 
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+    <h3 class="mb-2 text-sm font-semibold text-gray-700 uppercase">
+        Current term{{ $period ? ': ' . $period->semester . ', ' . $period->school_year : '' }}
+    </h3>
+    <div class="mb-8 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
         <div class="p-6">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Section</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Term</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Adviser</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Enrolled</th>
-                        <th class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse($sectionTerms as $term)
-                        <tr>
-                            <td class="px-6 py-4">
-                                <div class="font-medium">
-                                    {{ $term->section->program->code }} {{ $term->section->year_number }}-{{ $term->section->section_letter }}
-                                </div>
-                                <div class="text-sm text-gray-500">{{ $term->section->year_level }}</div>
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                {{ $term->semester }}, {{ $term->academic_year }}
-                            </td>
-                            <td class="px-6 py-4 text-sm">{{ $term->adviser?->name ?? '—' }}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded">
-                                    {{ $term->enrollments->count() }} students
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <a href="{{ route('dean.enrollments.show', $term) }}" class="text-blue-600 hover:text-blue-900">
-                                    View Class List
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">No section terms found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-            <div class="mt-4">
-                {{ $sectionTerms->links() }}
-            </div>
+            @include('dean.enrollments._table', [
+                'terms' => $current,
+                'empty' => $period ? 'No sections have a term in the current semester yet.' : 'No active academic period is set.',
+            ])
         </div>
     </div>
+
+    <details class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm" @if(request()->has('past')) open @endif>
+        <summary class="px-6 py-4 text-sm font-semibold text-gray-700 cursor-pointer">
+            Past terms ({{ $past->total() }})
+        </summary>
+        <div class="p-6 border-t border-gray-100">
+            @include('dean.enrollments._table', ['terms' => $past, 'empty' => 'No past terms.'])
+            <div class="mt-4">
+                {{ $past->links() }}
+            </div>
+        </div>
+    </details>
 
 </x-sidebar-layout>

@@ -34,7 +34,7 @@
                                 <x-input-error :messages="$errors->get('username')" class="mt-2" />
                             </div>
                             <div class="mb-4">
-                                <x-input-label for="email" :value="__('Email (optional. It can also be used to sign in. The system sends no email.)')" />
+                                <x-input-label for="email" :value="__('Email (optional. It is not used to sign in. The system sends no email.)')" />
                                 <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', $user->email)" />
                                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>

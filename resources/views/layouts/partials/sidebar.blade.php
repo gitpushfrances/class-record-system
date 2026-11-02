@@ -178,7 +178,7 @@
 
             @include('layouts.partials.sidebar-link', [
                 'href'   => route('dean.faculty.index'),
-                'active' => request()->routeIs('dean.faculty.*') || request()->routeIs('dean.teachers.*'),
+                'active' => request()->routeIs('dean.faculty.*'),
                 'icon'   => 'fa-id-badge',
                 'label'  => 'Faculty',
             ])

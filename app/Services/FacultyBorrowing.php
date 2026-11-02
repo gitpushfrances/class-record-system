@@ -74,12 +74,14 @@ class FacultyBorrowing
             ->first();
     }
 
-    /** Requests waiting for the signed-in Dean's decision (sidebar badge). */
+    /** Requests of the current semester waiting for the signed-in Dean's decision (sidebar badge). */
     public static function pendingIncomingCount(): int
     {
         $departmentId = Scope::departmentId();
 
-        return $departmentId ? FacultyBorrowRequest::pending()->where('lending_department_id', $departmentId)->count() : 0;
+        return $departmentId
+            ? FacultyBorrowRequest::pending()->current(AcademicPeriod::getActive())->where('lending_department_id', $departmentId)->count()
+            : 0;
     }
 
     public static function request(User $teacher, int $borrowingDepartmentId, int $requestedBy, ?string $message): ?string

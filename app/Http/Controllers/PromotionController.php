@@ -63,6 +63,7 @@ class PromotionController extends Controller
             'source'     => $source,
             'targets'    => $source ? BatchPromotion::targetTerms($section) : collect(),
             'candidates' => $source ? BatchPromotion::candidates($source) : collect(),
+            'moved'      => $source ? BatchPromotion::movedStudentIds($source)->count() : 0,
             'history'    => $source ? Promotion::with(['targetTerm.section', 'promoter'])->where('source_section_term_id', $source->id)->latest()->get() : collect(),
             'period'     => AcademicPeriod::getActive(),
             'prefix'     => $this->prefix(),

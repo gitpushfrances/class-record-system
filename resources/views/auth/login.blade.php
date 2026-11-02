@@ -6,20 +6,20 @@
     <div class="form-header">
         <div class="form-eyebrow"><span class="form-eyebrow-line"></span> Secure access</div>
         <h1 class="form-title">Sign In</h1>
-        <p class="form-sub">Use your username or your email address, and your password.</p>
+        <p class="form-sub">Use your username and password.</p>
     </div>
 
     <form method="POST" action="{{ route('login') }}" id="login-form">
         @csrf
 
-        <div class="field @error('login') has-error @enderror">
-            <label class="field-label" for="login">Username or email</label>
+        <div class="field @error('username') has-error @enderror">
+            <label class="field-label" for="username">Username</label>
             <div class="field-wrap">
                 <i class="fas fa-user field-ico"></i>
-                <input id="login" class="field-input" type="text" name="login" value="{{ old('login') }}"
-                       placeholder="your.username or name@example.com" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false">
+                <input id="username" class="field-input" type="text" name="username" value="{{ old('username') }}"
+                       placeholder="your.username" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false">
             </div>
-            @error('login')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
+            @error('username')<div class="field-err"><i class="fas fa-circle-exclamation"></i> {{ $message }}</div>@enderror
         </div>
 
         <div class="field @error('password') has-error @enderror">

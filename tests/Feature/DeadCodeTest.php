@@ -15,7 +15,7 @@ class DeadCodeTest extends TestCase
 
     public function test_removed_routes_and_table_are_gone(): void
     {
-        foreach (['admin.deans.create', 'admin.deans.store', 'teacher.classes.record.print'] as $name) {
+        foreach (['admin.deans.create', 'admin.deans.store', 'teacher.classes.record.print', 'dean.teachers.pending', 'dean.teachers.approve', 'dean.teachers.reject'] as $name) {
             $this->assertFalse(Route::has($name), "{$name} should be removed");
         }
         $this->assertTrue(Route::has('admin.users.create'));

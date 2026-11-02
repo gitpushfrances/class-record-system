@@ -137,33 +137,93 @@ class BorrowedFacultyFollowUpTest extends TestCase
         ]);
     }
 
-    public function test_each_button_on_the_borrowing_page_says_what_it_does(): void
+    public function test_the_borrowing_page_has_no_long_instruction_paragraphs(): void
+    {
+        $this->pendingLoan();
+
+        foreach ([$this->borrowingDean, $this->lendingDean] as $dean) {
+            $this->actingAs($dean)->get(route('dean.borrowing.index'))
+                ->assertOk()
+                ->assertDontSee('Nothing changes until they approve it, and you can cancel it while it is pending')
+                ->assertDontSee('Decline sends your reason back and nothing changes')
+                ->assertDontSee('Cannot revoke yet')
+                ->assertDontSee('Withdraws this request. Nothing was assigned.</p>', false);
+        }
+    }
+
+    public function test_the_buttons_keep_a_short_tooltip(): void
     {
         $this->pendingLoan();
 
         $this->actingAs($this->borrowingDean)->get(route('dean.borrowing.index'))
             ->assertOk()
-            ->assertSee('Sends your request to the other department')
-            ->assertSee('Withdraws this request. Nothing was assigned.')
-            ->assertSee('Hands the teacher back to CBA. You can no longer assign them.');
+            ->assertSee('title="Sends your request to the other department', false)
+            ->assertSee('title="Withdraws this request. Nothing was assigned."', false)
+            ->assertSee('Hands the teacher back to CBA.');
 
         $this->actingAs($this->lendingDean)->get(route('dean.borrowing.index'))
             ->assertOk()
-            ->assertSee('Approve lets CCS assign this teacher to its subjects until the semester ends')
-            ->assertSee('Returns the teacher to your department only. CCS can no longer assign them.');
+            ->assertSee('CCS can assign this teacher to its subjects until the semester ends.')
+            ->assertSee('Takes the teacher back. CCS can no longer assign them.');
     }
 
-    public function test_a_blocked_revoke_explains_why_to_both_deans(): void
+    public function test_a_blocked_revoke_shows_a_short_note_to_both_deans(): void
     {
         $this->teachBorrowedInCcs();
 
+        foreach ([$this->borrowingDean, $this->lendingDean] as $dean) {
+            $this->actingAs($dean)->get(route('dean.borrowing.index'))
+                ->assertOk()
+                ->assertSee('Teaching 1 subject now');
+        }
+
         $this->actingAs($this->borrowingDean)->get(route('dean.borrowing.index'))
-            ->assertOk()
-            ->assertSee('Cannot revoke yet: you still assign this teacher to 1 subject. Reassign them to another teacher on the Assignments page first.');
+            ->assertSee('Reassign this teacher');
+    }
+
+    private function loanOfAnEndedSemester(string $status): FacultyBorrowRequest
+    {
+        return FacultyBorrowRequest::create([
+            'borrowing_department_id' => $this->borrowingDean->department_id,
+            'lending_department_id'   => $this->borrowed->department_id,
+            'teacher_id'              => $this->borrowed->id,
+            'academic_year'           => '2023-2024',
+            'semester'                => $this->ccsTerm->semester,
+            'status'                  => $status,
+            'requested_by'            => $this->borrowingDean->id,
+        ]);
+    }
+
+    public function test_loans_of_an_ended_semester_are_not_listed_for_either_dean(): void
+    {
+        $this->loanOfAnEndedSemester('approved');
+
+        foreach ([$this->borrowingDean, $this->lendingDean] as $dean) {
+            $this->actingAs($dean)->get(route('dean.borrowing.index'))
+                ->assertOk()
+                ->assertSee($this->ccsTerm->academic_year)
+                ->assertDontSee('2023-2024');
+        }
+    }
+
+    public function test_a_request_of_an_ended_semester_is_not_counted_in_the_sidebar(): void
+    {
+        $this->loanOfAnEndedSemester('pending');
 
         $this->actingAs($this->lendingDean)->get(route('dean.borrowing.index'))
-            ->assertOk()
-            ->assertSee('Cannot revoke yet: this teacher still teaches 1 subject for CCS. Ask that Dean to reassign them first.');
+            ->assertOk()->assertDontSee('data-nav-badge', false);
+    }
+
+    public function test_with_no_active_period_no_loan_is_listed(): void
+    {
+        AcademicPeriod::query()->update(['is_active' => false]);
+
+        foreach ([$this->borrowingDean, $this->lendingDean] as $dean) {
+            $this->actingAs($dean)->get(route('dean.borrowing.index'))
+                ->assertOk()
+                ->assertSee('No other department has asked for your teachers.')
+                ->assertDontSee($this->ccsTerm->academic_year);
+        }
     }
 
     public function test_a_teacher_with_classes_in_one_department_sees_no_separator(): void
