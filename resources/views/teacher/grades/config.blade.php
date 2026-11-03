@@ -63,7 +63,7 @@
 
     {{-- Grade computation --}}
     <div class="p-5 mt-6 rounded-xl" style="background:#ffffff; border: 1px solid #e5e7eb;">
-        <label for="computation_method" class="block mb-2 text-base font-semibold" style="color:#0b3d0b;">Grade Computation</label>
+        <label for="computation_method" class="block mb-2 text-base font-semibold" style="color:#0b3d0b;">Grade Computation <x-hint text="S = score obtained, TS = total score. Recorded scores are never changed; switching only changes how grades are calculated. You can change this until you submit for verification." /></label>
         <div style="position:relative; max-width:380px;">
         <select name="computation_method" id="computation_method" data-saved="{{ $config?->computation_method ?? '' }}"
                 class="w-full px-3 py-2 text-sm rounded-lg" style="background:#ffffff; color:#1f2937; border:1px solid #d1d5db; appearance:none; -webkit-appearance:none; padding-right:36px; outline:none;" onfocus="this.style.boxShadow='0 0 0 2px rgba(212,175,55,0.4)'" onblur="this.style.boxShadow='none'">
@@ -74,7 +74,6 @@
         <i class="fa-solid fa-chevron-down" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:12px; color:#0b3d0b;"></i>
         </div>
         <p id="methodHint" class="mt-2 text-xs font-medium" style="color:#0b3d0b;"></p>
-        <p class="mt-2 text-xs" style="color:#6b7280;">S = score obtained, TS = total score. Recorded scores are never changed; switching only changes how grades are calculated. You can change this until you submit for verification.</p>
     </div>
 
     {{-- Validation error banner --}}

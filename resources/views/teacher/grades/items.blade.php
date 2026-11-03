@@ -55,10 +55,9 @@
                 </div>
 
                 <div>
-                    <label class="block mb-1 text-xs font-medium text-gray-600">Date Given</label>
+                    <label class="flex items-center mb-1 text-xs font-medium text-gray-600">Date Given <span id="date-hint-box" style="display:none;"><x-hint text="" /></span></label>
                     <input type="date" id="date-given" name="date_given" value="{{ old('date_given') }}"
                            class="w-full px-3 py-2 text-sm text-gray-800 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    <p id="date-hint" class="mt-1 text-xs text-gray-600"></p>
                 </div>
 
                 <div class="flex items-center">
@@ -172,7 +171,7 @@ function filterComponents() {
     const date  = document.getElementById('date-given');
     date.min = range[0] || '';
     date.max = range[1] || '';
-    document.getElementById('date-hint').textContent = recordingHints[period] + ' Left empty, the item is dated today.';
+    setHint('date-hint-box', recordingHints[period] + ' Left empty, the item is dated today.');
 }
 filterComponents();
 </script>

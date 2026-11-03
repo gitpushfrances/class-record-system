@@ -28,14 +28,16 @@
                 </div>
 
                 <div>
-                    <label for="approve_department_id" class="block text-sm font-medium text-gray-700">Department</label>
+                    <div class="flex items-center">
+                        <label for="approve_department_id" class="block text-sm font-medium text-gray-700">Department</label>
+                        <span id="approve_dean_note" class="hidden"><x-hint text="Only one Dean can be assigned per department." /></span>
+                    </div>
                     <select id="approve_department_id" name="department_id" required class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm">
                         <option value="">Select department</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->id }}">{{ $department->name }} ({{ $department->code }})</option>
                         @endforeach
                     </select>
-                    <p id="approve_dean_note" class="hidden mt-1 text-xs text-gray-500">Only one Dean can be assigned per department.</p>
                 </div>
 
                 <div id="approve_program_wrap" class="hidden">

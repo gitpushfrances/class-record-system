@@ -34,5 +34,6 @@ class HoverHintTest extends TestCase
         $this->assertSame(1, substr_count($html, '.hint-text { display:none;'));
         $this->assertSame(1, substr_count($html, "addEventListener('mouseover'"));
         $this->assertSame(2, substr_count($html, 'class="hint"'));
+        $this->assertSame(1, substr_count($html, 'window.setHint'));
     }
 }

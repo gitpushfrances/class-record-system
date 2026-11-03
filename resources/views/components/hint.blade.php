@@ -34,6 +34,14 @@
     document.addEventListener('focusin', function (e) { var h = find(e); if (h) show(h); });
     document.addEventListener('focusout', function (e) { if (find(e)) hide(); });
     window.addEventListener('scroll', hide, true);
+    window.setHint = function (id, text) {
+        var box = document.getElementById(id);
+        if (!box) return;
+        var hint = box.querySelector('.hint'), tip = box.querySelector('.hint-text');
+        tip.textContent = text;
+        hint.setAttribute('aria-label', text);
+        box.style.display = text ? '' : 'none';
+    };
 })();
 </script>
 @endonce

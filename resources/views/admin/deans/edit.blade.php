@@ -34,7 +34,10 @@
                                 <x-input-error :messages="$errors->get('username')" class="mt-2" />
                             </div>
                             <div class="mb-4">
-                                <x-input-label for="email" :value="__('Email (optional. It is not used to sign in. The system sends no email.)')" />
+                                <div class="flex items-center">
+                                    <x-input-label for="email" :value="__('Email (optional)')" />
+                                    <x-hint text="It is not used to sign in. The system sends no email." />
+                                </div>
                                 <x-text-input id="email" name="email" type="email" class="block w-full mt-1" :value="old('email', $user->email)" />
                                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>
@@ -49,22 +52,26 @@
                             </div>
 
                             <div class="mb-4">
-                                <x-input-label for="department_id" :value="__('Department')" />
+                                <div class="flex items-center">
+                                    <x-input-label for="department_id" :value="__('Department')" />
+                                    <span id="dean-department-note" style="display:none;"><x-hint text="Only one Dean can be assigned per department. Assigning here will unassign any existing Dean from that department." /></span>
+                                </div>
                                 <select id="department_id" name="department_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
                                     <option value="">Unassigned</option>
                                     @foreach($departments as $department)
                                         <option value="{{ $department->id }}" {{ old('department_id', $user->department_id) == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
                                     @endforeach
                                 </select>
-                                <p id="dean-department-note" class="mt-1 text-xs text-gray-500" style="display:none;">Only one Dean can be assigned per department — assigning here will unassign any existing Dean from that department.</p>
                                 <x-input-error :messages="$errors->get('department_id')" class="mt-2" />
                             </div>
                             <div class="mb-4" id="program-field" style="display:none;">
-                                <x-input-label for="program_id" :value="__('Program')" />
+                                <div class="flex items-center">
+                                    <x-input-label for="program_id" :value="__('Program')" />
+                                    <x-hint text="Only one Program Head can be assigned per program." />
+                                </div>
                                 <select id="program_id" name="program_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm">
                                     <option value="">Select department first</option>
                                 </select>
-                                <p class="mt-1 text-xs text-gray-500">Only one Program Head can be assigned per program.</p>
                                 <x-input-error :messages="$errors->get('program_id')" class="mt-2" />
                             </div>
 

@@ -39,7 +39,7 @@
         </div>
 
         <div class="field @error('email') has-error @enderror">
-            <label class="field-label" for="email">Email address <span class="opt">(optional. It is not used to sign in. The system sends no email.)</span></label>
+            <label class="field-label" for="email">Email address <span class="opt">(optional)</span> <x-hint text="It is not used to sign in. The system sends no email." /></label>
             <div class="field-wrap">
                 <i class="fas fa-envelope field-ico"></i>
                 <input id="email" class="field-input" type="email" name="email" value="{{ old('email') }}"

@@ -32,7 +32,7 @@
                     </div>
 
                     <div class="mb-6">
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Section</label>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Section <x-hint text="Type freely or pick a suggestion." /></label>
                         <input
                             type="text"
                             name="section_letter"
@@ -49,7 +49,6 @@
                             <option value="D"><option value="E"><option value="F">
                             <option value="Block 1"><option value="Block 2">
                         </datalist>
-                        <p class="mt-1 text-xs text-gray-400">Type freely or pick a suggestion.</p>
                         @error('section_letter')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                     </div>
 

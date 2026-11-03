@@ -28,7 +28,7 @@
                 </select>
             </div>
             <div>
-                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Department</label>
+                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Department <x-hint text="Optional. Only one Dean can be assigned per department." /></label>
                 <select name="department_id" id="departmentSelect"
                         class="w-full px-3 py-2 text-sm rounded-lg"
                         style="background:rgba(212,175,55,0.07);border:1px solid #e5e7eb;color:#1f2937;">
@@ -37,16 +37,14 @@
                         <option value="{{ $department->id }}" {{ old('department_id') == $department->id ? 'selected' : '' }}>{{ $department->name }} ({{ $department->code }})</option>
                     @endforeach
                 </select>
-                <p class="mt-1 text-xs" style="color:#6b7280;">Optional. Only one Dean can be assigned per department.</p>
             </div>
             <div id="programField" style="display:none;">
-                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Program</label>
+                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Program <x-hint text="Only one Program Head can be assigned per program." /></label>
                 <select name="program_id" id="programSelect"
                         class="w-full px-3 py-2 text-sm rounded-lg"
                         style="background:rgba(212,175,55,0.07);border:1px solid #e5e7eb;color:#1f2937;">
                     <option value="">Select department first</option>
                 </select>
-                <p class="mt-1 text-xs" style="color:#6b7280;">Only one Program Head can be assigned per program.</p>
             </div>
             <div>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -78,7 +76,7 @@
                 @error('username')<p class="mt-1 text-xs" style="color:#b91c1c;">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Email <span style="color:#4b5563;">(optional. It is not used to sign in. The system sends no email.)</span></label>
+                <label class="block mb-1 text-xs font-medium" style="color:#6b7280;">Email <span style="color:#4b5563;">(optional)</span> <x-hint text="It is not used to sign in. The system sends no email." /></label>
                 <input type="email" name="email" value="{{ old('email') }}"
                        class="w-full px-3 py-2 text-sm rounded-lg"
                        style="background:rgba(212,175,55,0.07);border:1px solid #e5e7eb;color:#1f2937;">

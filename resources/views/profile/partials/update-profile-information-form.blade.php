@@ -47,12 +47,14 @@
                         <x-input-error class="mt-2" :messages="$errors->get('academic_rank')" />
                     </div>
                     <div>
-                        <x-input-label for="credentials" :value="__('Credentials (optional)')" />
+                        <div class="flex items-center">
+                            <x-input-label for="credentials" :value="__('Credentials (optional)')" />
+                            <x-hint text="Printed under your name on the Report of Grades." />
+                        </div>
                         <x-text-input id="credentials" name="credentials" type="text" class="mt-1 block w-full" :value="old('credentials', $user->credentials)" placeholder="e.g. MIT, PCpE" />
                         <x-input-error class="mt-2" :messages="$errors->get('credentials')" />
                     </div>
                 </div>
-                <p style="margin-top:6px; font-size:12px; color:#6b7280;">Printed under your name on the Report of Grades.</p>
             @endif
         </div>
 
@@ -64,7 +66,10 @@
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email (optional. It is not used to sign in. The system sends no email.)')" />
+            <div class="flex items-center">
+                <x-input-label for="email" :value="__('Email (optional)')" />
+                <x-hint text="It is not used to sign in. The system sends no email." />
+            </div>
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" autocomplete="email" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 

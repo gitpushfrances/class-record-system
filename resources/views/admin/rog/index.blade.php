@@ -27,8 +27,7 @@
             @method('PUT')
 
             <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-sm font-semibold text-gray-700">Header logos</h3>
-                <p class="text-xs text-gray-500">PNG or JPG, up to 2 MB. A transparent PNG prints best.</p>
+                <h3 class="text-sm font-semibold text-gray-700">Header logos <x-hint text="PNG or JPG, up to 2 MB. A transparent PNG prints best." /></h3>
             </div>
             <div style="{{ $grid }}">
                 @foreach(['left' => 'Left logo (university)', 'right' => 'Right logo'] as $side => $title)
