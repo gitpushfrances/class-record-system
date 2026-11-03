@@ -61,11 +61,13 @@
                     <p id="date-hint" class="mt-1 text-xs text-gray-600"></p>
                 </div>
 
+                <div class="flex items-center">
                 <button type="submit" @disabled($windowProblem) @if($windowProblem) style="opacity:.5; cursor:not-allowed;" @endif
-                        class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                        class="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
                     Add Item
                 </button>
-                <p class="text-xs text-gray-600">Adds the item to the period chosen above. Use Enter Scores in the list to record the marks afterwards.</p>
+                <x-hint text="Adds the item to the period chosen above. Use Enter Scores in the list to record the marks afterwards." />
+                </div>
             </div>
         </form>
     </div>
@@ -144,7 +146,7 @@
             </div>
         @endforeach
 
-        <p class="text-xs text-gray-600">Enter Scores opens the marks for that item. Delete removes the item together with every score entered for it, and the final grades are recomputed without it. A padlock means the item is locked and cannot be deleted.</p>
+        <p class="text-xs text-gray-600">About these buttons <x-hint text="Enter Scores opens the marks for that item. Delete removes the item together with every score entered for it, and the final grades are recomputed without it. A padlock means the item is locked and cannot be deleted." /></p>
 
     </div>
 </div>

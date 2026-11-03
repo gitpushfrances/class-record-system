@@ -98,12 +98,12 @@
             </tbody>
         </table>
 
-        <div class="flex items-center justify-between gap-4 px-6 py-4 border-t border-gray-100">
-            <p class="text-xs text-gray-600">Saves attendance for {{ \Carbon\Carbon::parse($date)->format('M j, Y') }}. Saving again for the same date and session updates it, so nothing is duplicated.</p>
+        <div class="flex items-center justify-end gap-1 px-6 py-4 border-t border-gray-100">
             <button type="submit" @disabled($dateProblem) @if($dateProblem) style="opacity:.5; cursor:not-allowed;" @endif
                     class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition">
                 Save Attendance
             </button>
+            <x-hint :text="'Saves attendance for ' . \Carbon\Carbon::parse($date)->format('M j, Y') . '. Saving again for the same date and session updates it, so nothing is duplicated.'" />
         </div>
     </form>
 </div>

@@ -147,19 +147,24 @@ class BorrowedFacultyFollowUpTest extends TestCase
                 ->assertDontSee('Nothing changes until they approve it, and you can cancel it while it is pending')
                 ->assertDontSee('Decline sends your reason back and nothing changes')
                 ->assertDontSee('Cannot revoke yet')
-                ->assertDontSee('Withdraws this request. Nothing was assigned.</p>', false);
+                ->assertDontSee('Withdraws this request. Nothing was assigned.</p>', false)
+                ->assertDontSee('Once the lending Dean approves</p>', false);
         }
     }
 
-    public function test_the_buttons_keep_a_short_tooltip(): void
+    public function test_the_instructions_sit_behind_a_hover_icon(): void
     {
         $this->pendingLoan();
 
         $this->actingAs($this->borrowingDean)->get(route('dean.borrowing.index'))
             ->assertOk()
-            ->assertSee('title="Sends your request to the other department', false)
-            ->assertSee('title="Withdraws this request. Nothing was assigned."', false)
-            ->assertSee('Hands the teacher back to CBA.');
+            ->assertSee('class="hint"', false)
+            ->assertSee('fa-circle-info', false)
+            ->assertSee('Sends your request to the other department')
+            ->assertSee('Withdraws this request. Nothing was assigned.')
+            ->assertSee('Hands the teacher back to CBA.')
+            ->assertDontSee('title="Sends your request', false)
+            ->assertDontSee('title="Withdraws this request', false);
 
         $this->actingAs($this->lendingDean)->get(route('dean.borrowing.index'))
             ->assertOk()

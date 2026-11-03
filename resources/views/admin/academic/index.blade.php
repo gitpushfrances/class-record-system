@@ -19,15 +19,9 @@
         {{-- Add Period Form --}}
         <div class="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
             <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-sm font-semibold text-gray-700">Add New Period</h3>
+                <h3 class="text-sm font-semibold text-gray-700">Add New Period <x-hint text="Teachers can only record attendance and grade items dated from the semester start to the cutoffs set here: midterm records up to the midterm cutoff, finals records after it up to the finals cutoff. A period needs all three dates, otherwise teachers cannot record anything for that semester. A semester whose finals cutoff has already passed cannot be added." /></h3>
             </div>
             <div class="px-6 py-4">
-                <p class="mb-3 text-xs text-gray-600">
-                    Teachers can only record attendance and grade items dated from the semester start to the cutoffs set here:
-                    midterm records up to the midterm cutoff, finals records after it up to the finals cutoff.
-                    A period needs all three dates, otherwise teachers cannot record anything for that semester.
-                    A semester whose finals cutoff has already passed cannot be added.
-                </p>
                 <form action="{{ route('admin.academic.store') }}" method="POST" class="flex flex-wrap items-end gap-4">
                     @csrf
                     <div>
@@ -65,11 +59,11 @@
                                class="px-3 py-2 border rounded focus:outline-none focus:ring-1" required>
                         @error('finals_cutoff_date')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                     </div>
-                    <div style="max-width:230px;">
+                    <div style="display:flex; align-items:center;">
                         <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded hover:opacity-90" style="background-color: #d4af37;">
                             Add Period
                         </button>
-                        <p class="mt-1 text-xs text-gray-600">Adds the semester as Inactive. Nothing changes for teachers until you press Set Active.</p>
+                        <x-hint text="Adds the semester as Inactive. Nothing changes for teachers until you press Set Active." />
                     </div>
                 </form>
             </div>
@@ -110,33 +104,32 @@
                             <td class="px-4 py-4" style="min-width:250px;">
                                 <div class="space-y-3">
                                 @if(!$period->is_active)
-                                    <div>
+                                    <div class="flex items-center">
                                         <form action="{{ route('admin.academic.setActive', $period) }}" method="POST" class="inline"
                                               onsubmit="return confirm('Make {{ $period->semester }}, {{ $period->school_year }} the active period?\n\nThe period that is active now becomes inactive. Teachers will then be able to record only dates inside this period.');">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="text-sm font-medium text-blue-600 hover:text-blue-800">Set Active</button>
                                         </form>
-                                        <p class="text-xs text-gray-600" style="margin-top:2px;">Makes this the current semester and deactivates the one that is active now. Teachers can then record only dates inside this period.</p>
+                                        <x-hint text="Makes this the current semester and deactivates the one that is active now. Teachers can then record only dates inside this period." />
                                     </div>
-                                    <div>
+                                    <div class="flex items-center">
                                         <form action="{{ route('admin.academic.destroy', $period) }}" method="POST" class="inline"
                                               onsubmit="return confirm('Delete {{ $period->semester }}, {{ $period->school_year }}?\n\nThis permanently removes the period and cannot be undone. It is refused while a class term still uses it.');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-800">Delete</button>
                                         </form>
-                                        <p class="text-xs text-gray-600" style="margin-top:2px;">Permanently removes this period. Refused if a class term still uses it.</p>
+                                        <x-hint text="Permanently removes this period. Refused if a class term still uses it." />
                                     </div>
                                 @else
-                                    <div>
+                                    <div class="flex items-center">
                                         <span class="text-sm font-medium text-gray-700">Currently active</span>
-                                        <p class="text-xs text-gray-600" style="margin-top:2px;">Teachers are recording inside these dates now. To change the current semester, press Set Active on another period. The active period cannot be deleted.</p>
+                                        <x-hint text="Teachers are recording inside these dates now. To change the current semester, press Set Active on another period. The active period cannot be deleted." />
                                     </div>
                                 @endif
                                 <details>
-                                    <summary class="text-sm font-medium text-gray-700 cursor-pointer">Edit dates</summary>
-                                    <p class="mt-1 text-xs text-gray-600">Changes the start and the cutoffs. Records already saved are kept; new entries follow the new dates.</p>
+                                    <summary class="text-sm font-medium text-gray-700 cursor-pointer">Edit dates <x-hint text="Changes the start and the cutoffs. Records already saved are kept; new entries follow the new dates." /></summary>
                                     <form action="{{ route('admin.academic.update', $period) }}" method="POST" class="flex flex-wrap items-end gap-3 mt-2">
                                         @csrf
                                         @method('PATCH')

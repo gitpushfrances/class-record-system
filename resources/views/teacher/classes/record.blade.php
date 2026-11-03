@@ -392,11 +392,11 @@ document.addEventListener('DOMContentLoaded', function () {
         <label style="display:block; margin-top:12px; font-size:13px; font-weight:600; color:#374151;">Highest possible score
             <input type="number" name="max_score" min="1" step="any" required style="display:block; width:100%; margin-top:4px; padding:8px; border:1px solid #d1d5db; border-radius:8px;">
         </label>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px;">
+        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:18px;">
             <button type="button" onclick="document.getElementById('addItemDialog').close()" style="padding:8px 14px; font-size:13px; font-weight:600; color:#374151; background:#fff; border:1px solid #d1d5db; border-radius:8px; cursor:pointer;">Cancel</button>
             <button type="submit" style="padding:8px 14px; font-size:13px; font-weight:600; color:#fff; background:#0a5b05; border:none; border-radius:8px; cursor:pointer;">Add</button>
+            <x-hint text="Adds the item to the class record. Type the scores in its column afterwards." />
         </div>
-        <p style="margin:10px 0 0; font-size:12px; color:#4b5563;">Adds the item to the class record. Type the scores in its column afterwards.</p>
     </form>
 </dialog>
 <script>
