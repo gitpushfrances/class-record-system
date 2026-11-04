@@ -73,7 +73,7 @@ class ProgramController extends Controller
             'name' => ['required', 'string', 'max:255'],
         ], [
             'code.regex'  => 'The code may only contain letters, numbers and dashes.',
-            'code.unique' => 'Another program already uses this code.',
+            'code.unique' => 'Another program already uses this code. A major needs its own code, for example BSED-FIL.',
         ]);
     }
 
